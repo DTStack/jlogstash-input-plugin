@@ -1,1 +1,1 @@
-input
+input 详情见wiki
