@@ -212,12 +212,4 @@ public class Tcp extends BaseInput {
 			super.messageSent(session, message);
 		}
 	}
-	
-	
-	public static void main(String[] args){	
-		Tcp tcp = new Tcp(new HashMap<String,Object>(),new InputQueueList());
-		tcp.port = 9898;
-		tcp.prepare();
-		tcp.emit();
-	}
 }
