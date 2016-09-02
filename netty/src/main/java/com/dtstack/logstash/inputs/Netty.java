@@ -150,13 +150,4 @@ public class Netty extends BaseInput {
 			    ctx.sendUpstream(e);
 	    }	
 	}
-	
-
-	public static void main(String[] args) {
-		Netty.port = 9998;
-		Netty netty = new Netty(new HashMap<String, Object>(),
-				new InputQueueList());
-		netty.prepare();
-		netty.emit();
-	}
 }
