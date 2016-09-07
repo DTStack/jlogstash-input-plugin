@@ -141,12 +141,7 @@ public class Netty extends BaseInput {
 		@Override
 	    public void exceptionCaught(
 	            ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-			    String message =  e.getCause().getMessage();
-			    if(StringUtils.isNotBlank(message)){
-			    	if(message.indexOf("Connection reset by peer")<0){
-		                logger.error("netty io error: {}",e.getCause());
-			    	}	    	
-			    }
+		            logger.error("netty io error: {}",e.getCause());
 			    ctx.sendUpstream(e);
 	    }	
 	}
