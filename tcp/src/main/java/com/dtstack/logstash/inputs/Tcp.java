@@ -162,7 +162,6 @@ public class Tcp extends BaseInput {
 
 		public void exceptionCaught(IoSession session, Throwable cause)
 				throws Exception {
-			System.out.println(cause.getMessage());
 			logger.error(cause.getMessage());
 		}
 
