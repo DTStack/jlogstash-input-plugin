@@ -126,12 +126,7 @@ public class Beats extends BaseInput {
 
 		@Override
 		public void onException(ChannelHandlerContext ctx,Throwable cause) {
-	    	String error = cause.getMessage();
-	    	if(StringUtils.isNotBlank(error)){
-	    		if(error.indexOf("Connection reset by peer")<0){
-	    	        logger.error("Exception", cause);
-	    		}
-	    	}  	
+                     	logger.error("Exception", cause);
 		}
 	}
 
