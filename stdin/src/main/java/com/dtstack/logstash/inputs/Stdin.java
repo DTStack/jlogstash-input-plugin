@@ -26,7 +26,7 @@ public class Stdin extends BaseInput {
 
     @Override
     public void prepare() {
-        this.decoder = this.createDecoder();
+    	this.decoder = super.createDecoder();
     }
 
     public void emit() {
@@ -42,13 +42,11 @@ public class Stdin extends BaseInput {
                             .decode(input);
                    this.inputQueueList.put(event);
                 } catch (Exception e) {
-                    logger.error("process event failed:" + input);
-                    logger.error(e.getMessage());
+                    logger.error("process event failed:" + input,e.getMessage());
                 }
             }
         } catch (IOException io) {
-            logger.error("Stdin loop got exception");
-            System.exit(1);
+            logger.error("Stdin loop got exception",io.getCause());
         }
     }
 
