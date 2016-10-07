@@ -1,6 +1,5 @@
 package com.dtstack.logstash.inputs;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -61,24 +60,18 @@ public class Kafka extends BaseInput {
 						try {
 							m = new String(it.next().message(),
 									this.kafkaInput.encoding);
-						} catch (UnsupportedEncodingException e1) {
-							e1.printStackTrace();
-							logger.error(e1.getMessage());
-						}
-
-						try {
 							Map<String, Object> event = this.decoder
 									.decode(m);
-							this.kafkaInput.inputQueueList.put(event);
+							if (event!=null&&event.size()>0){
+								this.kafkaInput.inputQueueList.put(event);
+							} 
 						} catch (Exception e) {
-							logger.error("process event failed:" + m);
-							e.printStackTrace();
-							logger.error(e.getMessage());
+							logger.error("process event:%s failed:%s",m,e.getCause());
 						}
 					}
 				}
 			} catch (Exception t) {
-				logger.error("kakfa Consumer fetch is error",t);
+				logger.error("kakfa Consumer fetch is error:%s",t.getCause());
 			}
 		}
 	}
