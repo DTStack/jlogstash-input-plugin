@@ -60,7 +60,7 @@ public class ReadLineUtil {
 		while (bufPos < readSize) {
 			byte c = buf.get((int)bufPos);//FIXME if the file size max then Integer.Max,it is err
 			bufPos++;
-			if (c == '\r' || c == '\n') {
+			if (c == '\r' || c == lineBreak) {
 				if (c != lineBreak) {
 					continue;
 				}
