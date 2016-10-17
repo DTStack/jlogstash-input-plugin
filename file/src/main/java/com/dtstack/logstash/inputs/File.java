@@ -65,8 +65,11 @@ public class File extends BaseInput{
 	
 	private List<String> realPaths = Lists.newArrayList();
 	
-	private BlockingQueue<String> needReadList = new LinkedBlockingQueue<String>();
-	
+	/**默认值:cpu线程数+1*/
+	private static int readFileThreadNum = 0;
+		
+	private Map<Integer, BlockingQueue<String>> threadReadFileMap = new ConcurrentHashMap<>();
+		
 	private ConcurrentHashMap<String, Long> monitorMap = new ConcurrentHashMap<String, Long>();
 	
 	private boolean runFlag = false;
@@ -107,13 +110,19 @@ public class File extends BaseInput{
 				logger.error("file numbers is exceed.");
 				System.exit(1);
 			}
-			
-			needReadList.addAll(realPaths);
+		}
+		
+		if(readFileThreadNum <= 0){
+			readFileThreadNum = Runtime.getRuntime().availableProcessors() + 1;
+		}
+				
+		for(String fileStr : realPaths){
+			addFile(fileStr);
 		}
 		
 		checkoutSinceDb();
-		runFlag = true;
 		ReadLineUtil.setDelimiter(delimiter);
+		runFlag = true;
 	}
 	
 	public void filterExcludeFile(List<String> fileList, boolean errExit){
@@ -190,14 +199,32 @@ public class File extends BaseInput{
 		}
 		
 	}
+	
+	public void addFile(String fileName){
+		//int hashCode = sun.misc.Hashing.stringHash32(fileName);
+		int hashCode = fileName.hashCode();
+		int index = hashCode % readFileThreadNum;
+		BlockingQueue<String> readQueue = threadReadFileMap.get(index);
+		
+		if(readQueue == null){
+			readQueue = new LinkedBlockingQueue<>();
+			threadReadFileMap.put(index, readQueue);
+		}
+		
+		readQueue.offer(fileName);
+	}
 
 	@Override
 	public void emit() {
-		executor = Executors.newFixedThreadPool(3);
+		executor = Executors.newFixedThreadPool(readFileThreadNum + 2);
 		scheduleExecutor = Executors.newScheduledThreadPool(1);
+		
 		executor.submit(new MonitorChangeRunnable());
 		executor.submit(new MonitorNewFileRunnable());
-		executor.submit(new FileRunnable(this));
+		for(int i=0; i<readFileThreadNum; i++){
+			executor.submit(new FileRunnable(this, i));
+		}
+		
 		scheduleExecutor.scheduleWithFixedDelay(new DumpSinceDbRunnable(), 
 				sinceDbWriteInterval, sinceDbWriteInterval, TimeUnit.SECONDS);
 	}
@@ -216,15 +243,25 @@ public class File extends BaseInput{
 		
 		private File fileInput;
 		
-		public FileRunnable(File fileInput) {
+		private final int index;
+		
+		public FileRunnable(File fileInput, int index) {
 			this.fileInput = fileInput;
 			this.decoder = this.fileInput.createDecoder();
+			this.index = index;
 		}
 
 		public void run() {
 			
 			while(runFlag){
 				try {
+					
+					BlockingQueue<String> needReadList = threadReadFileMap.get(index);
+					if(needReadList == null){
+						logger.error("invalid FileRunnable thread, threadReadFileMap don't init needReadList of this index:{}.", index);
+						return;
+					}
+					
 					String readFileName = needReadList.poll(10, TimeUnit.SECONDS);
 					if(readFileName == null){
 						continue;
@@ -260,9 +297,7 @@ public class File extends BaseInput{
 							fileCurrPos.put(readFileName, readLineUtil.getCurrBufPos());
 						}
 					}
-					
-					System.out.println("has readLineNum:"  + readLineNum);
-					
+										
 					fileCurrPos.put(readFileName, readLineUtil.getCurrBufPos());
 					monitorMap.put(readFileName, lastModTime);
 				} catch (Exception e) {
@@ -300,7 +335,7 @@ public class File extends BaseInput{
 					}
 					
 					if(monitorFile.lastModified() > entry.getValue()){
-						needReadList.offer(entry.getKey());
+						addFile(entry.getKey());
 						iterator.remove();
 					}
 				}
@@ -311,7 +346,7 @@ public class File extends BaseInput{
 	}
 	
 	/** 
-	 * 监控新出现的符合条件的文件,并加入到needReadList里
+	 * 监控新出现的符合条件的文件,并加入到文件读取列表里
 	 * @author xuchao
 	 *
 	 */
@@ -338,12 +373,12 @@ public class File extends BaseInput{
 					}
 					
 					for(String addFile : dicFileList){
-						needReadList.offer(addFile);
+						addFile(addFile);
 					}
 				}
 				
 				if(!hasDic){
-					logger.info("don't have any dictory,no need for monitor dictory add new file!");
+					logger.info("don't have any dictory,no need for monitor a file which is not dictory!");
 					break;
 				}
 			}
