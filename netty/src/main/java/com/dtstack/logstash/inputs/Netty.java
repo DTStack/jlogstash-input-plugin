@@ -3,11 +3,9 @@ package com.dtstack.logstash.inputs;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -23,7 +21,6 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
@@ -131,7 +128,8 @@ public class Netty extends BaseInput {
 				if (message instanceof ChannelBuffer) {
 					String mes = ((ChannelBuffer) message).toString(Charset
 							.forName(encoding));
-					if (!"".equals(mes)) {
+					logger.debug("netty messageReceived:"+mes);
+					if (StringUtils.isNotBlank(mes)) {
 						this.netty.inputQueueList.put(this.decoder.decode(mes));
 					}
 				}
@@ -141,7 +139,7 @@ public class Netty extends BaseInput {
 		@Override
 	    public void exceptionCaught(
 	            ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		            logger.error("netty io error: {}",e.getCause());
+		        logger.debug("netty io error: {}",e.getCause());
 			    ctx.sendUpstream(e);
 	    }	
 	}
