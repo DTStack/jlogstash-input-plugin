@@ -6,11 +6,8 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-
 import javax.net.ssl.SSLContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandlerAdapter;
@@ -25,7 +22,6 @@ import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
@@ -38,6 +34,7 @@ import com.dtstack.logstash.decoder.IDecode;
  * @author sishu.yss
  *
  */
+@SuppressWarnings("serial")
 public class Tcp extends BaseInput {
 	
 	private static Logger logger = LoggerFactory.getLogger(Tcp.class);
@@ -162,7 +159,7 @@ public class Tcp extends BaseInput {
 
 		public void exceptionCaught(IoSession session, Throwable cause)
 				throws Exception {
-			logger.error(cause.getMessage());
+			logger.debug("exceptionCaught:{}",cause.getCause());
 		}
 
 		@Override
@@ -196,6 +193,7 @@ public class Tcp extends BaseInput {
 		public void messageReceived(IoSession session, Object message)
 				throws Exception {
 			// TODO Auto-generated method stub
+			logger.debug("messageReceived:{}",message);
 			if (message != null) {
 				String mes = message.toString();
 				if (!"".equals(mes)) {
