@@ -378,7 +378,7 @@ public class File extends BaseInput{
 				}
 				
 				if(!hasDic){
-					logger.info("don't have any dictory,no need for monitor a file which is not dictory!");
+					logger.info("don't have any directory,no need for monitor a file which is not directory!");
 					break;
 				}
 			}
