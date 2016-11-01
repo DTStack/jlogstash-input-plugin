@@ -24,6 +24,7 @@ import java.util.zip.InflaterInputStream;
 public class BeatsParser extends ByteToMessageDecoder {
     private static final int CHUNK_SIZE = 1024;
     private final static Logger logger = LoggerFactory.getLogger(BeatsParser.class);
+    private static final int LIMIT_PACKAGE_SIZE = 1024 * 1024;//限制传输的数据包大小1M
 
     private Batch batch = new Batch();
 
@@ -44,6 +45,9 @@ public class BeatsParser extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    	
+    	in.markReaderIndex();//标记,如果出现半包需要重置
+    	
         if(!hasEnoughBytes(in)) {
             return;
         }
@@ -51,7 +55,7 @@ public class BeatsParser extends ByteToMessageDecoder {
         switch (currentState) {
             case READ_HEADER: {
                 logger.debug("Running: READ_HEADER");
-
+                
                 byte currentVersion = in.readByte();
 
                 if(Protocol.isVersion2(currentVersion)) {
@@ -67,6 +71,7 @@ public class BeatsParser extends ByteToMessageDecoder {
             }
             case READ_FRAME_TYPE: {
                 logger.debug("Running: READ_FRAME_TYPE");
+                
                 byte frameType = in.readByte();
 
                 switch(frameType) {
@@ -110,6 +115,7 @@ public class BeatsParser extends ByteToMessageDecoder {
             case READ_DATA_FIELDS: {
                 // Lumberjack version 1 protocol, which use the Key:Value format.
                 logger.debug("Running: READ_DATA_FIELDS");
+                                
                 this.sequence = (int) in.readUnsignedInt();
                 int fieldsCount = (int) in.readUnsignedInt();
                 int count = 0;
@@ -118,9 +124,31 @@ public class BeatsParser extends ByteToMessageDecoder {
 
                 while(count < fieldsCount) {
                     int fieldLength = (int) in.readUnsignedInt();
+                    
+                    if(checkInvalidPackage(fieldLength)){
+                    	in.clear();
+                    	ctx.close();
+                    	return;
+                    }
+                    
+                    if(!checkEnoughBytes(in, fieldLength, true)){
+                    	return;
+                    }
+                    
                     String field = in.readBytes(fieldLength).toString(Charset.forName("UTF8"));
 
                     int dataLength = (int) in.readUnsignedInt();
+                    
+                    if(checkInvalidPackage(dataLength)){
+                    	in.clear();
+                    	ctx.close();
+                    	return;
+                    }
+                    
+                    if(!checkEnoughBytes(in, dataLength, true)){
+                    	return;
+                    }
+                    
                     String data = in.readBytes(dataLength).toString(Charset.forName("UTF8"));
 
                     dataMap.put(field, data);
@@ -208,6 +236,35 @@ public class BeatsParser extends ByteToMessageDecoder {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * 判断是否有足够的可读取字节
+     * @param in
+     * @param needLength
+     * @param needReset 是否需要重置ByteBuf
+     * @return
+     */
+    private boolean checkEnoughBytes(ByteBuf in, int needLength, boolean needReset){
+    	if(in.readableBytes() < needLength){//读取数据不足等待下次tcp传输
+    		if(needReset) in.resetReaderIndex();
+         	return false;
+        }
+    	 
+    	return true;
+    }
+    
+    /**
+     * 判断用户发送的数据部分是否超过限制大小
+     * @param needLength
+     * @return
+     */
+    private boolean checkInvalidPackage(int needLength){
+    	if(needLength >= LIMIT_PACKAGE_SIZE){
+    		return true;
+    	}
+    	
+    	return false;
     }
 
     public void transitionToReadHeader() {
