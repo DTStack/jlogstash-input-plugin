@@ -24,7 +24,7 @@ import java.util.zip.InflaterInputStream;
 public class BeatsParser extends ByteToMessageDecoder {
     private static final int CHUNK_SIZE = 1024;
     private final static Logger logger = LoggerFactory.getLogger(BeatsParser.class);
-    private static final int LIMIT_PACKAGE_SIZE = 1024 * 1024;//限制传输的数据包大小1M
+    private static final int LIMIT_PACKAGE_SIZE = 10 * 1024 * 1024;//限制传输的数据包大小10M
 
     private Batch batch = new Batch();
 
@@ -51,6 +51,10 @@ public class BeatsParser extends ByteToMessageDecoder {
         if(!hasEnoughBytes(in)) {
             return;
         }
+        
+        if(in.readableBytes() > LIMIT_PACKAGE_SIZE){
+    		logger.warn("rev a msg which legnth:{} may be too long.", in.readableBytes());
+    	}
 
         switch (currentState) {
             case READ_HEADER: {
@@ -261,6 +265,7 @@ public class BeatsParser extends ByteToMessageDecoder {
      */
     private boolean checkInvalidPackage(int needLength){
     	if(needLength >= LIMIT_PACKAGE_SIZE){
+    		logger.error("invalid msg length:{}, bigger then limit:{}.", needLength, LIMIT_PACKAGE_SIZE);
     		return true;
     	}
     	
