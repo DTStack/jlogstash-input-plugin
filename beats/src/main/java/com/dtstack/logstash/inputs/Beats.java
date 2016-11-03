@@ -104,7 +104,7 @@ public class Beats extends BaseInput {
 		@Override
 		public void onNewMessage(ChannelHandlerContext ctx, Message message) {
 			Map<String,Object> map =message.getData();
-			logger.debug("recive message:{}",map);
+			System.out.println(map);
 			if (map!=null){
 				Object obj = map.get("beat");
 				if(obj!=null){
