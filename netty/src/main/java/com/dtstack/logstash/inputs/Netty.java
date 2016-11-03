@@ -128,7 +128,7 @@ public class Netty extends BaseInput {
 				if (message instanceof ChannelBuffer) {
 					String mes = ((ChannelBuffer) message).toString(Charset
 							.forName(encoding));
-					logger.debug("netty messageReceived:"+mes);
+					System.out.println(map);
 					if (StringUtils.isNotBlank(mes)) {
 						this.netty.inputQueueList.put(this.decoder.decode(mes));
 					}
