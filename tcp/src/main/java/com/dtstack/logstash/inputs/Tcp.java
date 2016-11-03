@@ -193,7 +193,7 @@ public class Tcp extends BaseInput {
 		public void messageReceived(IoSession session, Object message)
 				throws Exception {
 			// TODO Auto-generated method stub
-			logger.debug("messageReceived:{}",message);
+			System.out.println(message);
 			if (message != null) {
 				String mes = message.toString();
 				if (!"".equals(mes)) {
