@@ -124,6 +124,7 @@ public class Netty extends BaseInput {
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
 			Object message = e.getMessage();
+			System.out.println(message);
 			if (message != null) {
 				if (message instanceof ChannelBuffer) {
 					String mes = ((ChannelBuffer) message).toString(Charset
