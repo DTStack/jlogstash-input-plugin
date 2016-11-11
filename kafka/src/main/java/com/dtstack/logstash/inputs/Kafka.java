@@ -81,12 +81,12 @@ public class Kafka extends BaseInput implements IKafkaChg{
 								this.kafkaInput.inputQueueList.put(event);
 							} 
 						} catch (Exception e) {
-							logger.error("process event:%s failed:%s",m,e.getCause());
+							logger.error("process event:{} failed:{}",m,e.getCause());
 						}
 					}
 				}
 			} catch (Exception t) {
-				logger.error("kakfa Consumer fetch is error:%s",t.getCause());
+				logger.error("kakfa Consumer fetch is error:{}",t.getCause());
 			}
 		}
 	}
