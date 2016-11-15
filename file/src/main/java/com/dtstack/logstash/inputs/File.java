@@ -5,7 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import org.yaml.snakeyaml.Yaml;
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
-import com.dtstack.logstash.inputs.BaseInput;
 import com.google.common.collect.Lists;
 
 /**
@@ -51,6 +51,9 @@ public class File extends BaseInput{
 		
 	private static String startPosition = "end";//one of ["beginning", "end"]
 	
+	/**key:文件夹路径, 匹配信息列表,  10s检测一次*/
+	private Map<String, List<String>> moniDic = new ConcurrentHashMap<String,  List<String>>();
+	
 	/**文件当前读取位置点*/
 	private ConcurrentHashMap<String, Integer> fileCurrPos  = new ConcurrentHashMap<String, Integer>();
 	
@@ -66,7 +69,7 @@ public class File extends BaseInput{
 	private List<String> realPaths = Lists.newArrayList();
 	
 	/**默认值:cpu线程数+1*/
-	private static int readFileThreadNum = 0;
+	public static int readFileThreadNum = 1;
 		
 	private Map<Integer, BlockingQueue<String>> threadReadFileMap = new ConcurrentHashMap<>();
 		
@@ -90,6 +93,12 @@ public class File extends BaseInput{
 		if(realPaths.size() == 0){
 			List<String> ps = Lists.newArrayList();
 			for(String p : path){
+				
+				if(p.contains("*") || p.contains("?")){//模糊匹配
+					ps.addAll(getPatternFile(p));
+					continue;
+				}
+				
 				java.io.File file = new java.io.File(p);
 				if(!file.exists()){
 					logger.error("file:{} is not exists.", p);
@@ -97,9 +106,13 @@ public class File extends BaseInput{
 				}
 				
 				if(file.isDirectory()){
-					ps.addAll(Arrays.asList(file.list()));
+					for(java.io.File tmpFile : file.listFiles()){
+						ps.add(tmpFile.getPath());
+					}
+					
+					addMonitorDic(p, null);
 				}else{
-					ps.add(p);
+					ps.add(file.getPath());
 				}
 			}
 			
@@ -125,6 +138,74 @@ public class File extends BaseInput{
 		runFlag = true;
 	}
 	
+	private List<String> getPatternFile(String patternName){
+		
+		List<String> fileList = Lists.newArrayList(); 
+		String dir = patternName.substring(0, patternName.lastIndexOf("/"));
+		String filePattern = patternName.substring(patternName.lastIndexOf("/") + 1);
+		java.io.File dirFile = new java.io.File(dir);
+		if(!dirFile.isDirectory()){
+			logger.info("don't exists dir in pattern:{}", patternName);
+			return fileList;
+		}
+		
+		addMonitorDic(dir, filePattern);
+		
+		for(java.io.File tmpFile : dirFile.listFiles()){
+			if(filePatternMatcher(filePattern, tmpFile.getName())){
+				fileList.add(tmpFile.getPath());
+			}
+		}
+		
+		return fileList;
+	}
+	
+	public void addMonitorDic(String dir, String patternName){
+		List<String> patternList = moniDic.get(dir);
+		if(patternList == null){
+			patternList = Lists.newArrayList();
+			moniDic.put(dir, patternList);
+		}
+		
+		if(patternName != null){
+			patternList.add(patternName);
+		}
+		
+	}
+	
+	private static boolean filePatternMatcher(String pattern, String str) {
+        int patternLength = pattern.length();
+        int strLength = str.length();
+        int strIndex = 0;
+        char ch;
+        for (int patternIndex = 0; patternIndex < patternLength; patternIndex++) {
+            ch = pattern.charAt(patternIndex);
+            if (ch == '*') {
+                //通配符星号*表示可以匹配任意多个字符
+                while (strIndex < strLength) {
+                    if (filePatternMatcher(pattern.substring(patternIndex + 1),
+                            str.substring(strIndex))) {
+                        return true;
+                    }
+                    strIndex++;
+                }
+            } else if (ch == '?') {
+                //通配符问号?表示匹配任意一个字符
+                strIndex++;
+                if (strIndex > strLength) {
+                    //表示str中已经没有字符匹配?了。
+                    return false;
+                }
+            } else {
+                if ((strIndex >= strLength) || (ch != str.charAt(strIndex))) {
+                    return false;
+                }
+                strIndex++;
+            }
+        }
+        return (strIndex == strLength);
+    }
+	
 	public void filterExcludeFile(List<String> fileList, boolean errExit){
 		if(exclude != null){
 			for(String e : exclude){
@@ -138,12 +219,23 @@ public class File extends BaseInput{
 				}
 				
 				if(file.isDirectory()){
-					fileList.removeAll(Arrays.asList(file.list()));
+					for(java.io.File tmpFile : file.listFiles()){
+						fileList.remove(tmpFile.getPath());
+					}
 				}else{
 					fileList.remove(e);
 				}
 			}
 		}
+	}
+	
+	public boolean isExcludeFile(String fileName){
+		
+		if(exclude != null){
+			return exclude.contains(fileName);
+		}
+		
+		return false;
 	}
 	
 	private void checkoutSinceDb(){
@@ -201,7 +293,6 @@ public class File extends BaseInput{
 	}
 	
 	public void addFile(String fileName){
-		//int hashCode = sun.misc.Hashing.stringHash32(fileName);
 		int hashCode = fileName.hashCode();
 		int index = hashCode % readFileThreadNum;
 		BlockingQueue<String> readQueue = threadReadFileMap.get(index);
@@ -237,17 +328,29 @@ public class File extends BaseInput{
 		dumpSinceDb();
 	}
 	
+	public static void main(String[] args) {
+		Map<String, String> config = new HashMap<String, String>();
+		File file = new File(config, null);
+		List<String> path = new ArrayList<String>();
+		path.add("D:/reginput/iis-log/*225*.txt");
+		path.add("D:/reginput/iis-log");
+		file.path = path;
+		file.prepare();
+		file.emit();
+	}
+	
+	
 	class FileRunnable implements Runnable{
 		
 		private IDecode decoder;
 		
 		private File fileInput;
-		
+				
 		private final int index;
 		
 		public FileRunnable(File fileInput, int index) {
 			this.fileInput = fileInput;
-			this.decoder = this.fileInput.createDecoder();
+			this.decoder = this.fileInput.createDecoder();		
 			this.index = index;
 		}
 
@@ -289,6 +392,8 @@ public class File extends BaseInput{
 					while( (line = readLineUtil.readLine()) != null){
 						readLineNum++;
 						Map<String, Object> event = this.decoder.decode(line);
+						event.put("path", readFileName);
+						
 						if (event != null && event.size() > 0){
 							this.fileInput.inputQueueList.put(event);
 						}
@@ -362,27 +467,38 @@ public class File extends BaseInput{
 					logger.error("", e);
 				}
 				
-				boolean hasDic = false;
-				for(String fileName : path){
-					java.io.File file = new java.io.File(fileName);
-					List<String> dicFileList = Arrays.asList(file.list());
+				for(Entry<String, List<String>> dirTmp : moniDic.entrySet()){
 					
-					if(file.exists() && file.isDirectory()){
-						hasDic = true;
-						filterExcludeFile(dicFileList, false);
+					String dicName = dirTmp.getKey();
+					List<String> patternList = dirTmp.getValue();
+					
+					java.io.File file = new java.io.File(dicName);					
+					
+					if(!file.exists() || !file.isDirectory()){
+						continue;
 					}
 					
-					for(String addFile : dicFileList){
-						addFile(addFile);
+					for(java.io.File tmpFile : file.listFiles()){
+						if(isExcludeFile(tmpFile.getPath())){
+							continue;
+						}
+						
+						if(patternList.size() == 0 && !realPaths.contains(tmpFile.getPath())){
+							realPaths.add(tmpFile.getPath());
+							addFile(tmpFile.getPath());
+							continue;
+						}
+						
+						for(String patternName : patternList){
+							if(filePatternMatcher(patternName, tmpFile.getName()) && !realPaths.contains(tmpFile.getPath())){
+								realPaths.add(tmpFile.getPath());
+								addFile(tmpFile.getPath());
+								break;
+							}
+						}
 					}
-				}
-				
-				if(!hasDic){
-					logger.info("don't have any directory,no need for monitor a file which is not directory!");
-					break;
 				}
 			}
-			
 		}
 		
 	}
