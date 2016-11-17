@@ -69,7 +69,7 @@ public class File extends BaseInput{
 	private List<String> realPaths = Lists.newArrayList();
 	
 	/**默认值:cpu线程数+1*/
-	public static int readFileThreadNum = 1;
+	public static int readFileThreadNum = -1;
 		
 	private Map<Integer, BlockingQueue<String>> threadReadFileMap = new ConcurrentHashMap<>();
 		
@@ -293,7 +293,7 @@ public class File extends BaseInput{
 	}
 	
 	public void addFile(String fileName){
-		int hashCode = fileName.hashCode();
+		int hashCode = Math.abs(fileName.hashCode());
 		int index = hashCode % readFileThreadNum;
 		BlockingQueue<String> readQueue = threadReadFileMap.get(index);
 		
@@ -333,7 +333,6 @@ public class File extends BaseInput{
 		File file = new File(config, null);
 		List<String> path = new ArrayList<String>();
 		path.add("D:/reginput/iis-log/*225*.txt");
-		path.add("D:/reginput/iis-log");
 		file.path = path;
 		file.prepare();
 		file.emit();
@@ -357,26 +356,32 @@ public class File extends BaseInput{
 		public void run() {
 			
 			while(runFlag){
+				
+				BlockingQueue<String> needReadList = threadReadFileMap.get(index);
+				if(needReadList == null){
+					logger.error("invalid FileRunnable thread, threadReadFileMap don't init needReadList of this index:{}.", index);
+					return;
+				}
+				
+				String readFileName = null;
 				try {
-					
-					BlockingQueue<String> needReadList = threadReadFileMap.get(index);
-					if(needReadList == null){
-						logger.error("invalid FileRunnable thread, threadReadFileMap don't init needReadList of this index:{}.", index);
-						return;
-					}
-					
-					String readFileName = needReadList.poll(10, TimeUnit.SECONDS);
+					readFileName = needReadList.poll(10, TimeUnit.SECONDS);
 					if(readFileName == null){
 						continue;
 					}
+				} catch (InterruptedException e) {
+					logger.error("", e);
+				}
 					
+				long lastModTime = 0l;	
+				try {
 					java.io.File readFile = new java.io.File(readFileName);
 					if(!readFile.exists()){
 						logger.error("file:{} is not exists!", readFileName);
 						continue;
 					}
 					
-					long lastModTime = readFile.lastModified();
+					lastModTime = readFile.lastModified();
 					Integer filePos = fileInput.fileCurrPos.get(readFileName);
 					ReadLineUtil readLineUtil = null;
 					
@@ -391,11 +396,14 @@ public class File extends BaseInput{
 					
 					while( (line = readLineUtil.readLine()) != null){
 						readLineNum++;
-						Map<String, Object> event = this.decoder.decode(line);
-						event.put("path", readFileName);
 						
-						if (event != null && event.size() > 0){
-							this.fileInput.inputQueueList.put(event);
+						if(!"".equals(line.trim())){
+							Map<String, Object> event = this.decoder.decode(line);
+							
+							if (event != null && event.size() > 0){
+								event.put("path", readFileName);
+								this.fileInput.inputQueueList.put(event);
+							}
 						}
 						
 						if(readLineNum%readLineNum4UpdateMap == 0){
@@ -404,9 +412,10 @@ public class File extends BaseInput{
 					}
 										
 					fileCurrPos.put(readFileName, readLineUtil.getCurrBufPos());
-					monitorMap.put(readFileName, lastModTime);
 				} catch (Exception e) {
 					logger.error("", e);
+				}finally{
+					monitorMap.put(readFileName, lastModTime);//确保文件回到监控列表
 				}
 			}
 		}
@@ -440,8 +449,8 @@ public class File extends BaseInput{
 					}
 					
 					if(monitorFile.lastModified() > entry.getValue()){
-						addFile(entry.getKey());
 						iterator.remove();
+						addFile(entry.getKey());
 					}
 				}
 				
