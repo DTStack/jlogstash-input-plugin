@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.CompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,14 +65,20 @@ public class ReadTarFile implements IReader {
 	}
 	
 	public boolean init(){
-		if (!tarFileName.toLowerCase().endsWith(".tar")) {
+		if (!tarFileName.toLowerCase().endsWith(".tar") && !tarFileName.toLowerCase().endsWith(".tar.gz")) {
 			logger.error("file:{} is not a tar file.", tarFileName);
 			return false;
 		}
 		
 		try{
+			
 			fins = new FileInputStream(tarFileName);
-			tarAchive = new TarArchiveInputStream(fins);
+			if(tarFileName.endsWith("tar.gz")){
+				CompressorInputStream in = new GzipCompressorInputStream(fins, true);
+				tarAchive = new TarArchiveInputStream(in);
+			}else{
+				tarAchive = new TarArchiveInputStream(fins);
+			}
 			getNextBuffer();
 		}catch(Exception e){
 			logger.error("", e);
