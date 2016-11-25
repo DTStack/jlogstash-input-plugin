@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -24,13 +23,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
+import com.dtstack.logstash.decoder.JsonDecoder;
+import com.dtstack.logstash.decoder.MultilineDecoder;
+import com.dtstack.logstash.decoder.PlainDecoder;
 import com.google.common.collect.Lists;
 
 /**
- * jlogstash 文件类型的读入插件
+ * Reason: jlogstash 文件类型的读入插件
+ * FIXME 每个File配置只能对应一种codec
+ * Date: 2016年11月19日
+ * Company: www.dtstack.com
  * @author xuchao
  *
  */
@@ -42,8 +46,11 @@ public class File extends BaseInput{
 	
 	private static String encoding = "UTF-8";
 	
-	@Required(required=true)
-	public static List<String> path = null;
+	private static Map<String, Object> pathcodecMap = null;
+	
+	private Map<String, IDecode> codecMap = new ConcurrentHashMap<String, IDecode>();
+	
+	private static List<String> path = null;
 	
 	private static List<String> exclude = null;
 	
@@ -55,10 +62,10 @@ public class File extends BaseInput{
 	private Map<String, List<String>> moniDic = new ConcurrentHashMap<String,  List<String>>();
 	
 	/**文件当前读取位置点*/
-	private ConcurrentHashMap<String, Integer> fileCurrPos  = new ConcurrentHashMap<String, Integer>();
+	private ConcurrentHashMap<String, Integer> fileCurrPos = new ConcurrentHashMap<String, Integer>();
 	
 	private static String sinceDbPath = "./sincedb.yaml";
-	
+		
 	private static int sinceDbWriteInterval = 15; //sincedb.yaml 更新频率(时间s)
 	
 	/**当读取设置行之后更新当前文件读取位置*/
@@ -86,9 +93,48 @@ public class File extends BaseInput{
 	public File(Map config, InputQueueList inputQueueList) {
 		super(config, inputQueueList);
 	}
+	
+	public void init(){
+		
+		if(pathcodecMap == null || pathcodecMap.size() == 0){
+			return;
+		}
+		
+		if(path == null){
+			path = Lists.newArrayList();
+		}
+		
+		for(Entry<String, Object> entry : pathcodecMap.entrySet()){
+			String filePatternName = entry.getKey();
+			Object codecInfo = entry.getValue();
+			path.add(filePatternName);
+			
+			if(codecInfo instanceof String){
+				if("json".equals(codecInfo)){
+		            codecMap.put(filePatternName, new  JsonDecoder());
+		        }else if("plain".equals(codecInfo)){
+		        	codecMap.put(filePatternName, new PlainDecoder());
+		        }else{
+		        	logger.error("invalid codec type:{}. please check config!", codecInfo);
+		        	System.exit(-1);
+		        }
+			}else if( codecInfo instanceof Map){
+				IDecode multilineDecoder = createMultiLineDecoder((Map)codecInfo);
+				codecMap.put(filePatternName, multilineDecoder);
+			}
+		       
+		}
+	}
 
 	@Override
 	public void prepare() {
+		
+		init();
+		
+		if(path == null || path.size() == 0){
+			logger.error("don't set any input file.both of [path, pathcodecMap] must not be empty");
+			System.exit(-1);
+		}
 		
 		if(realPaths.size() == 0){
 			List<String> ps = Lists.newArrayList();
@@ -102,7 +148,7 @@ public class File extends BaseInput{
 				java.io.File file = new java.io.File(p);
 				if(!file.exists()){
 					logger.error("file:{} is not exists.", p);
-					System.exit(1);
+					System.exit(-1);
 				}
 				
 				if(file.isDirectory()){
@@ -116,7 +162,13 @@ public class File extends BaseInput{
 				}
 			}
 			
-			filterExcludeFile(ps, true);
+			Iterator<String> it = ps.iterator();
+			for( ;it.hasNext();){
+				String name = it.next();
+				if(isExcludeFile(name)){
+					it.remove();
+				}
+			}
 			
 			realPaths.addAll(ps);
 			if(maxOpenFiles > 0 && realPaths.size() > maxOpenFiles){
@@ -128,13 +180,14 @@ public class File extends BaseInput{
 		if(readFileThreadNum <= 0){
 			readFileThreadNum = Runtime.getRuntime().availableProcessors() + 1;
 		}
-				
+		checkoutSinceDb();
+		filterFinishFile();
+		ReadLineUtil.setDelimiter(delimiter);
+		
 		for(String fileStr : realPaths){
 			addFile(fileStr);
 		}
 		
-		checkoutSinceDb();
-		ReadLineUtil.setDelimiter(delimiter);
 		runFlag = true;
 	}
 	
@@ -152,6 +205,12 @@ public class File extends BaseInput{
 		addMonitorDic(dir, filePattern);
 		
 		for(java.io.File tmpFile : dirFile.listFiles()){
+			
+			if(tmpFile.isDirectory()){
+				//FIXME 暂时不对指定文件夹下的子文件做模糊匹配,如果有需求在该处修改
+				continue;
+			}
+			
 			if(filePatternMatcher(filePattern, tmpFile.getName())){
 				fileList.add(tmpFile.getPath());
 			}
@@ -173,7 +232,11 @@ public class File extends BaseInput{
 		
 	}
 	
-	private static boolean filePatternMatcher(String pattern, String str) {
+	private boolean filePatternMatcher(String pattern, String str) {
+		
+		pattern = pattern.replace("\\", "").replace("/", "");
+		str = str.replace("\\", "").replace("/", "");
+		
         int patternLength = pattern.length();
         int strLength = str.length();
         int strIndex = 0;
@@ -205,34 +268,22 @@ public class File extends BaseInput{
         }
         return (strIndex == strLength);
     }
-	
-	public void filterExcludeFile(List<String> fileList, boolean errExit){
-		if(exclude != null){
-			for(String e : exclude){
-				java.io.File file = new java.io.File(e);
-				if(!file.exists()){
-					logger.error("exclude file:{} is not exists.", e);
-					
-					if(errExit){
-						System.exit(1);
-					}
-				}
-				
-				if(file.isDirectory()){
-					for(java.io.File tmpFile : file.listFiles()){
-						fileList.remove(tmpFile.getPath());
-					}
-				}else{
-					fileList.remove(e);
-				}
-			}
-		}
-	}
-	
+		
+	/**
+	 * 过滤排除文件
+	 * @param fileName
+	 * @return
+	 */
 	public boolean isExcludeFile(String fileName){
 		
-		if(exclude != null){
-			return exclude.contains(fileName);
+		if(exclude == null){
+			return false;
+		}
+		
+		for(String patternName : exclude){
+			if(filePatternMatcher(patternName, fileName)){
+				return true;
+			}
 		}
 		
 		return false;
@@ -266,9 +317,22 @@ public class File extends BaseInput{
 				}
 			}
 		}
-		
 	}
 	
+	/**
+	 * 过滤掉已经读取完成的文件
+	 */
+	private void filterFinishFile(){
+		for(Entry<String, Integer> entry : fileCurrPos.entrySet()){
+			if(entry.getValue() == -1){//表示该文件已经读取完成
+				realPaths.remove(entry.getKey());
+			}
+		}
+	}
+	
+	/**
+	 * FIXME 需要修改为先写临时文件,然后调用系统的mv方法覆盖,保证写的原子性
+	 */
 	private void dumpSinceDb(){
 		
 		FileWriter fw = null;
@@ -328,28 +392,46 @@ public class File extends BaseInput{
 		dumpSinceDb();
 	}
 	
-	public static void main(String[] args) {
+	public IDecode getDecoder(String fileName){
+		for(Entry<String, IDecode> entry : codecMap.entrySet()){
+			if(filePatternMatcher(entry.getKey(), fileName)){
+				return entry.getValue();
+			}
+		}
+		
+		logger.warn("can't find decoder from config. return default decoder.");
+		return this.decoder;
+	}
+	
+	public static void main(String[] args) throws FileNotFoundException {
 		Map<String, String> config = new HashMap<String, String>();
+		Yaml yaml = new Yaml();
+		InputStream io = new FileInputStream("C:\\Users\\Administrator\\Desktop\\fileread\\test1.yaml");
+		List<Object> fileMap = (List<Object>) yaml.load(io);
+		Map fileConf = (Map) fileMap.get(0);
+		fileConf = (Map) fileConf.get("File");
+		
+		List<String> excludeFile = Lists.newArrayList();
+		//excludeFile.add("E:/data/xcdir.tar");
+			
 		File file = new File(config, null);
-		List<String> path = new ArrayList<String>();
-		path.add("D:/reginput/iis-log/*225*.txt");
-		file.path = path;
+		file.exclude = excludeFile;
+		file.readFileThreadNum = 1;
+		file.pathcodecMap = (Map<String, Object>) fileConf.get("pathcodecMap");
+		
 		file.prepare();
 		file.emit();
 	}
 	
 	
 	class FileRunnable implements Runnable{
-		
-		private IDecode decoder;
-		
+				
 		private File fileInput;
 				
 		private final int index;
 		
 		public FileRunnable(File fileInput, int index) {
 			this.fileInput = fileInput;
-			this.decoder = this.fileInput.createDecoder();		
 			this.index = index;
 		}
 
@@ -382,23 +464,30 @@ public class File extends BaseInput{
 					}
 					
 					lastModTime = readFile.lastModified();
-					Integer filePos = fileInput.fileCurrPos.get(readFileName);
-					ReadLineUtil readLineUtil = null;
-					
-					if(filePos == null){
-						readLineUtil = new ReadLineUtil(readFile, File.encoding, startPosition);
-					}else{
-						readLineUtil = new ReadLineUtil(readFile, File.encoding, filePos);
+					IReader reader = ReadFactory.createReader(readFile, encoding, fileCurrPos, startPosition);
+					if(reader == null){
+						continue;
 					}
 					
 					String line = null;
 					int readLineNum = 0;
+					IDecode fileDecoder = getDecoder(readFileName);
+					boolean isMultiLine = false;
+					if(fileDecoder instanceof MultilineDecoder){
+						isMultiLine = true;
+					}
 					
-					while( (line = readLineUtil.readLine()) != null){
+					while( (line = reader.readLine()) != null){
 						readLineNum++;
 						
 						if(!"".equals(line.trim())){
-							Map<String, Object> event = this.decoder.decode(line);
+							Map<String, Object> event = null;
+							
+							if(isMultiLine){
+								event = fileDecoder.decode(line, readFileName);
+							}else{
+								event = fileDecoder.decode(line);
+							}
 							
 							if (event != null && event.size() > 0){
 								event.put("path", readFileName);
@@ -407,15 +496,18 @@ public class File extends BaseInput{
 						}
 						
 						if(readLineNum%readLineNum4UpdateMap == 0){
-							fileCurrPos.put(readFileName, readLineUtil.getCurrBufPos());
+							fileCurrPos.put(reader.getFileName(), reader.getCurrBufPos());
 						}
 					}
-										
-					fileCurrPos.put(readFileName, readLineUtil.getCurrBufPos());
+					
+					fileCurrPos.put(readFileName, reader.getCurrBufPos());
 				} catch (Exception e) {
 					logger.error("", e);
 				}finally{
-					monitorMap.put(readFileName, lastModTime);//确保文件回到监控列表
+					
+					if(!readFileName.toLowerCase().endsWith(".zip") && !readFileName.toLowerCase().endsWith(".rar")){
+						monitorMap.put(readFileName, lastModTime);//确保文件回到监控列表
+					}
 				}
 			}
 		}
@@ -425,6 +517,7 @@ public class File extends BaseInput{
 	/**
 	 * 监控文件变化,将有变化的文件插入到needReadList里
 	 * 2s查看一次
+	 * FIXME 需要对已经删除的文件做清理
 	 * @author xuchao
 	 *
 	 */
@@ -488,8 +581,17 @@ public class File extends BaseInput{
 					}
 					
 					for(java.io.File tmpFile : file.listFiles()){
+						
+						if(tmpFile.isDirectory()){//FIXME 不监控新出现的子文件夹
+							continue;
+						}
+						
 						if(isExcludeFile(tmpFile.getPath())){
 							continue;
+						}
+						
+						if(fileCurrPos.get(tmpFile.getPath()) != null && fileCurrPos.get(tmpFile.getPath()) == -1){
+							continue;//已经完结的数据
 						}
 						
 						if(patternList.size() == 0 && !realPaths.contains(tmpFile.getPath())){

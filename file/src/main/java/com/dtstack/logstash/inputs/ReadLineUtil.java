@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * @author xuchao
  *
  */
-public class ReadLineUtil {
+public class ReadLineUtil implements IReader{
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadLineUtil.class);
 	
@@ -30,15 +30,18 @@ public class ReadLineUtil {
 	private RandomAccessFile raf;
 	private int readSize = 0;
 	private int skipNum = 0;
+	private String fileName = "";
  
 	public ReadLineUtil(File file, String encoding, int pos)
 			throws IOException {
+		this.fileName = file.getPath();
 		raf = new RandomAccessFile(file, "r");
 		init(encoding, pos);
 	}
 	
 	public ReadLineUtil(File file, String encoding, String startPos) throws IOException{
 		raf = new RandomAccessFile(file, "r");
+		this.fileName = file.getPath();
 		if("beginning".equalsIgnoreCase(startPos)){
 			init(encoding, 0);
 		}else{
@@ -55,6 +58,7 @@ public class ReadLineUtil {
 		buf = channel.map(FileChannel.MapMode.READ_ONLY, this.skipNum, this.readSize);
 	}
 	
+	@Override
 	public String readLine() throws UnsupportedEncodingException{
 		
 		while (bufPos < readSize) {
@@ -101,7 +105,13 @@ public class ReadLineUtil {
 		ReadLineUtil.lineBreak = lineBreak;
 	}
 	
+	@Override
 	public int getCurrBufPos(){
 		return (int) (skipNum + bufPos);
+	}
+
+	@Override
+	public String getFileName() {
+		return fileName;
 	}
 }
