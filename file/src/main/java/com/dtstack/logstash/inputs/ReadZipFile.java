@@ -144,8 +144,6 @@ public class ReadZipFile implements IReader{
 		
 		if(currBuff == null){//释放资源
 			try {
-				zipIn.closeEntry();
-				zfile.close();
 				doAfterReaderOver();
 				logger.warn("release file resourse..");
 			} catch (IOException e) {
@@ -158,8 +156,13 @@ public class ReadZipFile implements IReader{
 	
 	/**
 	 * 清理之前记录的zip文件里的文件信息eg: e:\\d\xx.zip|mydata/aa.log
+	 * @throws IOException 
 	 */
-	private void doAfterReaderOver(){
+	public void doAfterReaderOver() throws IOException{
+		
+		zipIn.closeEntry();
+		zfile.close();
+		
 		Iterator<Entry<String, Integer>> it = fileCurrPos.entrySet().iterator();
 		String preFix = zipFileName + "|";
 		while(it.hasNext()){
@@ -229,6 +232,11 @@ public class ReadZipFile implements IReader{
 		fileCurrPos.put(getIdentify(currFileName), currFileSize);
 	}
 	
+	@Override
+	public boolean needMonitorChg() {
+		return false;
+	}
+
 	public static void main(String[] args) throws IOException {
 		ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<String, Integer>();
 		ReadZipFile zipFile = new ReadZipFile("E:\\data\\mydata.zip", "utf-8", map);

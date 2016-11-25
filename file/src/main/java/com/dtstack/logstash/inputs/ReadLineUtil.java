@@ -77,11 +77,13 @@ public class ReadLineUtil implements IReader{
 			return bufToString();
 		}
 		
+		doAfterReaderOver();
 		return null;
 		
 	}
 	
-	public void release(){
+	@Override
+	public void doAfterReaderOver(){
 		try {
 			channel.close();
 			raf.close();
@@ -113,5 +115,10 @@ public class ReadLineUtil implements IReader{
 	@Override
 	public String getFileName() {
 		return fileName;
+	}
+
+	@Override
+	public boolean needMonitorChg() {
+		return true;
 	}
 }

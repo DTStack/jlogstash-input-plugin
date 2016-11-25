@@ -19,6 +19,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -32,7 +33,6 @@ import com.google.common.collect.Lists;
 
 /**
  * Reason: jlogstash 文件类型的读入插件
- * FIXME 每个File配置只能对应一种codec
  * Date: 2016年11月19日
  * Company: www.dtstack.com
  * @author xuchao
@@ -75,7 +75,7 @@ public class File extends BaseInput{
 	
 	private List<String> realPaths = Lists.newArrayList();
 	
-	/**默认值:cpu线程数+1*/
+	/**默认值:cpu线程数*/
 	public static int readFileThreadNum = -1;
 		
 	private Map<Integer, BlockingQueue<String>> threadReadFileMap = new ConcurrentHashMap<>();
@@ -121,8 +121,10 @@ public class File extends BaseInput{
 			}else if( codecInfo instanceof Map){
 				IDecode multilineDecoder = createMultiLineDecoder((Map)codecInfo);
 				codecMap.put(filePatternName, multilineDecoder);
+			}else{
+				logger.error("invalid codec type:{}, please check param of 'pathcodecMap'.", codecInfo.getClass());
+				System.exit(-1);
 			}
-		       
 		}
 	}
 
@@ -130,56 +132,25 @@ public class File extends BaseInput{
 	public void prepare() {
 		
 		init();
-		
 		if(path == null || path.size() == 0){
-			logger.error("don't set any input file.both of [path, pathcodecMap] must not be empty");
+			logger.error("don't set any input file. [path, pathcodecMap] must not be empty at the same time.");
 			System.exit(-1);
 		}
 		
 		if(realPaths.size() == 0){
-			List<String> ps = Lists.newArrayList();
-			for(String p : path){
-				
-				if(p.contains("*") || p.contains("?")){//模糊匹配
-					ps.addAll(getPatternFile(p));
-					continue;
-				}
-				
-				java.io.File file = new java.io.File(p);
-				if(!file.exists()){
-					logger.error("file:{} is not exists.", p);
-					System.exit(-1);
-				}
-				
-				if(file.isDirectory()){
-					for(java.io.File tmpFile : file.listFiles()){
-						ps.add(tmpFile.getPath());
-					}
-					
-					addMonitorDic(p, null);
-				}else{
-					ps.add(file.getPath());
-				}
-			}
-			
-			Iterator<String> it = ps.iterator();
-			for( ;it.hasNext();){
-				String name = it.next();
-				if(isExcludeFile(name)){
-					it.remove();
-				}
-			}
-			
+			List<String> ps = generateRealPath();
 			realPaths.addAll(ps);
+			
 			if(maxOpenFiles > 0 && realPaths.size() > maxOpenFiles){
-				logger.error("file numbers is exceed.");
-				System.exit(1);
+				logger.error("file numbers is exceed, maxOpenFiles is {}", maxOpenFiles);
+				System.exit(-1);
 			}
 		}
 		
 		if(readFileThreadNum <= 0){
-			readFileThreadNum = Runtime.getRuntime().availableProcessors() + 1;
+			readFileThreadNum = Runtime.getRuntime().availableProcessors();
 		}
+		
 		checkoutSinceDb();
 		filterFinishFile();
 		ReadLineUtil.setDelimiter(delimiter);
@@ -189,6 +160,44 @@ public class File extends BaseInput{
 		}
 		
 		runFlag = true;
+	}
+	
+	private List<String> generateRealPath(){
+		
+		List<String> ps = Lists.newArrayList();
+		for(String p : path){
+			
+			if(p.contains("*") || p.contains("?")){//模糊匹配
+				ps.addAll(getPatternFile(p));
+				continue;
+			}
+			
+			java.io.File file = new java.io.File(p);
+			if(!file.exists()){
+				logger.error("file:{} is not exists.", p);
+				System.exit(-1);
+			}
+			
+			if(file.isDirectory()){
+				for(java.io.File tmpFile : file.listFiles()){
+					ps.add(tmpFile.getPath());
+				}
+				
+				addMonitorDic(p, null);
+			}else{
+				ps.add(file.getPath());
+			}
+		}
+		
+		Iterator<String> it = ps.iterator();
+		for( ;it.hasNext();){
+			String name = it.next();
+			if(isExcludeFile(name)){
+				it.remove();
+			}
+		}
+		
+		return ps;
 	}
 	
 	private List<String> getPatternFile(String patternName){
@@ -331,16 +340,20 @@ public class File extends BaseInput{
 	}
 	
 	/**
-	 * FIXME 需要修改为先写临时文件,然后调用系统的mv方法覆盖,保证写的原子性
+	 * 使用替换的方式防止出现写不全的情况
 	 */
 	private void dumpSinceDb(){
 		
 		FileWriter fw = null;
+		boolean isSuccess = false;
+		String tmpSinceDbName = sinceDbPath + ".tmp";
+		
 		try{
 			writeFileLock.lock();
-			Yaml yaml = new Yaml();
-			fw = new FileWriter(sinceDbPath);
-			yaml.dump(fileCurrPos, fw);
+			Yaml tmpYaml = new Yaml();
+			fw = new FileWriter(tmpSinceDbName);
+			tmpYaml.dump(fileCurrPos, fw);
+			isSuccess = true;
 		}catch(Exception e){
 			logger.error("", e);
 			logger.info("curr file pos:{}", fileCurrPos);
@@ -352,6 +365,18 @@ public class File extends BaseInput{
 			}
 			
 			writeFileLock.unlock();
+		}
+		
+		if(!isSuccess){
+			return;
+		}
+		
+		java.io.File srcFile = new java.io.File(tmpSinceDbName);
+		java.io.File dstFile = new java.io.File(sinceDbPath);
+		try {
+			FileUtils.rename(srcFile, dstFile);
+		} catch (IOException e) {
+			logger.error("", e);
 		}
 		
 	}
@@ -377,7 +402,7 @@ public class File extends BaseInput{
 		executor.submit(new MonitorChangeRunnable());
 		executor.submit(new MonitorNewFileRunnable());
 		for(int i=0; i<readFileThreadNum; i++){
-			executor.submit(new FileRunnable(this, i));
+			executor.submit(new FileRunnable(i));
 		}
 		
 		scheduleExecutor.scheduleWithFixedDelay(new DumpSinceDbRunnable(), 
@@ -399,7 +424,7 @@ public class File extends BaseInput{
 			}
 		}
 		
-		logger.warn("can't find decoder from config. return default decoder.");
+		logger.info("can't find decoder from config. return default decoder.");
 		return this.decoder;
 	}
 	
@@ -425,13 +450,10 @@ public class File extends BaseInput{
 	
 	
 	class FileRunnable implements Runnable{
-				
-		private File fileInput;
-				
+								
 		private final int index;
 		
-		public FileRunnable(File fileInput, int index) {
-			this.fileInput = fileInput;
+		public FileRunnable(int index) {
 			this.index = index;
 		}
 
@@ -453,9 +475,11 @@ public class File extends BaseInput{
 					}
 				} catch (InterruptedException e) {
 					logger.error("", e);
+					continue;
 				}
 					
 				long lastModTime = 0l;	
+				IReader reader = null;
 				try {
 					java.io.File readFile = new java.io.File(readFileName);
 					if(!readFile.exists()){
@@ -464,7 +488,7 @@ public class File extends BaseInput{
 					}
 					
 					lastModTime = readFile.lastModified();
-					IReader reader = ReadFactory.createReader(readFile, encoding, fileCurrPos, startPosition);
+					reader = ReadFactory.createReader(readFile, encoding, fileCurrPos, startPosition);
 					if(reader == null){
 						continue;
 					}
@@ -491,7 +515,7 @@ public class File extends BaseInput{
 							
 							if (event != null && event.size() > 0){
 								event.put("path", readFileName);
-								this.fileInput.inputQueueList.put(event);
+								inputQueueList.put(event);
 							}
 						}
 						
@@ -504,14 +528,12 @@ public class File extends BaseInput{
 				} catch (Exception e) {
 					logger.error("", e);
 				}finally{
-					
-					if(!readFileName.toLowerCase().endsWith(".zip") && !readFileName.toLowerCase().endsWith(".rar")){
+					if(reader != null && reader.needMonitorChg()){
 						monitorMap.put(readFileName, lastModTime);//确保文件回到监控列表
 					}
 				}
 			}
 		}
-		
 	}
 	
 	/**
@@ -537,7 +559,7 @@ public class File extends BaseInput{
 					Entry<String, Long> entry = iterator.next();
 					java.io.File monitorFile = new java.io.File(entry.getKey());
 					if(!monitorFile.exists()){
-						logger.error("file:{} not exists!", entry.getKey());
+						logger.info("file:{} not exists,may be delete!", entry.getKey());
 						continue;
 					}
 					

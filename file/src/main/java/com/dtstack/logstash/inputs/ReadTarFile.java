@@ -122,8 +122,6 @@ public class ReadTarFile implements IReader {
 		
 		if(currBuff == null){
 			try {
-				tarAchive.close();
-				fins.close();
 				doAfterReaderOver();
 			} catch (IOException e) {
 				logger.error("", e);
@@ -134,9 +132,14 @@ public class ReadTarFile implements IReader {
 	}
 	
 	/**
-	 * 清理之前记录的zip文件里的文件信息eg: e:\\d\xx.tar|mydata/aa.log
+	 * 清理之前记录的zip文件的子文件信息eg: e:\\d\mydata.tar|mydata/aa.log
+	 * @throws IOException 
 	 */
-	private void doAfterReaderOver(){
+	public void doAfterReaderOver() throws IOException{
+		
+		tarAchive.close();
+		fins.close();
+		
 		Iterator<Entry<String, Integer>> it = fileCurrPos.entrySet().iterator();
 		String preFix = tarFileName + "|";
 		while(it.hasNext()){
@@ -207,7 +210,12 @@ public class ReadTarFile implements IReader {
 		return skipNum;
 	}
 	    
-    public static void main(String[] args) throws IOException {
+    @Override
+	public boolean needMonitorChg() {
+		return false;
+	}
+
+	public static void main(String[] args) throws IOException {
     	Map<String, Integer> map = Maps.newConcurrentMap();
 		ReadTarFile readTar = new ReadTarFile("E:\\data\\xcdir.tar", "utf-8",map);
 		readTar.init();

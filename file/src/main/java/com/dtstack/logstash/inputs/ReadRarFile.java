@@ -133,7 +133,6 @@ public class ReadRarFile implements IReader{
 		
 		if(currBuff == null){//释放资源
 			try {
-				archive.close();
 				doAfterReaderOver();
 			} catch (IOException e) {
 				logger.error("", e);
@@ -143,10 +142,11 @@ public class ReadRarFile implements IReader{
 		return currBuff;
 	}
 	
-	/**
-	 * 清理之前记录的zip文件里的文件信息eg: e:\\d\xx.rar|mydata/aa.log
-	 */
-	private void doAfterReaderOver(){
+
+	public void doAfterReaderOver() throws IOException{
+		
+		archive.close();
+		
 		Iterator<Entry<String, Integer>> it = fileCurrPos.entrySet().iterator();
 		String preFix = rarFileName + "|";
 		while(it.hasNext()){
@@ -215,6 +215,11 @@ public class ReadRarFile implements IReader{
 		fileCurrPos.put(getIdentify(currFileName), currFileSize);
 	}
 	
+	@Override
+	public boolean needMonitorChg() {
+		return false;
+	}
+
 	public static void main(String[] args) throws IOException {
 		ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<String, Integer>();
 		ReadRarFile readRarFile = new ReadRarFile("E:\\data\\mydata.rar", "utf-8", map);
