@@ -3,9 +3,11 @@ package com.dtstack.logstash.inputs;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -21,6 +23,7 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
@@ -48,6 +51,8 @@ public class Netty extends BaseInput {
 	private static int receiveBufferSize = 1024 * 1024 * 20;// 设置缓存区大小20M
 
 	private static String delimiter = System.getProperty("line.separator");
+	
+	private static String multilineDelimiter = (char)29 +"";
 	
 	private ServerBootstrap bootstrap;
 	
@@ -114,7 +119,7 @@ public class Netty extends BaseInput {
 		private Netty netty;
 
 		private IDecode decoder;
-
+		
 		public NettyServerHandler(Netty netty) {
 			this.netty = netty;
 			this.decoder = netty.createDecoder();
@@ -124,12 +129,12 @@ public class Netty extends BaseInput {
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
 			Object message = e.getMessage();
-			System.out.println(message);
 			if (message != null) {
 				if (message instanceof ChannelBuffer) {
 					String mes = ((ChannelBuffer) message).toString(Charset
 							.forName(encoding));
 					if (StringUtils.isNotBlank(mes)) {
+						mes = multilineDecoder(mes);
 						this.netty.inputQueueList.put(this.decoder.decode(mes));
 					}
 				}
@@ -139,8 +144,20 @@ public class Netty extends BaseInput {
 		@Override
 	    public void exceptionCaught(
 	            ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		        logger.debug("netty io error: {}",e.getCause());
+		        logger.debug("netty io error:", e.getCause());
 			    ctx.sendUpstream(e);
 	    }	
+		
+		public String multilineDecoder(String msg){
+			return msg.replace(multilineDelimiter, delimiter);
+		}
 	}
+	
+	public static void main(String[] args) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		Netty netty = new Netty(map, null);
+		netty.port = 9111;
+		netty.emit();
+	}
+	
 }
