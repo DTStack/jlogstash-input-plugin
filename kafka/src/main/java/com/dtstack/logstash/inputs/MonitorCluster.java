@@ -31,7 +31,7 @@ public class MonitorCluster implements Runnable{
 	private ZkClient zkClient;
 	
 	/** 对consumer数量的监控周期 ms,可以根据实际情况自己设置 */
-	private int consumer_moni_period = 100 * 1000;
+	private int consumer_moni_period = 3600 * 1000;
 	
 	/** 对partitions 数量的监控周期ms,可以根据实际情况自己设置 */
 	private int partitions_moni_period = 10 * 1000;
@@ -51,12 +51,15 @@ public class MonitorCluster implements Runnable{
 	
 	private Map<String, Boolean> infoChg = Maps.newHashMap();
 	
-	public MonitorCluster(String zkAddress, Set<String> topicNameSet, String consumerGroup, IKafkaChg kafkaChg){
+	public MonitorCluster(String zkAddress, Set<String> topicNameSet, String consumerGroup, IKafkaChg kafkaChg,
+			int consumerMoniPeriod, int partitionsMoniPeriod){
 		this.zkAddress = zkAddress;
 		this.topicNameSet = topicNameSet;
 		this.consumerGroup = consumerGroup;
 		this.kafkaChg = kafkaChg;
 		this.zkClient = new ZkClient(this.zkAddress);
+		this.consumer_moni_period = consumerMoniPeriod;
+		this.partitions_moni_period = partitionsMoniPeriod;
 		
 		init();
 	}

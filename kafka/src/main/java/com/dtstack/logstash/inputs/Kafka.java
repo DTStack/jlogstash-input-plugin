@@ -53,6 +53,10 @@ public class Kafka extends BaseInput implements IKafkaChg{
 	
 	private static boolean openBalance = false;
 	
+	private static int consumerMoniPeriod =  3600 * 1000;
+	
+	private static int partitionsMoniPeriod = 10 * 1000;
+	
 	private ReentrantLock lock = new ReentrantLock();
 
 	private class Consumer implements Runnable {
@@ -180,7 +184,7 @@ public class Kafka extends BaseInput implements IKafkaChg{
 		String groupId = consumerSettings.get("group.id");
 		scheduleExecutor = Executors.newScheduledThreadPool(1);
 		
-		MonitorCluster monitor = new MonitorCluster(zookeeperConn, topic.keySet(), groupId, this);
+		MonitorCluster monitor = new MonitorCluster(zookeeperConn, topic.keySet(), groupId, this, consumerMoniPeriod, partitionsMoniPeriod);
 		scheduleExecutor.scheduleAtFixedRate(monitor, 10, 10, TimeUnit.SECONDS);
 	}
 
@@ -202,7 +206,7 @@ public class Kafka extends BaseInput implements IKafkaChg{
 			}
 			
 			if(threadNum != expectNum){
-				logger.warn("need chg thread num");
+				logger.warn("need chg thread num, curr threadNum:{}, expect threadNum:{}.", threadNum, expectNum);
 				topic.put(topicName, expectNum);
 				//停止,重启客户端
 				reconnConsumer(topicName);
