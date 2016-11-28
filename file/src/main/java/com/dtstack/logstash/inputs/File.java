@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +17,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
 import com.dtstack.logstash.decoder.JsonDecoder;
@@ -427,28 +424,7 @@ public class File extends BaseInput{
 		logger.info("can't find decoder from config. return default decoder.");
 		return this.decoder;
 	}
-	
-	public static void main(String[] args) throws FileNotFoundException {
-		Map<String, String> config = new HashMap<String, String>();
-		Yaml yaml = new Yaml();
-		InputStream io = new FileInputStream("C:\\Users\\Administrator\\Desktop\\fileread\\test1.yaml");
-		List<Object> fileMap = (List<Object>) yaml.load(io);
-		Map fileConf = (Map) fileMap.get(0);
-		fileConf = (Map) fileConf.get("File");
 		
-		List<String> excludeFile = Lists.newArrayList();
-		//excludeFile.add("E:/data/xcdir.tar");
-			
-		File file = new File(config, null);
-		file.exclude = excludeFile;
-		file.readFileThreadNum = 1;
-		file.pathcodecMap = (Map<String, Object>) fileConf.get("pathcodecMap");
-		
-		file.prepare();
-		file.emit();
-	}
-	
-	
 	class FileRunnable implements Runnable{
 								
 		private final int index;
@@ -515,7 +491,7 @@ public class File extends BaseInput{
 							
 							if (event != null && event.size() > 0){
 								event.put("path", readFileName);
-								inputQueueList.put(event);
+								process(event);
 							}
 						}
 						

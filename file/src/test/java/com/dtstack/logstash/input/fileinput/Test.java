@@ -21,7 +21,7 @@ public class Test {
 		path.add("E:\\server.log");
 		
 		File file = new File(config, inputList);
-		File.path = path;
+//		File.path = path;
 		file.prepare();
 		file.emit();
 	}

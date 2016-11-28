@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
-import com.dtstack.logstash.decoder.IDecode;
 
 /**
  * 
@@ -150,11 +149,8 @@ public class Tcp extends BaseInput {
 
 		private Tcp tcp;
 
-		private IDecode decoder;
-
 		public MinaBizHandler(Tcp tcp) {
 			this.tcp = tcp;
-			this.decoder = tcp.createDecoder();
 		}
 
 		public void exceptionCaught(IoSession session, Throwable cause)
@@ -196,8 +192,8 @@ public class Tcp extends BaseInput {
 			System.out.println(message);
 			if (message != null) {
 				String mes = message.toString();
-				if (!"".equals(mes)) {
-					this.tcp.inputQueueList.put(this.decoder.decode(mes));
+				if (mes!=null&&!"".equals(mes)) {
+					this.tcp.process(this.tcp.decoder.decode(mes));
 				}
 			}
 		}

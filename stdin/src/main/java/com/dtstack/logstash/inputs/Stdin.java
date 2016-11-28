@@ -1,8 +1,10 @@
 package com.dtstack.logstash.inputs;
 
 import com.dtstack.logstash.assembly.InputQueueList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,6 +19,7 @@ import java.util.Map;
  * @author sishu.yss
  *
  */
+@SuppressWarnings("serial")
 public class Stdin extends BaseInput {
     private static final Logger logger = LoggerFactory.getLogger(Stdin.class);
 
@@ -26,7 +29,6 @@ public class Stdin extends BaseInput {
 
     @Override
     public void prepare() {
-    	this.decoder = super.createDecoder();
     }
 
     public void emit() {
@@ -40,13 +42,13 @@ public class Stdin extends BaseInput {
                 try {
                     Map<String, Object> event = this.decoder
                             .decode(input);
-                   this.inputQueueList.put(event);
+                    this.process(event);
                 } catch (Exception e) {
-                    logger.error("process event failed:" + input,e.getMessage());
+                    logger.error("{}:process event failed:{}",input,e.getCause());
                 }
             }
         } catch (IOException io) {
-            logger.error("Stdin loop got exception",io.getCause());
+            logger.error("Stdin loop got exception:{}",io.getCause());
         }
     }
 
