@@ -19,7 +19,6 @@ import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
 
-import freemarker.core.ArithmeticEngine.ConservativeEngine;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -34,6 +33,7 @@ import kafka.javaapi.consumer.ConsumerConnector;
  * @author sishu.yss
  *
  */
+@SuppressWarnings("serial")
 public class Kafka extends BaseInput implements IKafkaChg{
 	private static final Logger logger = LoggerFactory.getLogger(Kafka.class);
 
@@ -78,7 +78,7 @@ public class Kafka extends BaseInput implements IKafkaChg{
 							Map<String, Object> event = this.decoder
 									.decode(m);
 							if (event!=null&&event.size()>0){
-								this.kafkaInput.inputQueueList.put(event);
+								this.kafkaInput.process(event);
 							} 
 						} catch (Exception e) {
 							logger.error("process event:{} failed:{}",m,e.getCause());

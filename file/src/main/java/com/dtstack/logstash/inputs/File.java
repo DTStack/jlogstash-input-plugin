@@ -491,7 +491,7 @@ public class File extends BaseInput{
 							
 							if (event != null && event.size() > 0){
 								event.put("path", readFileName);
-								inputQueueList.put(event);
+								process(event);
 							}
 						}
 						

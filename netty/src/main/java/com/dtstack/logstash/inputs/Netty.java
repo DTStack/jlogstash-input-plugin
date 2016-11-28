@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
-import com.dtstack.logstash.decoder.IDecode;
 
 
 /**
@@ -34,6 +33,7 @@ import com.dtstack.logstash.decoder.IDecode;
  * @author sishu.yss
  *
  */
+@SuppressWarnings("serial")
 public class Netty extends BaseInput {
 
 	private static Logger logger = LoggerFactory.getLogger(Netty.class);
@@ -113,11 +113,8 @@ public class Netty extends BaseInput {
 
 		private Netty netty;
 
-		private IDecode decoder;
-
 		public NettyServerHandler(Netty netty) {
 			this.netty = netty;
-			this.decoder = netty.createDecoder();
 		}
 
 		@Override
@@ -130,7 +127,7 @@ public class Netty extends BaseInput {
 					String mes = ((ChannelBuffer) message).toString(Charset
 							.forName(encoding));
 					if (StringUtils.isNotBlank(mes)) {
-						this.netty.inputQueueList.put(this.decoder.decode(mes));
+						this.netty.process(this.netty.decoder.decode(mes));
 					}
 				}
 			}

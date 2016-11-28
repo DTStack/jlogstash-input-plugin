@@ -1,13 +1,15 @@
 package com.dtstack.logstash.inputs;
 
 import io.netty.channel.ChannelHandlerContext;
+
 import java.io.FileInputStream;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.assembly.InputQueueList;
-import com.dtstack.logstash.decoder.IDecode;
 
 
 /**
@@ -18,6 +20,7 @@ import com.dtstack.logstash.decoder.IDecode;
  * @author sishu.yss
  *
  */
+@SuppressWarnings("serial")
 public class Beats extends BaseInput {
 
 	private final static Logger logger = LoggerFactory.getLogger(Beats.class);
@@ -39,6 +42,7 @@ public class Beats extends BaseInput {
 	
 	private MessageListener messageListener;
 
+	@SuppressWarnings("rawtypes")
 	public Beats(Map config, InputQueueList inputQueueList) {
 		super(config, inputQueueList);
 		// TODO Auto-generated constructor stub
@@ -90,30 +94,19 @@ public class Beats extends BaseInput {
 
 	public class MessageListener implements IMessageListener {
 
-		private InputQueueList inputQueueList;
-
-		@SuppressWarnings("unused")
-		private IDecode decoder;
-
+        private Beats beats;
+		
 		public MessageListener(Beats beats) {
-			this.inputQueueList = beats.inputQueueList;
-			this.decoder = beats.createDecoder();
+			this.beats = beats;
 		}
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@SuppressWarnings({ "unchecked"})
 		@Override
 		public void onNewMessage(ChannelHandlerContext ctx, Message message) {
 			Map<String,Object> map =message.getData();
 			System.out.println(map);
 			if (map!=null){
-				Object obj = map.get("beat");
-				if(obj!=null){
-					Map beat = (Map)obj;
-					map.put("hostname", beat.get("hostname"));
-					map.put("host",beat.get("name"));
-					map.remove("beat");
-				}
-				this.inputQueueList.put(map);
+				this.beats.process(map);
 			}
 		}
 
@@ -130,5 +123,5 @@ public class Beats extends BaseInput {
                logger.debug("onException:{}",cause.getCause());
 		}
 	}
-
 }
+
