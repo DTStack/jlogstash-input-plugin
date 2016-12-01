@@ -23,7 +23,6 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.dtstack.logstash.annotation.Required;
-import com.dtstack.logstash.assembly.InputQueueList;
 
 /**
  * 
@@ -63,8 +62,8 @@ public class Tcp extends BaseInput {
 
 	private MinaBizHandler minaBizHandler = null;
 
-	public Tcp(Map config, InputQueueList inputQueueList) {
-		super(config, inputQueueList);
+	public Tcp(Map config) {
+		super(config);
 		// TODO Auto-generated constructor stub
 	}
 

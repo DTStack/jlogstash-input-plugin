@@ -1,15 +1,11 @@
 package com.dtstack.logstash.inputs;
 
 import io.netty.channel.ChannelHandlerContext;
-
 import java.io.FileInputStream;
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.annotation.Required;
-import com.dtstack.logstash.assembly.InputQueueList;
 
 
 /**
@@ -43,8 +39,8 @@ public class Beats extends BaseInput {
 	private MessageListener messageListener;
 
 	@SuppressWarnings("rawtypes")
-	public Beats(Map config, InputQueueList inputQueueList) {
-		super(config, inputQueueList);
+	public Beats(Map config) {
+		super(config);
 		// TODO Auto-generated constructor stub
 	}
 

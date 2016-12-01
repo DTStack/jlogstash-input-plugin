@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -23,9 +22,7 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.annotation.Required;
-import com.dtstack.logstash.assembly.InputQueueList;
 
 
 /**
@@ -60,8 +57,8 @@ public class Netty extends BaseInput {
 	
 	private Executor workerExecutor;
 
-	public Netty(Map config, InputQueueList inputQueueList) {
-		super(config, inputQueueList);
+	public Netty(Map config) {
+		super(config);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -148,13 +145,5 @@ public class Netty extends BaseInput {
 		public String multilineDecoder(String msg){
 			return msg.replace(multilineDelimiter, delimiter);
 		}
-	}
-	
-	public static void main(String[] args) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		Netty netty = new Netty(map, null);
-		netty.port = 9111;
-		netty.emit();
-	}
-	
+	}	
 }

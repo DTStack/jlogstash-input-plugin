@@ -11,14 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.annotation.Required;
-import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
-
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -95,8 +91,8 @@ public class Kafka extends BaseInput implements IKafkaChg{
 		}
 	}
 
-	public Kafka(Map<String, Object> config,InputQueueList inputQueueList){
-		super(config,inputQueueList);
+	public Kafka(Map<String, Object> config){
+		super(config);
 	}
 
 	@SuppressWarnings("unchecked")
