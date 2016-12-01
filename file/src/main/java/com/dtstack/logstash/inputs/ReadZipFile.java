@@ -29,19 +29,19 @@ public class ReadZipFile implements IReader{
 	
 	private InputStream currIns;
 	
-	private int currFileSize = 0;
+	private long currFileSize = 0;
 	
 	private String currFileName = null;
 	
 	private String encoding = "UTF-8"; 
 	
-	private ConcurrentHashMap<String, Integer> fileCurrPos; 
+	private ConcurrentHashMap<String, Long> fileCurrPos; 
 	
 	private String zipFileName;
 	
 	public boolean readEnd = false;
 	
-	public static ReadZipFile createInstance(String fileName, String encoding, ConcurrentHashMap<String, Integer> fileCurrPos){
+	public static ReadZipFile createInstance(String fileName, String encoding, ConcurrentHashMap<String, Long> fileCurrPos){
 		ReadZipFile readZip = new ReadZipFile(fileName, encoding, fileCurrPos);
 		if(readZip.init()){
 			return readZip;
@@ -50,7 +50,7 @@ public class ReadZipFile implements IReader{
 		return null;
 	}
 	
-	private ReadZipFile(String fileName, String encoding, ConcurrentHashMap<String, Integer> fileCurrPos){
+	private ReadZipFile(String fileName, String encoding, ConcurrentHashMap<String, Long> fileCurrPos){
 		this.fileCurrPos = fileCurrPos;
 		this.zipFileName = fileName;
 		this.encoding = encoding;
@@ -84,8 +84,8 @@ public class ReadZipFile implements IReader{
 		return true;
 	}
 	
-	private int getSkipNum(String identify){
-		Integer skipNum = fileCurrPos.get(identify);
+	private long getSkipNum(String identify){
+		Long skipNum = fileCurrPos.get(identify);
 		skipNum = skipNum == null ? 0 : skipNum;
 		return skipNum;
 	}
@@ -125,7 +125,7 @@ public class ReadZipFile implements IReader{
 				if (!zipEn.isDirectory()) {					
 					currIns = zfile.getInputStream(zipEn);
 					String fileName = zipEn.getName();
-					Integer skipNum =  getSkipNum(getIdentify(fileName));
+					Long skipNum =  getSkipNum(getIdentify(fileName));
 					if(skipNum >= zipEn.getSize()){
 						zipIn.closeEntry();
 						continue;//跳过
@@ -163,17 +163,17 @@ public class ReadZipFile implements IReader{
 		zipIn.closeEntry();
 		zfile.close();
 		
-		Iterator<Entry<String, Integer>> it = fileCurrPos.entrySet().iterator();
+		Iterator<Entry<String, Long>> it = fileCurrPos.entrySet().iterator();
 		String preFix = zipFileName + "|";
 		while(it.hasNext()){
-			Entry<String, Integer> entry = it.next();
+			Entry<String, Long> entry = it.next();
 			if(entry.getKey().startsWith(preFix)){
 				it.remove();
 			}
 		}
 		
 		//重新插入一条表示zip包读取完成的信息
-		fileCurrPos.put(zipFileName, -1);
+		fileCurrPos.put(zipFileName, -1l);
 		readEnd = true;
 	}
 		
@@ -202,7 +202,7 @@ public class ReadZipFile implements IReader{
 	}
 
 	@Override
-	public int getCurrBufPos() {
+	public long getCurrBufPos() {
 		
 		if(readEnd){
 			return -1;
@@ -238,7 +238,7 @@ public class ReadZipFile implements IReader{
 	}
 
 	public static void main(String[] args) throws IOException {
-		ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<String, Integer>();
+		ConcurrentHashMap<String, Long> map = new ConcurrentHashMap<String, Long>();
 		ReadZipFile zipFile = new ReadZipFile("E:\\data\\mydata.zip", "utf-8", map);
 		//zipFile.fileCurrPos.put(zipFile.getIdentify("mydata/log4.log"), 3);
 		String str = null;

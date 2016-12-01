@@ -19,7 +19,7 @@ public class ReadRarFile implements IReader{
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadRarFile.class);
 	
-	private ConcurrentHashMap<String, Integer> fileCurrPos  = new ConcurrentHashMap<String, Integer>();
+	private ConcurrentHashMap<String, Long> fileCurrPos  = new ConcurrentHashMap<String, Long>();
 	
 	private Archive archive;
 		
@@ -29,7 +29,7 @@ public class ReadRarFile implements IReader{
 	
 	private String currFileName;
 	
-	private int currFileSize = 0;
+	private long currFileSize = 0;
 	
 	public boolean readEnd = false;
 	
@@ -37,7 +37,7 @@ public class ReadRarFile implements IReader{
 	
 	private String encoding = "UTF-8"; 
 	
-	public static ReadRarFile createInstance(String fileName, String encoding, ConcurrentHashMap<String, Integer> fileCurrPos){
+	public static ReadRarFile createInstance(String fileName, String encoding, ConcurrentHashMap<String, Long> fileCurrPos){
 		ReadRarFile readRarFile = new ReadRarFile(fileName, encoding, fileCurrPos);
 		if(readRarFile.init()){
 			return readRarFile;
@@ -46,14 +46,14 @@ public class ReadRarFile implements IReader{
 		return null;
 	}
 		
-	private ReadRarFile(String fileName, String encoding, ConcurrentHashMap<String, Integer> fileCurrPos){
+	private ReadRarFile(String fileName, String encoding, ConcurrentHashMap<String, Long> fileCurrPos){
 		this.fileCurrPos = fileCurrPos;
 		this.rarFileName = fileName;
 		this.encoding = encoding;
 	}
 	
-	public int getRarSkipNum(String assignName){
-		Integer skipNum = fileCurrPos.get(assignName);
+	public long getRarSkipNum(String assignName){
+		Long skipNum = fileCurrPos.get(assignName);
 		skipNum = skipNum == null ? 0 : skipNum;
 		return skipNum;
 	}
@@ -112,7 +112,7 @@ public class ReadRarFile implements IReader{
 					InputStream ins = archive.getInputStream(fh);
 					currFileName = fh.getFileNameString();
 					String identify = getIdentify(currFileName);
-					int skipNum = getRarSkipNum(identify);
+					long skipNum = getRarSkipNum(identify);
 					currFileSize = fh.getDataSize();
 					
 					if(currFileSize <= skipNum){
@@ -147,17 +147,17 @@ public class ReadRarFile implements IReader{
 		
 		archive.close();
 		
-		Iterator<Entry<String, Integer>> it = fileCurrPos.entrySet().iterator();
+		Iterator<Entry<String, Long>> it = fileCurrPos.entrySet().iterator();
 		String preFix = rarFileName + "|";
 		while(it.hasNext()){
-			Entry<String, Integer> entry = it.next();
+			Entry<String, Long> entry = it.next();
 			if(entry.getKey().startsWith(preFix)){
 				it.remove();
 			}
 		}
 		
 		//重新插入一条表示zip包读取完成的信息
-		fileCurrPos.put(rarFileName, -1);
+		fileCurrPos.put(rarFileName, -1l);
 		readEnd = true;
 	}
 
@@ -187,7 +187,7 @@ public class ReadRarFile implements IReader{
 	}
 
 	@Override
-	public int getCurrBufPos() {
+	public long getCurrBufPos() {
 		
 		if(readEnd){
 			return -1;
@@ -221,10 +221,10 @@ public class ReadRarFile implements IReader{
 	}
 
 	public static void main(String[] args) throws IOException {
-		ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<String, Integer>();
+		ConcurrentHashMap<String, Long> map = new ConcurrentHashMap<String, Long>();
 		ReadRarFile readRarFile = new ReadRarFile("E:\\data\\mydata.rar", "utf-8", map);
 		readRarFile.init();
-		readRarFile.fileCurrPos.put(readRarFile.getIdentify("mydata\\log4.log"), 3);
+		readRarFile.fileCurrPos.put(readRarFile.getIdentify("mydata\\log4.log"), 3l);
 		String line = null;
 		while( (line = readRarFile.readLine()) != null){
 			System.out.println(line);

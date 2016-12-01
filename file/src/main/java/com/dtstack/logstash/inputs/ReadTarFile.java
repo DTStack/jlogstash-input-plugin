@@ -47,15 +47,15 @@ public class ReadTarFile implements IReader {
 	
 	private boolean readEnd = false;
 	
-	private Map<String, Integer> fileCurrPos;
+	private Map<String, Long> fileCurrPos;
 	
-	private ReadTarFile(String fileName, String encoding, Map fileCurrPos){
+	private ReadTarFile(String fileName, String encoding, Map<String, Long> fileCurrPos){
 		this.tarFileName = fileName;
 		this.fileCurrPos = fileCurrPos;
 		this.encoding = encoding;
 	}
 	
-	public static ReadTarFile createInstance(String fileName, String encoding, ConcurrentHashMap<String, Integer> fileCurrPos){
+	public static ReadTarFile createInstance(String fileName, String encoding, ConcurrentHashMap<String, Long> fileCurrPos){
 		ReadTarFile readTar = new ReadTarFile(fileName, encoding, fileCurrPos);
 		if(readTar.init()){
 			return readTar;
@@ -106,7 +106,7 @@ public class ReadTarFile implements IReader {
 				currFileName = entry.getName();
 				currFileSize = (int) entry.getSize();
 				String identify = getIdentify(currFileName);
-				int skipNum = getSkipNum(identify);
+				long skipNum = getSkipNum(identify);
 				if(skipNum >= entry.getSize()){
 					continue;
 				}
@@ -140,17 +140,17 @@ public class ReadTarFile implements IReader {
 		tarAchive.close();
 		fins.close();
 		
-		Iterator<Entry<String, Integer>> it = fileCurrPos.entrySet().iterator();
+		Iterator<Entry<String, Long>> it = fileCurrPos.entrySet().iterator();
 		String preFix = tarFileName + "|";
 		while(it.hasNext()){
-			Entry<String, Integer> entry = it.next();
+			Entry<String, Long> entry = it.next();
 			if(entry.getKey().startsWith(preFix)){
 				it.remove();
 			}
 		}
 		
 		//重新插入一条表示zip包读取完成的信息
-		fileCurrPos.put(tarFileName, -1);
+		fileCurrPos.put(tarFileName, -1l);
 		readEnd = true;
 	}
 
@@ -182,7 +182,7 @@ public class ReadTarFile implements IReader {
 	}
 
 	@Override
-	public int getCurrBufPos() {
+	public long getCurrBufPos() {
 
 		if(readEnd){
 			return -1;
@@ -204,8 +204,8 @@ public class ReadTarFile implements IReader {
 		return tarFileName + "|" + fileName; 
 	}
 	
-	private int getSkipNum(String identify){
-		Integer skipNum = fileCurrPos.get(identify);
+	private long getSkipNum(String identify){
+		Long skipNum = fileCurrPos.get(identify);
 		skipNum = skipNum == null ? 0 : skipNum;
 		return skipNum;
 	}
@@ -216,7 +216,7 @@ public class ReadTarFile implements IReader {
 	}
 
 	public static void main(String[] args) throws IOException {
-    	Map<String, Integer> map = Maps.newConcurrentMap();
+    	Map<String, Long> map = Maps.newConcurrentMap();
 		ReadTarFile readTar = new ReadTarFile("E:\\data\\xcdir.tar", "utf-8",map);
 		readTar.init();
 		String line = null;

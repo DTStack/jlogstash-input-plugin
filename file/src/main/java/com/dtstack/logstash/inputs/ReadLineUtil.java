@@ -7,9 +7,9 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * RandomAccessFile 方式按行读取文件 
@@ -24,15 +24,15 @@ public class ReadLineUtil implements IReader{
 	private FileChannel channel;
 	private String encoding;
 	private long fileLength;
-	private ByteBuffer buf;
-	private long bufPos = 0;
+	private ByteBuffer buf ;
+	private int bufPos = 0;
 	private ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	private RandomAccessFile raf;
-	private int readSize = 0;
-	private int skipNum = 0;
+	private long readSize = 0;
+	private long skipNum = 0;
 	private String fileName = "";
  
-	public ReadLineUtil(File file, String encoding, int pos)
+	public ReadLineUtil(File file, String encoding, long pos)
 			throws IOException {
 		this.fileName = file.getPath();
 		raf = new RandomAccessFile(file, "r");
@@ -45,24 +45,23 @@ public class ReadLineUtil implements IReader{
 		if("beginning".equalsIgnoreCase(startPos)){
 			init(encoding, 0);
 		}else{
-			init(encoding, (int)raf.length());
+			init(encoding, raf.length());
 		}
 	}
 	
-	private void init(String encoding, int pos) throws IOException{
+	private void init(String encoding, long pos) throws IOException{
 		channel = raf.getChannel();
 		fileLength = raf.length();
 		this.encoding = encoding;
 		this.skipNum = pos;
-		readSize = (int) (fileLength - this.skipNum);
+		readSize = ((fileLength - this.skipNum)>Integer.MAX_VALUE?Integer.MAX_VALUE:(fileLength - this.skipNum));
 		buf = channel.map(FileChannel.MapMode.READ_ONLY, this.skipNum, this.readSize);
 	}
 	
 	@Override
-	public String readLine() throws UnsupportedEncodingException{
-		
+	public String readLine() throws Exception{
 		while (bufPos < readSize) {
-			byte c = buf.get((int)bufPos);//FIXME if the file size max then Integer.Max,it is err
+			byte c = buf.get(bufPos);//FIXME if the file size max then Integer.Max,it is err
 			bufPos++;
 			if (c == '\r' || c == lineBreak) {
 				if (c != lineBreak) {
@@ -79,9 +78,8 @@ public class ReadLineUtil implements IReader{
 		
 		doAfterReaderOver();
 		return null;
-		
 	}
-	
+		
 	@Override
 	public void doAfterReaderOver(){
 		try {
@@ -108,8 +106,8 @@ public class ReadLineUtil implements IReader{
 	}
 	
 	@Override
-	public int getCurrBufPos(){
-		return (int) (skipNum + bufPos);
+	public long getCurrBufPos(){
+		return  skipNum + bufPos;
 	}
 
 	@Override

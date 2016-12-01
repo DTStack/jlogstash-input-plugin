@@ -16,8 +16,9 @@ public interface IReader {
 	 * 读取文件一行,返回null表示读文件结束
 	 * @return
 	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public String readLine() throws IOException;
+	public String readLine() throws Exception;
 	
 	/**
 	 * 获取当前读文件名
@@ -29,7 +30,7 @@ public interface IReader {
 	 * 获取当前文件读取位置(byte)
 	 * @return
 	 */
-	public int getCurrBufPos();
+	public long getCurrBufPos();
 	
 	/***
 	 * 是否需监控文件内容变化

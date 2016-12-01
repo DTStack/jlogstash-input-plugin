@@ -21,7 +21,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-import com.dtstack.logstash.assembly.InputQueueList;
+//import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
 import com.dtstack.logstash.decoder.JsonDecoder;
 import com.dtstack.logstash.decoder.MultilineDecoder;
@@ -53,13 +53,13 @@ public class File extends BaseInput{
 	
 	private static int maxOpenFiles = 0;//0表示没有上限
 		
-	private static String startPosition = "end";//one of ["beginning", "end"]
+	private static String startPosition = "beginning";//one of ["beginning", "end"]
 	
 	/**key:文件夹路径, 匹配信息列表,  10s检测一次*/
 	private Map<String, List<String>> moniDic = new ConcurrentHashMap<String,  List<String>>();
 	
 	/**文件当前读取位置点*/
-	private ConcurrentHashMap<String, Integer> fileCurrPos = new ConcurrentHashMap<String, Integer>();
+	private ConcurrentHashMap<String, Long> fileCurrPos = new ConcurrentHashMap<String, Long>();
 	
 	private static String sinceDbPath = "./sincedb.yaml";
 		
@@ -87,8 +87,8 @@ public class File extends BaseInput{
 	
 	private ReentrantLock writeFileLock = new ReentrantLock();
 
-	public File(Map config, InputQueueList inputQueueList) {
-		super(config, inputQueueList);
+	public File(Map config) {
+		super(config);
 	}
 	
 	public void init(){
@@ -305,7 +305,7 @@ public class File extends BaseInput{
 		InputStream io = null;
 		try {
 			io = new FileInputStream(sinceFile);
-			Map<String, Integer> fileMap = (Map) yaml.load(io);
+			Map<String, Long> fileMap = (Map) yaml.load(io);
 			if(fileMap == null){
 				return;
 			}
@@ -329,7 +329,7 @@ public class File extends BaseInput{
 	 * 过滤掉已经读取完成的文件
 	 */
 	private void filterFinishFile(){
-		for(Entry<String, Integer> entry : fileCurrPos.entrySet()){
+		for(Entry<String, Long> entry : fileCurrPos.entrySet()){
 			if(entry.getValue() == -1){//表示该文件已经读取完成
 				realPaths.remove(entry.getKey());
 			}
@@ -425,6 +425,7 @@ public class File extends BaseInput{
 		return this.decoder;
 	}
 		
+		
 	class FileRunnable implements Runnable{
 								
 		private final int index;
@@ -439,7 +440,7 @@ public class File extends BaseInput{
 				
 				BlockingQueue<String> needReadList = threadReadFileMap.get(index);
 				if(needReadList == null){
-					logger.error("invalid FileRunnable thread, threadReadFileMap don't init needReadList of this index:{}.", index);
+					logger.warn("invalid FileRunnable thread, threadReadFileMap don't init needReadList of this index:{}.", index);
 					return;
 				}
 				
@@ -525,7 +526,7 @@ public class File extends BaseInput{
 			
 			while(runFlag){
 				try {
-					Thread.sleep(2000);
+					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					logger.error("", e);
 				}
@@ -538,11 +539,15 @@ public class File extends BaseInput{
 						logger.info("file:{} not exists,may be delete!", entry.getKey());
 						continue;
 					}
-					
-					if(monitorFile.lastModified() > entry.getValue()){
+										
+//					if(monitorFile.lastModified() > entry.getValue()){
+//						iterator.remove();
+//						addFile(entry.getKey());
+//					}
+					if(fileCurrPos.get(entry.getKey())<monitorFile.length()){
 						iterator.remove();
 						addFile(entry.getKey());
-					}
+					}	
 				}
 				
 			}
