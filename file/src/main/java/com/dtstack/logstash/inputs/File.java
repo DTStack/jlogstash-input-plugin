@@ -21,7 +21,6 @@ import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-//import com.dtstack.logstash.assembly.InputQueueList;
 import com.dtstack.logstash.decoder.IDecode;
 import com.dtstack.logstash.decoder.JsonDecoder;
 import com.dtstack.logstash.decoder.MultilineDecoder;
@@ -53,7 +52,7 @@ public class File extends BaseInput{
 	
 	private static int maxOpenFiles = 0;//0表示没有上限
 		
-	private static String startPosition = "beginning";//one of ["beginning", "end"]
+	private static String startPosition = "end";//one of ["beginning", "end"]
 	
 	/**key:文件夹路径, 匹配信息列表,  10s检测一次*/
 	private Map<String, List<String>> moniDic = new ConcurrentHashMap<String,  List<String>>();

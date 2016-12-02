@@ -1,7 +1,6 @@
 package com.dtstack.logstash.inputs;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,16 +8,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
-
 /**
  * 读取tar文件信息
  * Reason: TODO ADD REASON(可选)
@@ -214,15 +209,4 @@ public class ReadTarFile implements IReader {
 	public boolean needMonitorChg() {
 		return false;
 	}
-
-	public static void main(String[] args) throws IOException {
-    	Map<String, Long> map = Maps.newConcurrentMap();
-		ReadTarFile readTar = new ReadTarFile("E:\\data\\xcdir.tar", "utf-8",map);
-		readTar.init();
-		String line = null;
-		while( (line = readTar.readLine()) != null){
-			System.out.println(line);
-		}
-	}
-
 }

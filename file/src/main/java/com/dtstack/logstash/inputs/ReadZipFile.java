@@ -13,10 +13,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * Date: 2016年11月19日
+ * Company: www.dtstack.com
+ * @author xuchao
+ *
+ */
 public class ReadZipFile implements IReader{
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadZipFile.class);
@@ -235,19 +241,5 @@ public class ReadZipFile implements IReader{
 	@Override
 	public boolean needMonitorChg() {
 		return false;
-	}
-
-	public static void main(String[] args) throws IOException {
-		ConcurrentHashMap<String, Long> map = new ConcurrentHashMap<String, Long>();
-		ReadZipFile zipFile = new ReadZipFile("E:\\data\\mydata.zip", "utf-8", map);
-		//zipFile.fileCurrPos.put(zipFile.getIdentify("mydata/log4.log"), 3);
-		String str = null;
-		while( (str = zipFile.readLine()) != null){
-			System.out.println(str);
-		}
-		
-		System.out.println();
-		System.out.println(zipFile.fileCurrPos);
-		
 	}
 }

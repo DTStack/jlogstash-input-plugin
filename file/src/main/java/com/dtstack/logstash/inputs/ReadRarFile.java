@@ -8,13 +8,19 @@ import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 
+
+/**
+ * 
+ * Date: 2016年11月19日
+ * Company: www.dtstack.com
+ * @author xuchao
+ *
+ */
 public class ReadRarFile implements IReader{
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadRarFile.class);
@@ -218,19 +224,5 @@ public class ReadRarFile implements IReader{
 	@Override
 	public boolean needMonitorChg() {
 		return false;
-	}
-
-	public static void main(String[] args) throws IOException {
-		ConcurrentHashMap<String, Long> map = new ConcurrentHashMap<String, Long>();
-		ReadRarFile readRarFile = new ReadRarFile("E:\\data\\mydata.rar", "utf-8", map);
-		readRarFile.init();
-		readRarFile.fileCurrPos.put(readRarFile.getIdentify("mydata\\log4.log"), 3l);
-		String line = null;
-		while( (line = readRarFile.readLine()) != null){
-			System.out.println(line);
-		}
-		
-		System.out.println(readRarFile.fileCurrPos);
-	}
-	
+	}	
 }
