@@ -329,7 +329,7 @@ public class File extends BaseInput{
 	 */
 	private void filterFinishFile(){
 		for(Entry<String, Long> entry : fileCurrPos.entrySet()){
-			if(entry.getValue() == -1){//表示该文件已经读取完成
+			if(entry.getValue() == -1l){//表示该文件已经读取完成
 				realPaths.remove(entry.getKey());
 			}
 		}
