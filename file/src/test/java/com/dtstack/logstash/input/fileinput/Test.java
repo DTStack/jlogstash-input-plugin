@@ -36,8 +36,9 @@ public class Test {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		Test test = new Test();
+//		Test test = new Test();
 //		test.testReadLine();
+		System.out.println(Long.MAX_VALUE/1024/1024/1024/1024/1024);
 	}
 
 }
