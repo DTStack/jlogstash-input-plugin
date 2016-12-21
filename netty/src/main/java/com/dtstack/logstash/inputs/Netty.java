@@ -138,7 +138,7 @@ public class Netty extends BaseInput {
 		@Override
 	    public void exceptionCaught(
 	            ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		        logger.error("netty io error:", e.getCause());
+		        logger.debug("netty io error:", e.getCause());
 			    ctx.sendUpstream(e);
 	    }	
 		
