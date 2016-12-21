@@ -37,7 +37,7 @@ public class Stdin extends BaseInput {
 
             while ((input = br.readLine()) != null) {
                 try {
-                    Map<String, Object> event = this.decoder
+                    Map<String, Object> event = this.getDecoder()
                             .decode(input);
                     this.process(event);
                 } catch (Exception e) {

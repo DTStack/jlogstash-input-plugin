@@ -192,7 +192,7 @@ public class Tcp extends BaseInput {
 			if (message != null) {
 				String mes = message.toString();
 				if (mes!=null&&!"".equals(mes)) {
-					this.tcp.process(this.tcp.decoder.decode(mes));
+					this.tcp.process(this.tcp.getDecoder().decode(mes));
 				}
 			}
 		}

@@ -63,7 +63,7 @@ public class Kafka extends BaseInput implements IKafkaChg{
 		public Consumer(KafkaStream<byte[], byte[]> a_stream, Kafka kafkaInput) {
 			this.m_stream = a_stream;
 			this.kafkaInput = kafkaInput;
-			this.decoder = kafkaInput.createDecoder();
+			this.decoder = kafkaInput.getDecoder();
 		}
 
 		public void run() {

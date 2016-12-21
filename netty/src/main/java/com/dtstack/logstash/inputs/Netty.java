@@ -3,7 +3,6 @@ package com.dtstack.logstash.inputs;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -127,9 +126,10 @@ public class Netty extends BaseInput {
 				if (message instanceof ChannelBuffer) {
 					String mes = ((ChannelBuffer) message).toString(Charset
 							.forName(encoding));
+					System.out.println(mes);
 					if (StringUtils.isNotBlank(mes)) {
 						mes = multilineDecoder(mes);
-						this.netty.process(this.netty.decoder.decode(mes));
+						this.netty.process(this.netty.getDecoder().decode(mes));
 					}
 				}
 			}
@@ -138,7 +138,7 @@ public class Netty extends BaseInput {
 		@Override
 	    public void exceptionCaught(
 	            ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		        logger.debug("netty io error:", e.getCause());
+		        logger.error("netty io error:", e.getCause());
 			    ctx.sendUpstream(e);
 	    }	
 		

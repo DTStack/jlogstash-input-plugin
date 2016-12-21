@@ -421,7 +421,7 @@ public class File extends BaseInput{
 		}
 		
 		logger.info("can't find decoder from config. return default decoder.");
-		return this.decoder;
+		return this.getDecoder();
 	}
 		
 		
