@@ -11,14 +11,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.decoder.IDecode;
 import com.dtstack.logstash.distributed.ZkDistributed;
-
+import com.dtstack.logstash.exception.ExceptionUtil;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -35,6 +33,7 @@ import kafka.javaapi.consumer.ConsumerConnector;
  */
 @SuppressWarnings("serial")
 public class KafkaDistributed extends BaseInput implements IKafkaChg{
+	
 	private static final Logger logger = LoggerFactory.getLogger(KafkaDistributed.class);
 
 	private Map<String, ConsumerConnector> consumerConnMap = new HashMap<>();
@@ -57,10 +56,11 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	/**
 	 *  是否开启分布式 null不开启，不为null开启
 	 * 	{"zkAddress":"127.0.0.1:2181/distributed",
-	 *   "routeRule":["logtype eq jvm1.8.log"]
+	 *   "localAddress":"127.0.0.1:2181",
+	 *   "routeRule":{"logtype":["jvm1.8.log"]}
 	 *  }
 	 */
-	private  Map<String,String> distributed;
+	private  Map<String,Object> distributed;
 	
 	private ZkDistributed zkDistributed;
 	
@@ -123,8 +123,13 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 			consumerConnMap.put(topicName, consumer);
 		}
 		if(distributed!=null){
-			zkDistributed = new ZkDistributed(distributed);
-			zkDistributed.zkRegistration();
+			try {
+				zkDistributed = new ZkDistributed(distributed);
+				zkDistributed.zkRegistration();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				logger.error("zkRegistration fail:{}",ExceptionUtil.getErrorMessage(e));
+			}
 		}
 	}
 	
