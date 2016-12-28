@@ -11,10 +11,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.decoder.IDecode;
+import com.dtstack.logstash.distributed.ZkDistributed;
+
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -53,10 +57,12 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	/**
 	 *  是否开启分布式 null不开启，不为null开启
 	 * 	{"zkAddress":"127.0.0.1:2181/distributed",
-	 *   "routeRule":["logtype eq jvm1.8.log"],
+	 *   "routeRule":["logtype eq jvm1.8.log"]
 	 *  }
 	 */
 	private  Map<String,String> distributed;
+	
+	private ZkDistributed zkDistributed;
 	
 	private  int consumerMoniPeriod =  3600 * 1000;
 	
@@ -86,7 +92,11 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 									this.kafkaInput.encoding);
 							Map<String, Object> event = this.decoder
 									.decode(m);
-							this.kafkaInput.process(event);
+							if(zkDistributed==null||zkDistributed.originalRoute(event)){
+								this.kafkaInput.process(event);
+							}else{
+								zkDistributed.route(event);
+							}
 						} catch (Exception e) {
 							logger.error("process event:{} failed:{}",m,e.getCause());
 						}
@@ -111,6 +121,10 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 					.createJavaConsumerConnector(new ConsumerConfig(props));
 			
 			consumerConnMap.put(topicName, consumer);
+		}
+		if(distributed!=null){
+			zkDistributed = new ZkDistributed(distributed);
+			zkDistributed.zkRegistration();
 		}
 	}
 	

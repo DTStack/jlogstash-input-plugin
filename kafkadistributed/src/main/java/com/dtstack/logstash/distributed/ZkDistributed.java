@@ -18,12 +18,17 @@ public class ZkDistributed {
 	public ZkDistributed(Map<String,String> distribute){
 		this.distributed = distribute;
 	}
+	
+	public void zkRegistration(){
+		
+	}
 
 	public boolean originalRoute(Map<String,Object> event){
 	  return true;
 	}
 	
-	public Map<String, String> getDistributed() {
-		return distributed;
+	public void route(Map<String,Object> event){
+		
 	}
 }
+
