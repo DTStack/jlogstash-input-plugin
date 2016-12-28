@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
@@ -43,11 +44,24 @@ public class ZkDistributed {
 	
 	private String localAddress;
 	
+	private String localNode;
+
 	private CuratorFramework zkClient;
 	
 	private InterProcessMutex lock;
 	
+	private Map<String,List<Long>> nodeDatas;
+	
 	private static ObjectMapper objectMapper = new ObjectMapper();
+	
+	private static ZkDistributed zkDistributed ;
+	
+	
+	public static ZkDistributed getSingleZkDistributed(Map<String,Object> distribute) throws Exception{
+		if(zkDistributed!=null)return zkDistributed;
+		zkDistributed = new ZkDistributed(distribute);;
+		return zkDistributed;
+	}
 	
 	@SuppressWarnings("unchecked")
 	public ZkDistributed(Map<String,Object> distribute) throws Exception{
@@ -74,6 +88,7 @@ public class ZkDistributed {
         if(StringUtils.isBlank(this.localAddress)){
         	throw new Exception("localAddress is error");
         }
+        localNode = String.format("%s/%s", this.distributeRootNode,this.localAddress);
 	}
 	
 	private  CuratorFramework createWithOptions(String connectionString, RetryPolicy retryPolicy, int connectionTimeoutMs, int sessionTimeoutMs) throws IOException {
@@ -92,18 +107,34 @@ public class ZkDistributed {
 				logger.warn("%s node is Exist",this.distributeRootNode);
 			}
 		}
-		String localNode = String.format("%s/%s", this.distributeRootNode,this.localAddress);
-		Map<String,Long> nodeSign  = Maps.newHashMap();
-		nodeSign.put("pn", 0l);
-		nodeSign.put("bs", 0l);
 		Stat stat = zkClient.checkExists().forPath(localNode);
-		byte[] data = objectMapper.writeValueAsBytes(nodeSign);
 		if(stat==null){
-			zkClient.create().forPath(localNode,data);
+			createLocalNode();
 		}else{
-			zkClient.setData().forPath(localNode,data);
+			Map<String,Object> nodeSign  = Maps.newHashMap();
+			nodeSign.put("p", new CopyOnWriteArrayList<Long>());
+			nodeSign.put("t", System.currentTimeMillis());
+			updateLocalNode(nodeSign);
 		}
+		
 	}
+	
+    public void createLocalNode() throws Exception{
+		Map<String,Object> nodeSign  = Maps.newHashMap();
+		nodeSign.put("p", new CopyOnWriteArrayList<Long>());
+		nodeSign.put("t", System.currentTimeMillis());
+		byte[] data = objectMapper.writeValueAsBytes(nodeSign);
+		zkClient.create().forPath(localNode,data);
+    }
+    
+    @SuppressWarnings("unchecked")
+	public void updateLocalNode(Map<String,Object> nodeSign) throws Exception{
+    	nodeSign = nodeSign==null?objectMapper.readValue(zkClient.getData().forPath(localNode), Map.class):nodeSign;
+    	nodeSign.put("t", System.currentTimeMillis());
+    	byte[] data = objectMapper.writeValueAsBytes(nodeSign);
+		zkClient.setData().forPath(localNode,data);
+    }
+	
 	
 	public boolean originalRoute(Map<String,Object> event){
 	  for(Entry<String, List<String>> entry:routeRule){

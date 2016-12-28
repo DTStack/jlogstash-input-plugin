@@ -124,7 +124,7 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 		}
 		if(distributed!=null){
 			try {
-				zkDistributed = new ZkDistributed(distributed);
+				zkDistributed = ZkDistributed.getSingleZkDistributed(distributed);
 				zkDistributed.zkRegistration();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
