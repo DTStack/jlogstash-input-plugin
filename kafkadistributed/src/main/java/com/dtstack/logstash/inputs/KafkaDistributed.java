@@ -92,18 +92,18 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 									this.kafkaInput.encoding);
 							Map<String, Object> event = this.decoder
 									.decode(m);
-							if(zkDistributed==null||zkDistributed.originalRoute(event)){
+							if(zkDistributed==null){
 								this.kafkaInput.process(event);
 							}else{
-								zkDistributed.route(event);
+								zkDistributed.getRouteSelect().route(event);
 							}
 						} catch (Exception e) {
-							logger.error("process event:{} failed:{}",m,e.getCause());
+							logger.error("process event:{} failed:{}",m,ExceptionUtil.getErrorMessage(e));
 						}
 					}
 				}
 			} catch (Exception t) {
-				logger.error("kakfa Consumer fetch is error:{}",t.getCause());
+				logger.error("kakfa Consumer fetch is error:{}",ExceptionUtil.getErrorMessage(t));
 			}
 		}
 	}

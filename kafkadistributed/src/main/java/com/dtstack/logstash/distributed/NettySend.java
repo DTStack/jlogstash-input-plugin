@@ -23,41 +23,40 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.dtstack.logstash.exception.ExceptionUtil;
 
 /**
  * 
  * @author sishu.yss
  *
  */
-public class Netty{
+public class NettySend{
 	
-	private static final Logger logger = LoggerFactory.getLogger(Netty.class);
+	private static final Logger logger = LoggerFactory.getLogger(NettySend.class);
    
-	private static int port;
+	private  int port;
 	
-	private static String host;
+	private  String host;
 	
 	private NettyClient client;
 	
 	private static ObjectMapper objectMapper = new ObjectMapper();
 		
-	private static String delimiter = System.getProperty("line.separator");
 	
-	public Netty(Map config){
-	}
-
-	public void prepare() {
-		client = new NettyClient(host, port);
+	public  NettySend(String broker) {
+		String[] bs = broker.split(":");
+		this.host = bs[0];
+		this.port = Integer.parseInt(bs[1]);
+		client = new NettyClient(this.host, this.port);
 		client.connect();
 	}
 
-	protected void emit(Map event) {
-		
+	public void emit(Map event) {
 		try{
 			String msg = objectMapper.writeValueAsString(event);
-			client.write(msg + delimiter);
+			client.write(msg);
 		}catch(Exception e){
-			logger.error("", e);
+			logger.error(ExceptionUtil.getErrorMessage(e));
 		}
 	}
 }
