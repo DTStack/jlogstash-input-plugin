@@ -23,7 +23,9 @@ public class MonitorJlogstashCluster implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
-			zkDistributed.updateMemBrokersNodeData();
+			if(zkDistributed.setMaster()){
+				
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error(ExceptionUtil.getErrorMessage(e));

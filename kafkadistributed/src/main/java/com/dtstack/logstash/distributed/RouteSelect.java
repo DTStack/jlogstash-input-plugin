@@ -60,7 +60,7 @@ public class RouteSelect {
 			nettySend = getNettySend(broker);
 		}else{
 			try{
-				zkDistributed.getCreateNodelock().acquire();
+				zkDistributed.getAddMetaToNodelock().acquire();
 				zkDistributed.updateMemBrokersNodeData();
 				broker = getBroker(sign);
 				if(broker!=null){
@@ -73,7 +73,7 @@ public class RouteSelect {
 			}catch(Exception e){
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}finally{
-				zkDistributed.getCreateNodelock().release();
+				zkDistributed.getAddMetaToNodelock().release();
 			}
 		}
 		nettySend.emit(event);

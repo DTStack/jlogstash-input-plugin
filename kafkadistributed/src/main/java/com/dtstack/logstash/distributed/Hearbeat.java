@@ -17,13 +17,16 @@ public class Hearbeat implements Runnable{
 
 	private final static int HEATBEAT = 1000;
 	
-	public final static int EXPIRED = 5000;
+	private ZkDistributed zkDistributed;
+	
+	public Hearbeat(ZkDistributed zkDistributed){
+		this.zkDistributed  = zkDistributed;
+	}
 
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
-			ZkDistributed zkDistributed =ZkDistributed.getSingleZkDistributed(null);
 			zkDistributed.updateLocalNode(false);
 			zkDistributed.updateMemBrokersNodeData();
 			Thread.sleep(HEATBEAT);

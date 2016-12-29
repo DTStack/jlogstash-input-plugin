@@ -12,6 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dtstack.logstash.exception.ExceptionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.curator.RetryPolicy;
@@ -49,7 +50,10 @@ public class ZkDistributed {
 
 	private CuratorFramework zkClient;
 	
-	private InterProcessMutex createNodelock;
+	private InterProcessMutex addMetaToNodelock;
+	
+	private InterProcessMutex masterlock;
+
 	
 	private String hashKey;
 	
@@ -68,19 +72,16 @@ public class ZkDistributed {
 		return zkDistributed;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public ZkDistributed(Map<String,Object> distribute) throws Exception{
 		this.distributed = distribute;
 		checkDistributedConfig();
-        if (StringUtils.isNotBlank(zkAddress)){
-        	this.zkClient =createWithOptions(zkAddress,new ExponentialBackoffRetry(1000, 3), 1000, 1000);
-        	this.zkClient.start();
-        	this.createNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"lock"));
-        }
-        routeSelect = new RouteSelect(this);
+        this.zkClient =createWithOptions(zkAddress,new ExponentialBackoffRetry(1000, 3), 1000, 1000);
+        this.zkClient.start();
+        this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
+        this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
+        this.routeSelect = new RouteSelect(this);
 	}
     
-	@SuppressWarnings("unchecked")
 	private void checkDistributedConfig() throws Exception{
 //        this.routeRule  =((Map<String, List<String>>) this.distributed.get("routeRule")).entrySet();
         this.zkAddress = (String) distributed.get("zkAddress");
@@ -120,7 +121,41 @@ public class ZkDistributed {
 			updateLocalNode(true);
 		}
 		updateMemBrokersNodeData();
+		setMaster();
 	}
+	
+   public boolean setMaster(){
+	   boolean flag =false;
+	   try{
+			this.masterlock.acquire();
+			String master = isHaveMaster();
+            if(master==null){
+          	   this.zkClient.setData().forPath(this.brokersNode, this.localAddress.getBytes());
+          	   flag = true ;
+            }else if(this.localAddress.equals(master)){
+               flag = true ;
+            }
+		}catch(Exception e){
+			logger.error(ExceptionUtil.getErrorMessage(e));
+		}finally{
+			try{
+				this.masterlock.release();
+			}catch(Exception e){
+				logger.error(ExceptionUtil.getErrorMessage(e));
+			}
+		}
+		return flag;
+   }	
+	
+	
+   public String isHaveMaster() throws Exception{
+	   byte[] data = this.zkClient.getData().forPath(this.brokersNode);
+	   if(data==null||StringUtils.isBlank(objectMapper.readValue(data, BrokersNode.class).getMaster())){
+		   return null;
+	   }
+	   return objectMapper.readValue(data, BrokersNode.class).getMaster();
+   }	
+   
 	
    public void createNodeIfNotExists(String node) throws Exception{
 		if(zkClient.checkExists().forPath(node)==null){
@@ -132,7 +167,6 @@ public class ZkDistributed {
 		}
    }
 	
-   @SuppressWarnings("unchecked")
   public synchronized void updateMemBrokersNodeData() throws Exception{
 	  List<String> childrens =  zkClient.getChildren().forPath(this.brokersNode);
       if(childrens!=null){
@@ -143,9 +177,8 @@ public class ZkDistributed {
       }
       Set<Map.Entry<String, BrokerNode>> sets = nodeDatas.entrySet();
       for(Map.Entry<String, BrokerNode> entry:sets){
-    	 Long t =  (Long) entry.getValue().getTimeStamp();
-    	 if(System.currentTimeMillis()-t > Hearbeat.EXPIRED){
-    		 nodeDatas.remove(entry.getKey());
+    	 if(!entry.getValue().isAlive()){
+     		 nodeDatas.remove(entry.getKey());
     	 }
       }
    }
@@ -155,11 +188,14 @@ public class ZkDistributed {
 		zkClient.create().forPath(localNode,data);
     }
     
-    @SuppressWarnings("unchecked")
-	public void updateLocalNode(boolean cover) throws Exception{
+	public synchronized void updateLocalNode(boolean cover) throws Exception{
     	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(localNode), BrokerNode.class);
-    	nodeSign.setTimeStamp(System.currentTimeMillis());
-    	if(cover) nodeSign.setMetas(Lists.newArrayList());
+    	nodeSign.setSeq(nodeSign.getSeq()+1);
+    	if(cover){
+    		nodeSign.setMetas(Lists.newArrayList());
+    		nodeSign.setAlive(true);
+    		nodeSign.setSeq(0);
+    	} 
     	byte[] data = objectMapper.writeValueAsBytes(nodeSign);
 		zkClient.setData().forPath(localNode,data);
     }
@@ -168,7 +204,6 @@ public class ZkDistributed {
     	String nodePath = String.format("%s/%s", this.brokersNode,node);
     	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(nodePath), BrokerNode.class);
     	nodeSign.getMetas().add(sign);
-    	nodeSign.setTimeStamp(System.currentTimeMillis());
     	zkClient.setData().forPath(nodePath,objectMapper.writeValueAsBytes(nodeSign));
     	updateMemBrokersNodeData();
     }
@@ -177,8 +212,13 @@ public class ZkDistributed {
 		return routeSelect;
 	}
 
-	public InterProcessMutex getCreateNodelock() {
-		return createNodelock;
+    
+	public InterProcessMutex getMasterlock() {
+		return masterlock;
+	}
+
+	public InterProcessMutex getAddMetaToNodelock() {
+		return addMetaToNodelock;
 	}
 
 	public String getHashKey() {

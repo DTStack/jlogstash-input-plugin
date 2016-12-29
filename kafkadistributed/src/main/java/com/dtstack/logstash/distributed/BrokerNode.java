@@ -12,16 +12,26 @@ import com.google.common.collect.Lists;
  */
 public class BrokerNode {
 	
-	private long timeStamp = System.currentTimeMillis();
+	private long seq = 0;
+	
+	private  boolean alive = true;
 	
 	private List<String> metas = Lists.newArrayList();
-
-	public long getTimeStamp() {
-		return timeStamp;
+	
+	public boolean isAlive() {
+		return alive;
 	}
 
-	public void setTimeStamp(long timeStamp) {
-		this.timeStamp = timeStamp;
+	public void setAlive(boolean alive) {
+		this.alive = alive;
+	}
+
+	public long getSeq() {
+		return seq;
+	}
+
+	public void setSeq(long seq) {
+		this.seq = seq;
 	}
 
 	public List<String> getMetas() {
@@ -31,5 +41,4 @@ public class BrokerNode {
 	public void setMetas(List<String> metas) {
 		this.metas = metas;
 	}
-	
 }
