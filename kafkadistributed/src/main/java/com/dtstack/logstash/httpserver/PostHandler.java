@@ -18,7 +18,7 @@ import  com.sun.net.httpserver.HttpHandler;
  *
  */
 @SuppressWarnings("restriction")
-public class PostHandler implements HttpHandler{
+public abstract class PostHandler implements HttpHandler{
 
 	@Override
 	public void handle(HttpExchange he) throws IOException {
@@ -26,7 +26,6 @@ public class PostHandler implements HttpHandler{
         OutputStream os = he.getResponseBody();
         os.close();
 	}
-	
 	
 	@SuppressWarnings("unchecked")
 	protected static void parseQuery(String query, Map<String, 
