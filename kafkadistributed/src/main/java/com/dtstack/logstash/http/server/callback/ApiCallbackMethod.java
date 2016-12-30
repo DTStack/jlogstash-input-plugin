@@ -1,4 +1,4 @@
-package com.dtstack.logstash.httpserver.callback;
+package com.dtstack.logstash.http.server.callback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
