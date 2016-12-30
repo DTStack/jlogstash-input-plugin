@@ -1,5 +1,6 @@
 package com.dtstack.logstash.distributed;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.dtstack.logstash.exception.ExceptionUtil;
@@ -14,7 +15,7 @@ public class MasterCheck implements Runnable{
 	
 	private static final Logger logger = LoggerFactory.getLogger(MasterCheck.class);
 
-    private boolean isMaster;
+    private AtomicBoolean isMaster = new AtomicBoolean(false);
     
 	private ZkDistributed zkDistributed;
 	
@@ -22,14 +23,13 @@ public class MasterCheck implements Runnable{
 
     public MasterCheck(ZkDistributed zkDistributed){
     	this.zkDistributed = zkDistributed;
-    	
     }
 	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		try{
-			isMaster = zkDistributed.setMaster();
+			isMaster.getAndSet(zkDistributed.setMaster());
 			Thread.sleep(MASTERCHECK);
 		}catch(Exception e){
 			logger.error("MasterCheck error:{}",ExceptionUtil.getErrorMessage(e));
@@ -37,6 +37,6 @@ public class MasterCheck implements Runnable{
 	}
 
 	public boolean isMaster() {
-		return isMaster;
+		return isMaster.get();
 	}
 }

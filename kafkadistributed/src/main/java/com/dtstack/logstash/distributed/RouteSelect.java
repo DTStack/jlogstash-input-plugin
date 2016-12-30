@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dtstack.logstash.exception.ExceptionUtil;
+import com.dtstack.logstash.netty.client.NettySend;
 import com.dtstack.logstash.render.Formatter;
 import com.google.common.collect.Maps;
 

@@ -1,4 +1,4 @@
-package com.dtstack.logstash.distributed;
+package com.dtstack.logstash.netty.client;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
