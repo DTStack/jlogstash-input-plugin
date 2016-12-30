@@ -184,7 +184,7 @@ public class ZkDistributed {
     	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(localNode), BrokerNode.class);
     	nodeSign.setSeq(nodeSign.getSeq()+1);
     	if(cover){
-    		nodeSign.setMetas(Lists.newArrayList());
+    		nodeSign.setMetas(Lists.<String>newArrayList());
     		nodeSign.setSeq(0);
     	} 
 		nodeSign.setAlive(true);
