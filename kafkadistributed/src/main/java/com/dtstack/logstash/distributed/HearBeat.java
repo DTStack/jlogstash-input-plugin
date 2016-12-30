@@ -11,15 +11,15 @@ import com.dtstack.logstash.exception.ExceptionUtil;
  * @author sishu.yss
  *
  */
-public class Hearbeat implements Runnable{
+public class HearBeat implements Runnable{
 
-	private static final Logger logger = LoggerFactory.getLogger(Hearbeat.class);
+	private static final Logger logger = LoggerFactory.getLogger(HearBeat.class);
 
 	private final static int HEATBEAT = 1000;
 	
 	private ZkDistributed zkDistributed;
 	
-	public Hearbeat(ZkDistributed zkDistributed){
+	public HearBeat(ZkDistributed zkDistributed){
 		this.zkDistributed  = zkDistributed;
 	}
 
@@ -28,7 +28,6 @@ public class Hearbeat implements Runnable{
 		// TODO Auto-generated method stub
 		try {
 			zkDistributed.updateLocalNode(false);
-			zkDistributed.updateMemBrokersNodeData();
 			Thread.sleep(HEATBEAT);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -32,9 +32,9 @@ public class RouteSelect {
 	
 	private String keyHashCode;
 
-	public RouteSelect(ZkDistributed zkDistributed){
+	public RouteSelect(ZkDistributed zkDistributed,String hashKey){
 		this.zkDistributed = zkDistributed;
-		String[] ks= this.zkDistributed.getHashKey().split(":");
+		String[] ks= hashKey.split(":");
 		keyPrefix = ks[0];
 		keyHashCode = ks[1];
 	}

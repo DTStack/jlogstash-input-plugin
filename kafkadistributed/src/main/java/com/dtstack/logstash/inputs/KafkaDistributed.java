@@ -57,7 +57,6 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	 *  是否开启分布式 null不开启，不为null开启
 	 * 	{"zkAddress":"127.0.0.1:2181/distributed",
 	 *   "localAddress":"127.0.0.1:2181",
-	 *   "routeRule":{"logtype":["jvm1.8.log"]}
 	 *  }
 	 */
 	private  Map<String,Object> distributed;

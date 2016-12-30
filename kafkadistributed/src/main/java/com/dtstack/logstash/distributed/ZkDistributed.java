@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -36,8 +34,6 @@ public class ZkDistributed {
 	
 	private  Map<String,Object> distributed;
 	
-//	private Set<Entry<String, List<String>>> routeRule;
-	
 	private String zkAddress;
 	
 	private String distributeRootNode;
@@ -54,7 +50,6 @@ public class ZkDistributed {
 	
 	private InterProcessMutex masterlock;
 
-	
 	private String hashKey;
 	
 	private Map<String,BrokerNode> nodeDatas = Maps.newConcurrentMap();
@@ -79,11 +74,10 @@ public class ZkDistributed {
         this.zkClient.start();
         this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
         this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
-        this.routeSelect = new RouteSelect(this);
+        this.routeSelect = new RouteSelect(this,this.hashKey);
 	}
     
 	private void checkDistributedConfig() throws Exception{
-//        this.routeRule  =((Map<String, List<String>>) this.distributed.get("routeRule")).entrySet();
         this.zkAddress = (String) distributed.get("zkAddress");
         if(StringUtils.isBlank(this.zkAddress)||this.zkAddress.split("/").length<2){
         	throw new Exception("zkAddress is error");
@@ -129,12 +123,10 @@ public class ZkDistributed {
 	   try{
 			this.masterlock.acquire();
 			String master = isHaveMaster();
-            if(master==null){
+            if(master==null||!getBrokerNodeData(master).isAlive()){
           	   this.zkClient.setData().forPath(this.brokersNode, this.localAddress.getBytes());
           	   flag = true ;
-            }else if(this.localAddress.equals(master)){
-               flag = true ;
-            }
+            }else if(this.localAddress.equals(master))flag = true ;
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		}finally{
@@ -168,7 +160,7 @@ public class ZkDistributed {
    }
 	
   public synchronized void updateMemBrokersNodeData() throws Exception{
-	  List<String> childrens =  zkClient.getChildren().forPath(this.brokersNode);
+	  List<String> childrens = getBrokersChildren();
       if(childrens!=null){
     	  for(String node:childrens){
     		  BrokerNode data = objectMapper.readValue(zkClient.getData().forPath(String.format("%s/%s", this.brokersNode,node)), BrokerNode.class);
@@ -188,41 +180,63 @@ public class ZkDistributed {
 		zkClient.create().forPath(localNode,data);
     }
     
-	public synchronized void updateLocalNode(boolean cover) throws Exception{
+	public void updateLocalNode(boolean cover) throws Exception{
     	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(localNode), BrokerNode.class);
     	nodeSign.setSeq(nodeSign.getSeq()+1);
     	if(cover){
     		nodeSign.setMetas(Lists.newArrayList());
-    		nodeSign.setAlive(true);
     		nodeSign.setSeq(0);
     	} 
-    	byte[] data = objectMapper.writeValueAsBytes(nodeSign);
-		zkClient.setData().forPath(localNode,data);
+		nodeSign.setAlive(true);
+    	updateBrokerNode(this.localAddress,nodeSign);
     }
+	
+	public synchronized void updateBrokerNode(String node,BrokerNode nodeSign){
+		try{
+	    	String nodePath = String.format("%s/%s", this.brokersNode,node);
+	    	zkClient.setData().forPath(nodePath,objectMapper.writeValueAsBytes(nodeSign));
+		}catch(Exception e){
+			logger.error("{}:updateBrokerNode error:{}",node,ExceptionUtil.getErrorMessage(e));
+		}
+	}
     
     public void updateBrokerNodeMeta(String node,String sign) throws Exception{
-    	String nodePath = String.format("%s/%s", this.brokersNode,node);
-    	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(nodePath), BrokerNode.class);
-    	nodeSign.getMetas().add(sign);
-    	zkClient.setData().forPath(nodePath,objectMapper.writeValueAsBytes(nodeSign));
-    	updateMemBrokersNodeData();
+    	BrokerNode nodeSign = getBrokerNodeData(node);
+    	if(nodeSign!=null){
+        	nodeSign.getMetas().add(sign);
+        	updateBrokerNode(node,nodeSign);
+        	updateMemBrokersNodeData();
+    	}
     }
+    
+    public List<String> getBrokersChildren(){
+    	try{
+        	return zkClient.getChildren().forPath(this.brokersNode);
+    	}catch(Exception e){
+    		logger.error("getBrokersChildren error:{}",ExceptionUtil.getErrorMessage(e));
+    	}
+    	return null;
+    }
+    
+    public BrokerNode getBrokerNodeData(String node){
+    	try{
+        	String nodePath = String.format("%s/%s", this.brokersNode,node);
+        	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(nodePath), BrokerNode.class);
+        	return nodeSign;
+    	}catch(Exception e){
+    		logger.error("{}:getBrokerNodeData error:{}",node,ExceptionUtil.getErrorMessage(e));
+    	}
 
+    	return null;
+    }
+    
 	public RouteSelect getRouteSelect() {
 		return routeSelect;
 	}
 
-    
-	public InterProcessMutex getMasterlock() {
-		return masterlock;
-	}
 
 	public InterProcessMutex getAddMetaToNodelock() {
 		return addMetaToNodelock;
-	}
-
-	public String getHashKey() {
-		return hashKey;
 	}
 
 	public Map<String, BrokerNode> getNodeDatas() {
