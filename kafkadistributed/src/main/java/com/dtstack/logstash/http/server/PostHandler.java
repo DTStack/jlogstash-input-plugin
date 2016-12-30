@@ -1,4 +1,4 @@
-package com.dtstack.logstash.httpserver;
+package com.dtstack.logstash.http.server;
 
 
 import java.io.IOException;

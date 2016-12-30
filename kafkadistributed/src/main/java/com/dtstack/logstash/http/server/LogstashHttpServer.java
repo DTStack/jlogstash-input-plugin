@@ -1,4 +1,4 @@
-package com.dtstack.logstash.httpserver;
+package com.dtstack.logstash.http.server;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

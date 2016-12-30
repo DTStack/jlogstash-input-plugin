@@ -1,4 +1,4 @@
-package com.dtstack.logstash.httpserver;
+package com.dtstack.logstash.http.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpExchange;
  * @author sishu.yss
  *
  */
+@SuppressWarnings("restriction")
 public class ImmediatelyLoadNodeDataHandler extends PostHandler{
 	
 	
