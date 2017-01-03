@@ -43,8 +43,6 @@ public abstract class PostHandler implements HttpHandler{
 	@Override
 	public void handle(HttpExchange he) throws IOException {
 		// TODO Auto-generated method stub
-        OutputStream os = he.getResponseBody();
-        os.close();
 	}
 	
 	@SuppressWarnings("unchecked")
