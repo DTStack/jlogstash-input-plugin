@@ -22,6 +22,10 @@ public class ClusterLog {
 
     private long logTime;
 
+    private String host;
+
+    private String path;
+
     private String loginfo;
 
     private String originalLog;
@@ -45,6 +49,10 @@ public class ClusterLog {
     @Override
     public String toString() {
         return loginfo;
+    }
+
+    public String getLogFlag(){
+        return host + ":" + path;
     }
 
     public static ClusterLog generateClusterLog(String log) {

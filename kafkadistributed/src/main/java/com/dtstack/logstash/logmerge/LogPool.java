@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,15 +39,21 @@ public class LogPool {
         logWatcher.startup();
     }
 
-    public void addLog(String host, String filePath, String log){
-        String flag = getLogFlag(host, filePath);
+    public void addLog(String log){
+
+        ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
+        if(log == null){
+            //FIXME deal
+            return;
+        }
+
+        String flag = clusterLog.getLogFlag();
         IPreLog preLogInfo = logInfoMap.get(flag);
         if(preLogInfo == null){//FIXMe 目前只有cms日志,之后根据日志类型生成源日志存储类
             preLogInfo = new PreLogInfo(flag);
             logInfoMap.put(flag, preLogInfo);
         }
 
-        ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
         preLogInfo.addLog(clusterLog);
     }
 
@@ -59,10 +66,10 @@ public class LogPool {
         logWatcher.wakeup(flag);
     }
 
-    private String getLogFlag(String host, String filePath){
-        return host + ":" + filePath;
+    //FIXME 获取未完成的日志信息
+    public List<String> getNotCompleteLog(){
+        return  null;
     }
-
 
 
 }
