@@ -111,7 +111,7 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 							if(zkDistributed==null){
 								this.kafkaInput.process(event);
 							}else{
-								zkDistributed.getRouteSelect().route(event);
+								zkDistributed.route(event);
 							}
 						} catch (Exception e) {
 							logger.error("process event:{} failed:{}",m,ExceptionUtil.getErrorMessage(e));

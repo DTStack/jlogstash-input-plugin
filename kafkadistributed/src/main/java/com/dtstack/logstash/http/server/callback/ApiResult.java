@@ -17,6 +17,8 @@
  */
 package com.dtstack.logstash.http.server.callback;
 
+import java.util.UUID;
+
 /**
  * 
  * Reason: TODO ADD REASON(可选)
@@ -28,13 +30,13 @@ package com.dtstack.logstash.http.server.callback;
 public class ApiResult {
 
 	private int code;
-	private String msg;
+	private Object data;
 	private String errorMsg;
 	private long space;
-	private String requestId;
+	private String requestId = UUID.randomUUID().toString();
 
 	public ApiResult(){
-		setRequestId(RequestContext.get().getRequestId());
+//		setRequestId(RequestContext.get().getRequestId());
 	}
 	/**
 	 * @return the requestId
@@ -71,7 +73,6 @@ public class ApiResult {
 		this.errorMsg = errorMsg;
 	}
 
-	private Object data;
 
 	/**
 	 * @return the code
@@ -89,20 +90,6 @@ public class ApiResult {
 		this.code = code;
 	}
 
-	/**
-	 * @return the msg
-	 */
-	public String getMsg() {
-		return msg;
-	}
-
-	/**
-	 * @param msg
-	 *            the msg to set
-	 */
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
 
 
 	public void serverError() {
@@ -111,7 +98,7 @@ public class ApiResult {
 
 	public void setCodeMsg(int code, String msg) {
 		this.setCode(code);
-		this.setMsg(msg);
+		this.setErrorMsg(msg);
 	}
 	
 	public void success(Object data){
@@ -137,5 +124,4 @@ public class ApiResult {
 	public void notModified(){
 		this.setCodeMsg(304, "Not Modified");
 	}
-
 }

@@ -21,13 +21,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.exception.ExceptionUtil;
+import com.dtstack.logstash.http.cilent.LogstashHttpClient;
+import com.dtstack.logstash.http.server.LogstashHttpServer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.curator.RetryPolicy;
@@ -76,6 +80,11 @@ public class ZkDistributed {
 	private static ZkDistributed zkDistributed;
 	
     private RouteSelect routeSelect;
+    
+    private LogstashHttpClient logstashHttpClient;
+    
+    private LogstashHttpServer logstashHttpServer;
+
 	
 	
 	public static synchronized ZkDistributed getSingleZkDistributed(Map<String,Object> distribute) throws Exception{
@@ -92,6 +101,8 @@ public class ZkDistributed {
         this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
         this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
         this.routeSelect = new RouteSelect(this,this.hashKey);
+        this.logstashHttpServer = new LogstashHttpServer(zkDistributed);
+        this.logstashHttpClient = new LogstashHttpClient(zkDistributed);
 	}
     
 	private void checkDistributedConfig() throws Exception{
@@ -247,11 +258,6 @@ public class ZkDistributed {
     	return null;
     }
     
-	public RouteSelect getRouteSelect() {
-		return routeSelect;
-	}
-
-
 	public InterProcessMutex getAddMetaToNodelock() {
 		return addMetaToNodelock;
 	}
@@ -262,6 +268,15 @@ public class ZkDistributed {
 
 	public String getLocalAddress() {
 		return localAddress;
+	}
+
+	public void route(Map<String, Object> event) throws Exception {
+		// TODO Auto-generated method stub
+		this.routeSelect.route(event);
+	}
+	
+	public void realse(){
+		this.logstashHttpClient.sendImmediatelyLoadNodeData();
 	}
 }
 

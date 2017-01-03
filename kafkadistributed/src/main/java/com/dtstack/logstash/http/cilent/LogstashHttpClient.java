@@ -15,43 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dtstack.logstash.http.server;
+package com.dtstack.logstash.http.cilent;
 
-import java.io.IOException;
+import java.util.Set;
 import com.dtstack.logstash.distributed.ZkDistributed;
-import com.dtstack.logstash.http.server.callback.ApiCallback;
-import com.dtstack.logstash.http.server.callback.ApiCallbackMethod;
-import com.dtstack.logstash.http.server.callback.ApiResult;
-import com.sun.net.httpserver.HttpExchange;
+import com.dtstack.logstash.http.common.HttpCommon;
+import com.dtstack.logstash.http.common.Urls;
 
 
 /**
  * 
- * Reason: TODO ADD REASON(可选)
- * Date: 2016年12月30日 下午1:16:37
- * Company: www.dtstack.com
  * @author sishu.yss
  *
  */
-@SuppressWarnings("restriction")
-public class ImmediatelyLoadNodeDataHandler extends PostHandler{
+public class LogstashHttpClient {
 	
 	private ZkDistributed zkDistributed;
 	
-	public ImmediatelyLoadNodeDataHandler(ZkDistributed zkDistributed) {
-		// TODO Auto-generated constructor stub
+	private static String tempalteUrl = "http://%s:%d%s";
+	
+	public LogstashHttpClient(ZkDistributed zkDistributed){
 		this.zkDistributed = zkDistributed;
 	}
-
-	@Override
-	public void handle(final HttpExchange he) throws IOException {
-		// TODO Auto-generated method stub
-		 ApiCallbackMethod.doCallback(new ApiCallback(){
-			@Override
-			public void execute(ApiResult apiResult) throws Exception {
-				// TODO Auto-generated method stub
-				zkDistributed.updateMemBrokersNodeData();
-			}
-		 }, he);
-	}
+	
+    public void sendImmediatelyLoadNodeData(){
+    	Set<String> nodes = this.zkDistributed.getNodeDatas().keySet();
+    	for(String node:nodes){
+    		if(!node.equals(this.zkDistributed.getLocalAddress())){
+    			Object[] obj = HttpCommon.getUrlPort(node);
+    			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOADNODEDATA));
+    		}
+    	}
+    }	
 }
