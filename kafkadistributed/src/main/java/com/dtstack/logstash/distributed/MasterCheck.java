@@ -8,6 +8,9 @@ import com.dtstack.logstash.exception.ExceptionUtil;
 
 /**
  * 
+ * Reason: TODO ADD REASON(可选)
+ * Date: 2016年12月28日 下午1:16:37
+ * Company: www.dtstack.com
  * @author sishu.yss
  *
  */
