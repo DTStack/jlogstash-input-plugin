@@ -67,9 +67,7 @@ public class LogPool {
     }
 
     //FIXME 获取未完成的日志信息
-    public List<String> getNotCompleteLog(){
+    public List<Map<String,Object>> getNotCompleteLog(){
         return  null;
     }
-
-
 }

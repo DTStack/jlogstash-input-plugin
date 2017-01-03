@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.dtstack.logstash.http.cilent.LogstashHttpClient;
 import com.dtstack.logstash.http.server.LogstashHttpServer;
+import com.dtstack.logstash.logmerge.LogPool;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.curator.RetryPolicy;
@@ -84,9 +85,10 @@ public class ZkDistributed {
     private LogstashHttpClient logstashHttpClient;
     
     private LogstashHttpServer logstashHttpServer;
-
-	
-	
+    
+    private LogPool logPool = LogPool.getInstance();
+    
+    
 	public static synchronized ZkDistributed getSingleZkDistributed(Map<String,Object> distribute) throws Exception{
 		if(zkDistributed!=null)return zkDistributed;
 		zkDistributed = new ZkDistributed(distribute);
@@ -219,6 +221,12 @@ public class ZkDistributed {
     	updateBrokerNode(this.localAddress,nodeSign);
     }
 	
+	public void disableLocalNode(){
+		BrokerNode brokerNode = new BrokerNode();
+		brokerNode.setAlive(false);
+		updateBrokerNode(this.localAddress,brokerNode);
+	}
+		
 	public synchronized void updateBrokerNode(String node,BrokerNode nodeSign){
 		try{
 	    	String nodePath = String.format("%s/%s", this.brokersNode,node);
@@ -275,8 +283,27 @@ public class ZkDistributed {
 		this.routeSelect.route(event);
 	}
 	
-	public void realse(){
+	public void route(List<Map<String, Object>> events) throws Exception {
+		// TODO Auto-generated method stub
+		if(events != null){
+			for(Map<String, Object> event:events){
+				this.routeSelect.route(event);
+			}
+		}
+	}
+	
+	
+	public void realse() throws Exception{
+		
+		
+		this.disableLocalNode();
 		this.logstashHttpClient.sendImmediatelyLoadNodeData();
+		this.sendLogPoolData();
+	}
+	
+	public void sendLogPoolData() throws Exception{
+		List<Map<String,Object>> events = this.logPool.getNotCompleteLog();
+		route(events);
 	}
 }
 

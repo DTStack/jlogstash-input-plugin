@@ -28,12 +28,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.decoder.IDecode;
 import com.dtstack.logstash.distributed.ZkDistributed;
 import com.dtstack.logstash.exception.ExceptionUtil;
+
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -202,17 +205,20 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 
 	@Override
 	public void release() {
-		
-		for(ConsumerConnector consumer : consumerConnMap.values()){
-			consumer.commitOffsets(true);
-			consumer.shutdown();
+		try {
+			for(ConsumerConnector consumer : consumerConnMap.values()){
+				consumer.commitOffsets(true);
+				consumer.shutdown();
+			}
+			for(ExecutorService executor : executorMap.values()){
+				executor.shutdownNow();
+			}
+			scheduleExecutor.shutdownNow();
+			this.zkDistributed.realse();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.error(ExceptionUtil.getErrorMessage(e));
 		}
-		
-		for(ExecutorService executor : executorMap.values()){
-			executor.shutdownNow();
-		}
-		
-		scheduleExecutor.shutdownNow();
 	}
 	
 	public void startMonitor(){
