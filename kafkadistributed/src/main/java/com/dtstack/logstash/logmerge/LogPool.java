@@ -38,7 +38,7 @@ public class LogPool {
         logWatcher.startup();
     }
 
-    public void addLog(String host, String filePath, ClusterLog log){
+    public void addLog(String host, String filePath, String log){
         String flag = getLogFlag(host, filePath);
         IPreLog preLogInfo = logInfoMap.get(flag);
         if(preLogInfo == null){//FIXMe 目前只有cms日志,之后根据日志类型生成源日志存储类
@@ -46,7 +46,8 @@ public class LogPool {
             logInfoMap.put(flag, preLogInfo);
         }
 
-        preLogInfo.addLog(log);
+        ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
+        preLogInfo.addLog(clusterLog);
     }
 
     public GCLog mergeLog(String flag){
