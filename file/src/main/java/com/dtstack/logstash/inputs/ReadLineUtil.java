@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * RandomAccessFile 方式按行读取文件 
+ * RandomAccessFile 方式按行读取文件
  * @author xuchao
  *
  */

@@ -1,7 +1,5 @@
 package com.dtstack.logstash.inputs;
 
-import io.netty.channel.ChannelHandlerContext;
-
 import java.util.ArrayList;
 import java.util.List;
 

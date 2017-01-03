@@ -11,7 +11,7 @@ import java.util.List;
  * @ahthor xuchao
  */
 
-public class CMSLog {
+public class GCLog {
 
     private List<String> logInfo = Lists.newArrayList();
 

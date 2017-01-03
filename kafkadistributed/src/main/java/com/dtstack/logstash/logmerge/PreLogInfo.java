@@ -15,7 +15,7 @@ import java.util.List;
  * @ahthor xuchao
  */
 
-public class PreLogInfo {
+public class PreLogInfo implements IPreLog {
 
     private static final Logger logger = LoggerFactory.getLogger(PreLogInfo.class);
 
@@ -24,7 +24,7 @@ public class PreLogInfo {
 
     private long firstEleTime;
 
-    private IlogMerge logMerge = new CMSLogMerge();
+    private CMSLogMerge logMerge = new CMSLogMerge();
 
     private List<ClusterLog> logList;
 
@@ -38,7 +38,7 @@ public class PreLogInfo {
      * @param addLog
      * @return
      */
-    public boolean add(ClusterLog addLog){//插入的时候根据时间排序,升序
+    public boolean addLog(ClusterLog addLog){//插入的时候根据时间排序,升序
         int addPos = logList.size();
         for(int i=0; i<logList.size(); i++){
             ClusterLog compLog = logList.get(i);
@@ -53,12 +53,8 @@ public class PreLogInfo {
             firstEleTime = System.currentTimeMillis();
         }
 
-        //FIXME 触发日志完整性检查修改到其他线程处理
         if (logList.size() >= CMSLogMerge.MERGE_NUM){
-            if(checkIsComplete()){
-                CMSLog cmsLog = mergeGcLog();
-                System.out.println(cmsLog.toString());
-            }
+            LogPool.getInstance().addMergeSignal(flag);
         }
         return true;
     }
@@ -67,9 +63,15 @@ public class PreLogInfo {
      * 合并出完整的一条日志
      * @return
      */
-    public CMSLog mergeGcLog(){
+    @Override
+    public GCLog mergeGcLog(){
+
+        if(!checkIsCompleteLog()){
+           return null;
+        }
+
         //从列表中抽取出CMS记录
-        CMSLog cmsLog = new CMSLog();
+        GCLog cmsLog = new GCLog();
         for (int i=0; i<CMSLogMerge.MERGE_NUM; i++){
             ClusterLog currLog = logList.remove(0);//一直remove第0个
             if(currLog == null){
@@ -93,10 +95,10 @@ public class PreLogInfo {
      * 判断是不是一条完整的CMS日志
      * @return
      */
-    public boolean checkIsComplete(){
-        boolean isCompleteLog = logMerge.checkisCompleteLog(logList.subList(0, 12));
+    public boolean checkIsCompleteLog(){
+        boolean isCompleteLog = logMerge.checkIsCompleteLog(logList.subList(0, 12));
         if (isCompleteLog){
-            logger.info("get a full msg..");
+            logger.debug("get a full msg..");
         }
 
         return isCompleteLog;

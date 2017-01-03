@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  *
  * @ahthor xuchao
  */
-public class CMSLogMerge implements IlogMerge {
+public class CMSLogMerge{
 
     private static final Logger logger = LoggerFactory.getLogger(CMSLogMerge.class);
 
@@ -76,8 +76,7 @@ public class CMSLogMerge implements IlogMerge {
      * 校验是不是一条完整的cms日志
      * @return
      */
-    @Override
-    public boolean checkisCompleteLog(List<ClusterLog> logPool){
+    public boolean checkIsCompleteLog(List<ClusterLog> logPool){
         if (logPool.size() < CMSLogMerge.MERGE_NUM){
             logger.info("log size is not match cms step.");
             return false;
