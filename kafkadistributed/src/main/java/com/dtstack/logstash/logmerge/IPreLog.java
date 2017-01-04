@@ -19,7 +19,7 @@ public interface IPreLog {
      * 执行日志合并
      * @return
      */
-    GCLog mergeGcLog();
+    CompleteLog mergeGcLog();
 
     /**
      * 添加一条日志源

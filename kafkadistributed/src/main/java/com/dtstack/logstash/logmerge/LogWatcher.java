@@ -1,5 +1,7 @@
 package com.dtstack.logstash.logmerge;
 
+import com.dtstack.logstash.assembly.qlist.InputQueueList;
+import com.dtstack.logstash.inputs.BaseInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +30,14 @@ public class LogWatcher implements Callable {
 
     private LogPool logPool;
 
+    private static InputQueueList inputQueueList = BaseInput.getInputQueueList();
+
     public  LogWatcher(LogPool logPool){
         this.logPool = logPool;
+        if (inputQueueList == null){
+            logger.error("not init InputQueueList. please check it.");
+            System.exit(-1);
+        }
     }
 
     public void wakeup(String flag){
@@ -41,10 +49,14 @@ public class LogWatcher implements Callable {
     public Object call() throws Exception {
         while(isRunning){
             String flag = signal.poll(MAX_WAIT_PERIOD, TimeUnit.SECONDS);
-            logPool.mergeLog(flag);
-            //FIXME 将数据加入到jlogstash 的input数据流当中
-        }
+            if(flag == null){
+                continue; //FIXME 处理超时队列消息
+            }
 
+            CompleteLog completeLog = logPool.mergeLog(flag);
+            inputQueueList.put(completeLog.getEventMap());
+        }
+        logger.info("log pool watcher is not running....");
         return null;
     }
 
@@ -52,11 +64,12 @@ public class LogWatcher implements Callable {
         this.isRunning = true;
         executorService = Executors.newSingleThreadExecutor();
         executorService.submit(this);
-        logger.info("gc log pool merge watch is start up success");
+        logger.info("log pool merge watcher is start up success");
     }
 
     public void shutdown(){
         this.isRunning = false;
         executorService.shutdown();
+        logger.info("log pool merge watcher is shutdown");
     }
 }
