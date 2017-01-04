@@ -86,8 +86,7 @@ public class HeartBeatCheck implements Runnable{
 						brokerNodeCount.setCount(0);
 					}
 					if(brokerNodeCount.getCount() > EXCEEDCOUNT){//node died
-						brokerNode.setAlive(false);
-						this.zkDistributed.updateBrokerNode(node, brokerNode);
+					    this.zkDistributed.disableLocalNode(node);
 						brokerNodeCounts.remove(node);
 					}else{
 						brokerNodeCount.setBrokerNode(brokerNode);

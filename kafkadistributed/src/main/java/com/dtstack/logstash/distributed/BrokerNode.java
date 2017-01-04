@@ -32,13 +32,13 @@ import com.google.common.collect.Lists;
  */
 public class BrokerNode {
 	
-	private long seq = 0;
+	private Long seq;
 	
-	private  boolean alive = true;
+	private  Boolean alive;
 	
-	private List<String> metas = Lists.newArrayList();
+	private List<String> metas;
 	
-	public boolean isAlive() {
+	public Boolean isAlive() {
 		return alive;
 	}
 
@@ -46,7 +46,7 @@ public class BrokerNode {
 		this.alive = alive;
 	}
 
-	public long getSeq() {
+	public Long getSeq() {
 		return seq;
 	}
 
@@ -60,5 +60,29 @@ public class BrokerNode {
 
 	public void setMetas(List<String> metas) {
 		this.metas = metas;
+	}
+	
+	public static BrokerNode initBrokerNode(){
+		BrokerNode brokerNode = new BrokerNode();
+		brokerNode.setMetas(Lists.newArrayList());
+		brokerNode.setAlive(true);
+		return brokerNode;
+	}
+	
+	public static BrokerNode initNullBrokerNode(){
+		BrokerNode brokerNode = new BrokerNode();
+		return brokerNode;
+	}
+	
+	public static void copy(BrokerNode source,BrokerNode target){
+    	if(source.getSeq()!=null){
+    		target.setSeq(source.getSeq()+target.getSeq());
+    	}
+    	if(source.getMetas()!=null){
+    		target.setMetas(source.getMetas());
+    	}
+    	if(source.isAlive()!=null){
+    		target.setAlive(source.isAlive());
+    	}
 	}
 }

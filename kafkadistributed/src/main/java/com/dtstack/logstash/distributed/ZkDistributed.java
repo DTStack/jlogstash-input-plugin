@@ -21,19 +21,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.dtstack.logstash.http.cilent.LogstashHttpClient;
 import com.dtstack.logstash.http.server.LogstashHttpServer;
 import com.dtstack.logstash.logmerge.LogPool;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
@@ -70,11 +68,13 @@ public class ZkDistributed {
 	
 	private InterProcessMutex addMetaToNodelock;
 	
+	private InterProcessMutex updateNodelock;
+	
 	private InterProcessMutex masterlock;
-
+	
 	private String hashKey;
 	
-	private Map<String,BrokerNode> nodeDatas = Maps.newConcurrentMap();
+	private Map<String,BrokerNode> nodeDatas = Maps.newConcurrentMap();//多线程安全
 	
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	
@@ -102,6 +102,7 @@ public class ZkDistributed {
         this.zkClient.start();
         this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
         this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
+        this.updateNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"updateNodelock"));
         this.routeSelect = new RouteSelect(this,this.hashKey);
         this.logstashHttpServer = new LogstashHttpServer(zkDistributed);
         this.logstashHttpClient = new LogstashHttpClient(zkDistributed);
@@ -135,6 +136,7 @@ public class ZkDistributed {
 				.build();
 	}
 	
+	@SuppressWarnings("static-access")
 	public void zkRegistration() throws Exception{
 		createNodeIfNotExists(this.distributeRootNode);
 		createNodeIfNotExists(this.brokersNode);
@@ -142,7 +144,8 @@ public class ZkDistributed {
 		if(stat==null){
 			createLocalNode();
 		}else{
-			updateLocalNode(true);
+			BrokerNode BrokerNode = new BrokerNode();
+			this.updateBrokerNode(this.localAddress, BrokerNode.initBrokerNode());
 		}
 		updateMemBrokersNodeData();
 		setMaster();
@@ -151,12 +154,14 @@ public class ZkDistributed {
    public boolean setMaster(){
 	   boolean flag =false;
 	   try{
-			this.masterlock.acquire();
 			String master = isHaveMaster();
+			if(this.localAddress.equals(master))return true;
+			this.masterlock.acquire();
+			master = isHaveMaster();
             if(master==null||!getBrokerNodeData(master).isAlive()){
           	   this.zkClient.setData().forPath(this.brokersNode, this.localAddress.getBytes());
           	   flag = true ;
-            }else if(this.localAddress.equals(master))flag = true ;
+            }
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		}finally{
@@ -182,7 +187,7 @@ public class ZkDistributed {
    public void createNodeIfNotExists(String node) throws Exception{
 		if(zkClient.checkExists().forPath(node)==null){
 			try{
-				zkClient.create().forPath(node);
+				zkClient.create().forPath(node,objectMapper.writeValueAsBytes(new BrokersNode()));
 			}catch(KeeperException.NodeExistsException e){
 				logger.warn("%s node is Exist",node);
 			}
@@ -206,35 +211,33 @@ public class ZkDistributed {
    }
 	
     public void createLocalNode() throws Exception{
-		byte[] data = objectMapper.writeValueAsBytes(new BrokerNode());
-		zkClient.create().forPath(localNode,data);
+		zkClient.create().forPath(localNode,objectMapper.writeValueAsBytes(BrokerNode.initBrokerNode()));
     }
-    
-	public void updateLocalNode(boolean cover) throws Exception{
-    	BrokerNode nodeSign = objectMapper.readValue(zkClient.getData().forPath(localNode), BrokerNode.class);
-    	nodeSign.setSeq(nodeSign.getSeq()+1);
-    	if(cover){
-    		nodeSign.setMetas(Lists.<String>newArrayList());
-    		nodeSign.setSeq(0);
-    	} 
-		nodeSign.setAlive(true);
-    	updateBrokerNode(this.localAddress,nodeSign);
-    }
-	
-	public void disableLocalNode(){
-		BrokerNode brokerNode = new BrokerNode();
+
+	public void disableLocalNode(String node){
+		BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
 		brokerNode.setAlive(false);
-		updateBrokerNode(this.localAddress,brokerNode);
+		updateBrokerNode(node,brokerNode);
 	}
 		
-	public synchronized void updateBrokerNode(String node,BrokerNode nodeSign){
+	public void updateBrokerNode(String node,BrokerNode nodeSign){
 		try{
+			this.updateNodelock.acquire(30, TimeUnit.SECONDS);
 	    	String nodePath = String.format("%s/%s", this.brokersNode,node);
-	    	zkClient.setData().forPath(nodePath,objectMapper.writeValueAsBytes(nodeSign));
+	    	BrokerNode brokerNode = this.getBrokerNodeData(node);
+	    	BrokerNode.copy(nodeSign, brokerNode);
+	    	zkClient.setData().forPath(nodePath,objectMapper.writeValueAsBytes(brokerNode));
 		}catch(Exception e){
 			logger.error("{}:updateBrokerNode error:{}",node,ExceptionUtil.getErrorMessage(e));
+		}finally{
+			try{
+				this.updateNodelock.release();
+			}catch(Exception e){
+				logger.error("{}:updateBrokerNode error:{}",node,ExceptionUtil.getErrorMessage(e));
+			}
 		}
 	}
+	
     
     public void updateBrokerNodeMeta(String node,String sign) throws Exception{
     	BrokerNode nodeSign = getBrokerNodeData(node);
@@ -262,7 +265,6 @@ public class ZkDistributed {
     	}catch(Exception e){
     		logger.error("{}:getBrokerNodeData error:{}",node,ExceptionUtil.getErrorMessage(e));
     	}
-
     	return null;
     }
     
@@ -294,16 +296,20 @@ public class ZkDistributed {
 	
 	
 	public void realse() throws Exception{
+		downReblance();
+		disableLocalNode(this.localAddress);
+		logstashHttpClient.sendImmediatelyLoadNodeData();
+		sendLogPoolData();
+	}
+	
+	public void downReblance(){
 		
-		
-		this.disableLocalNode();
-		this.logstashHttpClient.sendImmediatelyLoadNodeData();
-		this.sendLogPoolData();
 	}
 	
 	public void sendLogPoolData() throws Exception{
 		List<Map<String,Object>> events = this.logPool.getNotCompleteLog();
 		route(events);
 	}
+	
 }
 

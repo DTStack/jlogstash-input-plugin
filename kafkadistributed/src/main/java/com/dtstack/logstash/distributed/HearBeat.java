@@ -35,7 +35,7 @@ public class HearBeat implements Runnable{
 
 	private static final Logger logger = LoggerFactory.getLogger(HearBeat.class);
 
-	private final static int HEATBEAT = 1000;
+	private final static int HEATBEAT = 2000;
 	
 	private ZkDistributed zkDistributed;
 	
@@ -47,7 +47,9 @@ public class HearBeat implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
-			zkDistributed.updateLocalNode(false);
+			BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
+			brokerNode.setSeq(1);
+			zkDistributed.updateBrokerNode(this.zkDistributed.getLocalAddress(), brokerNode);
 			Thread.sleep(HEATBEAT);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

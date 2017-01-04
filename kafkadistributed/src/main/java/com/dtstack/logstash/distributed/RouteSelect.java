@@ -41,8 +41,6 @@ import com.google.common.collect.Maps;
  */
 public class RouteSelect {
 	
-	private static Formatter formatter = new Formatter();
-
 	private static final Logger logger = LoggerFactory.getLogger(RouteSelect.class);
 	
 	private Map<String,NettySend> nettySends = Maps.newConcurrentMap();
@@ -60,10 +58,9 @@ public class RouteSelect {
 		keyHashCode = ks[1];
 	}
 
-	@SuppressWarnings("static-access")
 	public void route(Map<String,Object> event) throws Exception{
-		String prefix = formatter.format(event,keyPrefix);
-		int hashcode  = formatter.format(event,keyHashCode).hashCode();
+		String prefix = Formatter.format(event,keyPrefix);
+		int hashcode  = Formatter.format(event,keyHashCode).hashCode();
 		String sign  = String.format("%s_%d", prefix,hashcode);
 		String broker = getBroker(sign);
 		NettySend nettySend = null;

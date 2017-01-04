@@ -30,8 +30,8 @@ public class HttpCommon {
 	public static Object[] getUrlPort(String address){
 		Object[] object =new Object[]{}; 
 		String[] la = address.split(":");
-		object[0] = la[0];
-		object[1] = Integer.parseInt(la[1])+1;
+		object[0] = la[0].trim();
+		object[1] = Integer.parseInt(la[1].trim())+1;
 		return object;
 	}
 }
