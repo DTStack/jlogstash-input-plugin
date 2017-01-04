@@ -24,15 +24,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.dtstack.logstash.http.cilent.LogstashHttpClient;
 import com.dtstack.logstash.http.server.LogstashHttpServer;
@@ -94,6 +94,8 @@ public class ZkDistributed {
     
     private LogPool logPool = LogPool.getInstance();
     
+	private ExecutorService executors;
+
     
 	public static synchronized ZkDistributed getSingleZkDistributed(Map<String,Object> distribute) throws Exception{
 		if(zkDistributed!=null)return zkDistributed;
@@ -104,16 +106,31 @@ public class ZkDistributed {
 	public ZkDistributed(Map<String,Object> distribute) throws Exception{
 		this.distributed = distribute;
 		checkDistributedConfig();
-        this.zkClient =createWithOptions(zkAddress,new ExponentialBackoffRetry(1000, 3), 1000, 1000);
-        this.zkClient.start();
+		initZk();
         this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
         this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
         this.updateNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"updateNodelock"));
         this.routeSelect = new RouteSelect(this,this.hashKey);
         this.logstashHttpServer = new LogstashHttpServer(zkDistributed);
         this.logstashHttpClient = new LogstashHttpClient(zkDistributed);
+        initScheduledExecutorService();
 	}
     
+	private void initZk() throws IOException{
+        this.zkClient =createWithOptions(zkAddress,new ExponentialBackoffRetry(1000, 3), 1000, 1000);
+        this.zkClient.start();
+	}
+	
+	private void initScheduledExecutorService(){
+		executors = Executors.newFixedThreadPool(5);
+		MasterCheck masterCheck = new MasterCheck(zkDistributed);
+		executors.submit(new HearBeat(zkDistributed));
+		executors.submit(masterCheck);
+		executors.submit(new HeartBeatCheck(zkDistributed,masterCheck));
+		executors.submit(new DownReblance(zkDistributed,masterCheck));
+		executors.submit(new UpReblance(zkDistributed,masterCheck));
+	}
+	
 	private void checkDistributedConfig() throws Exception{
         this.zkAddress = (String) distributed.get("zkAddress");
         if(StringUtils.isBlank(this.zkAddress)||this.zkAddress.split("/").length<2){
