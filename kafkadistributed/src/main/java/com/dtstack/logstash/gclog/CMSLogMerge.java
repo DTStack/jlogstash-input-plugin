@@ -1,5 +1,6 @@
-package com.dtstack.logstash.logmerge;
+package com.dtstack.logstash.gclog;
 
+import com.dtstack.logstash.logmerge.ClusterLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

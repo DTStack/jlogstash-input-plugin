@@ -1,5 +1,6 @@
-package com.dtstack.logstash.logmerge;
+package com.dtstack.logstash.gclog;
 
+import com.dtstack.logstash.logmerge.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,9 +16,9 @@ import java.util.List;
  * @ahthor xuchao
  */
 
-public class PreLogInfo implements IPreLog {
+public class CMSPreLogInfo implements IPreLog {
 
-    private static final Logger logger = LoggerFactory.getLogger(PreLogInfo.class);
+    private static final Logger logger = LoggerFactory.getLogger(CMSPreLogInfo.class);
 
     /**该日志的标识:用户加上文件路径*/
     private String flag = "";
@@ -28,7 +29,7 @@ public class PreLogInfo implements IPreLog {
 
     private List<ClusterLog> logList;
 
-    public PreLogInfo(String flag){
+    public CMSPreLogInfo(String flag){
         this.flag  = flag;
         logList = new LinkedList<>();
     }
@@ -64,22 +65,28 @@ public class PreLogInfo implements IPreLog {
      * @return
      */
     @Override
-    public GCLog mergeGcLog(){
+    public CompleteLog mergeGcLog(){
 
         if(!checkIsCompleteLog()){
            return null;
         }
 
         //从列表中抽取出CMS记录
-        GCLog cmsLog = new GCLog();
+        CompleteLog cmsLog = new CompleteLog();
         for (int i=0; i<CMSLogMerge.MERGE_NUM; i++){
             ClusterLog currLog = logList.remove(0);//一直remove第0个
             if(currLog == null){
-               break;
+                break;
+            }
+
+            if(i == 0){
+                cmsLog.setEventMap(currLog.getBaseInfo());
             }
 
             cmsLog.addLog(currLog.getLoginfo());
         }
+
+        cmsLog.complete();
         return cmsLog;
     }
 
@@ -92,7 +99,7 @@ public class PreLogInfo implements IPreLog {
     }
 
     /**
-     * 判断是不是一条完整的CMS日志
+     * 判断是不是一条完整的日志
      * @return
      */
     public boolean checkIsCompleteLog(){
