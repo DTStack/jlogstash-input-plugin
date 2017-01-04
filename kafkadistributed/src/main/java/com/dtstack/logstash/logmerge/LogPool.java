@@ -1,8 +1,7 @@
 package com.dtstack.logstash.logmerge;
 
-import com.dtstack.logstash.assembly.qlist.InputQueueList;
 import com.dtstack.logstash.gclog.CMSPreLogInfo;
-import com.dtstack.logstash.inputs.BaseInput;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +11,7 @@ import java.util.Map;
 
 /**
  *
- * FIXME 暂时未考虑多线程
- * FIXME 考虑太久未使用的内存的清理
+ * FIXME 考虑超时未使用的内存的清理
  * Date: 2016/12/30
  * Company: www.dtstack.com
  * @ahthor xuchao
@@ -61,9 +59,15 @@ public class LogPool {
         preLogInfo.addLog(clusterLog);
     }
 
-    public CompleteLog mergeLog(String flag){
+    public CompletedLog mergeLog(String flag){
         IPreLog preLogInfo = logInfoMap.get(flag);
         return preLogInfo.mergeGcLog();
+    }
+
+    public void dealTimeout(){
+        for(IPreLog preLog : logInfoMap.values()){
+            preLog.dealTimeout();
+        }
     }
 
     public void addMergeSignal(String flag){
@@ -71,7 +75,7 @@ public class LogPool {
     }
 
     private IPreLog createPreLogInfoByLogType(ClusterLog clusterLog){
-        if(LogTypeConstant.CMS_LOG_TYPE.equalsIgnoreCase(clusterLog.getLogFlag())){
+        if(LogTypeConstant.CMS_LOG_TYPE.equalsIgnoreCase(clusterLog.getLogType())){
             return new CMSPreLogInfo(clusterLog.getLogFlag());
         }else{
             logger.info("not support log type of {}.", clusterLog.getLogType());
@@ -80,8 +84,14 @@ public class LogPool {
         }
     }
 
-    //FIXME 获取未完成的日志信息
+    /**
+     * 获取未完成的日志信息
+     */
     public List<Map<String,Object>> getNotCompleteLog(){
-        return  null;
+        List<Map<String, Object>> notCompleteList = Lists.newArrayList();
+        for (IPreLog preLog : logInfoMap.values()){
+            notCompleteList.addAll(preLog.getNotCompleteLog());
+        }
+        return  notCompleteList;
     }
 }

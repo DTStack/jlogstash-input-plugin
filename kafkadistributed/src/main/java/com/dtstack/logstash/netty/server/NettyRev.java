@@ -41,6 +41,8 @@ public class NettyRev {
 
     private static String delimiter = System.getProperty("line.separator");
 
+    private static String multilineDelimiter = (char)29 +"";
+
     private ServerBootstrap bootstrap;
 
     private Executor bossExecutor;
@@ -97,12 +99,15 @@ public class NettyRev {
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
                 throws Exception {
             Object message = e.getMessage();
-            if (message != null) {
-                if (message instanceof ChannelBuffer) {
-                    String mes = ((ChannelBuffer) message).toString(Charset.forName(encoding));
-                    //将数据加入到merge队列里面
-                    LogPool.getInstance().addLog(mes);
+            if (message != null && message instanceof ChannelBuffer) {
+                String mes = ((ChannelBuffer) message).toString(Charset.forName(encoding));
+                if(!StringUtils.isNoneBlank(mes)){
+                    return;
                 }
+
+                //将数据加入到merge队列里面
+                mes = mes.replaceAll(multilineDelimiter, delimiter);
+                LogPool.getInstance().addLog(mes);
             }
         }
 

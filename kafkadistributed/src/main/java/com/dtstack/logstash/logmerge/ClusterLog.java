@@ -90,6 +90,22 @@ public class ClusterLog {
         return eventMap;
     }
 
+    /**
+     * 获取除了message字段以外的信息
+     * @return
+     */
+    public Map<String, Object> getEventMap(){
+        Map<String, Object> eventMap = null;
+        try{
+            eventMap = gson.fromJson(originalLog, Map.class);
+        }catch (Exception e){
+            logger.error("解析 log json 对象异常", e);
+            return null;
+        }
+
+        return eventMap;
+    }
+
     public static ClusterLog generateClusterLog(String log) {
         Map<String, String> eventMap = null;
         try{
