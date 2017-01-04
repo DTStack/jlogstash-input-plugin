@@ -28,5 +28,7 @@ package com.dtstack.logstash.http.common;
 public class Urls {
 	
 	public final static String LOADNODEDATA = "/loadNodeData";
+	
+	public final static String LOGPOOLDATA = "/logPoolData";
 
 }

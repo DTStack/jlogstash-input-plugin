@@ -15,45 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dtstack.logstash.distributed;
+package com.dtstack.logstash.http.server;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.dtstack.logstash.exception.ExceptionUtil;
-
+import java.io.IOException;
+import com.dtstack.logstash.distributed.ZkDistributed;
+import com.dtstack.logstash.http.server.callback.ApiCallback;
+import com.dtstack.logstash.http.server.callback.ApiCallbackMethod;
+import com.dtstack.logstash.http.server.callback.ApiResult;
+import com.sun.net.httpserver.HttpExchange;
 
 
 /**
  * 
  * Reason: TODO ADD REASON(可选)
- * Date: 2016年12月28日 下午1:16:37
+ * Date: 2016年12月30日 下午1:16:37
  * Company: www.dtstack.com
  * @author sishu.yss
  *
  */
-public class HearBeat implements Runnable{
-
-	private static final Logger logger = LoggerFactory.getLogger(HearBeat.class);
-
-	private final static int HEATBEAT = 1000;
+@SuppressWarnings("restriction")
+public class ImmediatelyLogPoolDataHandler extends PostHandler{
 	
 	private ZkDistributed zkDistributed;
 	
-	public HearBeat(ZkDistributed zkDistributed){
-		this.zkDistributed  = zkDistributed;
+	public ImmediatelyLogPoolDataHandler(ZkDistributed zkDistributed) {
+		// TODO Auto-generated constructor stub
+		this.zkDistributed = zkDistributed;
 	}
 
 	@Override
-	public void run() {
+	public void handle(final HttpExchange he) throws IOException {
 		// TODO Auto-generated method stub
-		try {
-			BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
-			brokerNode.setSeq(1);
-			zkDistributed.updateBrokerNode(this.zkDistributed.getLocalAddress(), brokerNode);
-			Thread.sleep(HEATBEAT);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			logger.error("Hearbeat fail:{}",ExceptionUtil.getErrorMessage(e));
-		}
+		 ApiCallbackMethod.doCallback(new ApiCallback(){
+			@Override
+			public void execute(ApiResult apiResult) throws Exception {
+				// TODO Auto-generated method stub
+				zkDistributed.sendLogPoolData();
+			}
+		 }, he);
 	}
 }

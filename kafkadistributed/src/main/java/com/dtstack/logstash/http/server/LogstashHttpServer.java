@@ -65,6 +65,7 @@ public class LogstashHttpServer {
 	
 	private void setHandler(){
 		this.server.createContext(Urls.LOADNODEDATA,new ImmediatelyLoadNodeDataHandler(this.zkDistributed));
+		this.server.createContext(Urls.LOGPOOLDATA,new ImmediatelyLogPoolDataHandler(this.zkDistributed));
 	}
 
 }

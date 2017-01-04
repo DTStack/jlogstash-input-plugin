@@ -92,6 +92,8 @@ public class HeartBeatCheck implements Runnable{
 						brokerNodeCount.setBrokerNode(brokerNode);
 						brokerNodeCounts.put(node, brokerNodeCount);
 					}
+				}else{
+					brokerNodeCounts.remove(node);
 				}
 			}
 		}

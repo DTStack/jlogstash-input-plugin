@@ -46,5 +46,15 @@ public class LogstashHttpClient {
     			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOADNODEDATA));
     		}
     	}
-    }	
+    }
+    
+    public void sendImmediatelyLogPoolData(){
+    	Set<String> nodes = this.zkDistributed.getNodeDatas().keySet();
+    	for(String node:nodes){
+    		if(!node.equals(this.zkDistributed.getLocalAddress())){
+    			Object[] obj = HttpCommon.getUrlPort(node);
+    			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOGPOOLDATA));
+    		}
+    	}
+    }
 }
