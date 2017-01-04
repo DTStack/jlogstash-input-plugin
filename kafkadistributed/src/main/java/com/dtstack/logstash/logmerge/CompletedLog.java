@@ -15,7 +15,7 @@ import java.util.Map;
  * @ahthor xuchao
  */
 
-public class CompleteLog {
+public class CompletedLog {
 
     private String lineSP = System.getProperty("line.separator");
 

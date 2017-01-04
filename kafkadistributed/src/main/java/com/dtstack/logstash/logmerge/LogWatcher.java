@@ -22,6 +22,10 @@ public class LogWatcher implements Callable {
     /**最大空闲等待2min*/
     private static int MAX_WAIT_PERIOD =  2 * 60;
 
+    private static int DEAL_TIME_OUT_PERIOD = 2 * 60 * 1000;
+
+    private long lastDealTimeout = System.currentTimeMillis();
+
     private boolean isRunning = false;
 
     private BlockingQueue<String> signal = new LinkedBlockingQueue<>();
@@ -50,15 +54,24 @@ public class LogWatcher implements Callable {
         while(isRunning){
             String flag = signal.poll(MAX_WAIT_PERIOD, TimeUnit.SECONDS);
             if(flag == null){
-                continue; //FIXME 处理超时队列消息
+                dealTimeout();
+                continue;
             }
 
-            CompleteLog completeLog = logPool.mergeLog(flag);
+            CompletedLog completeLog = logPool.mergeLog(flag);
             inputQueueList.put(completeLog.getEventMap());
+            dealTimeout();
         }
         logger.info("log pool watcher is not running....");
         return null;
     }
+
+    private void dealTimeout(){
+        if(lastDealTimeout + DEAL_TIME_OUT_PERIOD < System.currentTimeMillis()){
+            logPool.dealTimeout();
+        }
+    }
+
 
     public void startup(){
         this.isRunning = true;

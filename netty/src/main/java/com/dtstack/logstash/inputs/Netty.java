@@ -143,7 +143,6 @@ public class Netty extends BaseInput {
 				if (message instanceof ChannelBuffer) {
 					String mes = ((ChannelBuffer) message).toString(Charset
 							.forName(encoding));
-					System.out.println(mes);
 					if (StringUtils.isNotBlank(mes)) {
 						mes = multilineDecoder(mes);
 						this.netty.process(this.netty.getDecoder().decode(mes));

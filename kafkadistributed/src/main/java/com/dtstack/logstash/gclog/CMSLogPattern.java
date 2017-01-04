@@ -16,11 +16,13 @@ import java.util.regex.Pattern;
  *
  * @ahthor xuchao
  */
-public class CMSLogMerge{
+public class CMSLogPattern {
 
-    private static final Logger logger = LoggerFactory.getLogger(CMSLogMerge.class);
+    private static final Logger logger = LoggerFactory.getLogger(CMSLogPattern.class);
 
     public static int MERGE_NUM = 12;
+
+    public static final Pattern full_gc = Pattern.compile(".*CMS.*");
 
     public static final String heap_size_re = "([0-9]+)([KM])";
 
@@ -73,12 +75,27 @@ public class CMSLogMerge{
     private static Pattern conreset_phase_pattern = Pattern.compile(
             timestamp_re + "\\[(AS)?CMS-concurrent-reset:\\s*" + gc_time_re + "/" + gc_time_secs_re + "\\]");
 
+
     /**
-     * 校验是不是一条完整的cms日志
+     * 判断是不是cms的full gc
+     * @param log
+     * @return
+     */
+    public boolean checkIsFullGC(String log){
+        Matcher matcher = full_gc.matcher(log);
+        if(matcher.find()){
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 校验是不是一条完整的cms full gc日志
      * @return
      */
     public boolean checkIsCompleteLog(List<ClusterLog> logPool){
-        if (logPool.size() < CMSLogMerge.MERGE_NUM){
+        if (logPool.size() < CMSLogPattern.MERGE_NUM){
             logger.info("log size is not match cms step.");
             return false;
         }
@@ -295,7 +312,7 @@ public class CMSLogMerge{
 
     //FIXME TETST
     public static void main(String[] args) {
-        CMSLogMerge cmsLogMerge = new CMSLogMerge();
+        CMSLogPattern cmsLogMerge = new CMSLogPattern();
         boolean isInitMark = cmsLogMerge.checkInitialMark("2016-12-28T10:07:21.971+0800: 1190255.3662016-12-28T10:07:20.994+0800: 1190254.390: [GC (CMS Initial Mark) [1 CMS-initial-mark: 2786997K(3670016K)] 2839212K(4141888K), 0.0059182 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]");
         if(isInitMark){
             System.out.println("is init mark");
