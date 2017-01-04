@@ -47,10 +47,13 @@ public class HearBeat implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
-			BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
-			brokerNode.setSeq(1);
-			zkDistributed.updateBrokerNode(this.zkDistributed.getLocalAddress(), brokerNode);
-			Thread.sleep(HEATBEAT);
+			while(true){
+				BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
+				brokerNode.setSeq(1);
+				zkDistributed.updateBrokerNode(this.zkDistributed.getLocalAddress(), brokerNode);
+				Thread.sleep(HEATBEAT);
+			}
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error("Hearbeat fail:{}",ExceptionUtil.getErrorMessage(e));

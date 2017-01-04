@@ -60,10 +60,13 @@ public class HeartBeatCheck implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
-			if(this.masterCheck.isMaster()){
-				healthCheck();
+			while(true){
+				if(this.masterCheck.isMaster()){
+					healthCheck();
+				}
+				Thread.sleep(HEATBEATCHECK);
 			}
-			Thread.sleep(HEATBEATCHECK);
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error(ExceptionUtil.getErrorMessage(e));

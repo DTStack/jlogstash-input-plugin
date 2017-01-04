@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
@@ -23,6 +24,7 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.exception.ExceptionUtil;
 
 /**
@@ -44,6 +46,7 @@ public class NettySend{
 	private NettyClient client;
 	
 	private static ObjectMapper objectMapper = new ObjectMapper();
+
 		
 	
 	public  NettySend(String broker) {
@@ -126,6 +129,11 @@ class NettyClient{
 	private final Timer timer = new HashedWheelTimer();
 	
 	public Object lock = new Object();
+	
+    private static String multilineDelimiter = (char)29 +"";
+    
+    private static String delimiter = System.getProperty("line.separator");
+
 				
 	public NettyClient(String host, int port){
 		this.host = host;
@@ -164,7 +172,6 @@ class NettyClient{
 	}
 	
 	public boolean write(String msg){
-		
 		boolean canWrite = channel.isConnected() && channel.isWritable();
 		while(!canWrite){
 			try {
@@ -174,8 +181,7 @@ class NettyClient{
 			}
 			canWrite = channel.isConnected() && channel.isWritable();
 		}
-		
-		channel.write(msg);
+		channel.write(msg.replaceAll(delimiter, multilineDelimiter)+delimiter);
 		return true;
 	}
 

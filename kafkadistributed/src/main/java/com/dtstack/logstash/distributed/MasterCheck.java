@@ -49,8 +49,10 @@ public class MasterCheck implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try{
-			isMaster.getAndSet(zkDistributed.setMaster());
-			Thread.sleep(MASTERCHECK);
+			while(true){
+				isMaster.getAndSet(zkDistributed.setMaster());
+				Thread.sleep(MASTERCHECK);
+			}
 		}catch(Exception e){
 			logger.error("MasterCheck error:{}",ExceptionUtil.getErrorMessage(e));
 		}
