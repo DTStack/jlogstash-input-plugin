@@ -48,7 +48,6 @@ public class NettySend{
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 		
-	
 	public  NettySend(String broker) {
 		String[] bs = broker.split(":");
 		this.host = bs[0];
@@ -84,7 +83,7 @@ class NettyClientHandler extends SimpleChannelHandler {
 	
 	@Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-	    logger.error("", e);    
+	    logger.error(ExceptionUtil.getErrorMessage(e.getCause()));    
     }
 
 	@Override
@@ -128,7 +127,7 @@ class NettyClient{
 	
 	private final Timer timer = new HashedWheelTimer();
 	
-	public Object lock = new Object();
+//	public Object lock = new Object();
 	
     private static String multilineDelimiter = (char)29 +"";
     
@@ -165,7 +164,7 @@ class NettyClient{
 			ChannelFuture future = bootstrap.connect().sync();
 			channel = future.getChannel();
 		} catch (Exception e) {
-			logger.error("", e);
+			logger.error(ExceptionUtil.getErrorMessage(e));
 			bootstrap.releaseExternalResources();
 			System.exit(-1);//第一次连接出现异常直接退出,不走重连
 		}
@@ -177,7 +176,7 @@ class NettyClient{
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
-				logger.error("", e);
+				logger.error(ExceptionUtil.getErrorMessage(e));
 			}
 			canWrite = channel.isConnected() && channel.isWritable();
 		}
