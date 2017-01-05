@@ -27,16 +27,19 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.dtstack.logstash.http.cilent.LogstashHttpClient;
 import com.dtstack.logstash.http.server.LogstashHttpServer;
 import com.dtstack.logstash.logmerge.LogPool;
+import com.dtstack.logstash.netty.server.NettyRev;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.curator.RetryPolicy;
@@ -92,9 +95,11 @@ public class ZkDistributed {
     
     private LogstashHttpServer logstashHttpServer;
     
-    private LogPool logPool = LogPool.getInstance();
+    private LogPool logPool;
     
 	private ExecutorService executors;
+	
+	private NettyRev nettyRev;
 
     
 	public static synchronized ZkDistributed getSingleZkDistributed(Map<String,Object> distribute) throws Exception{
@@ -110,6 +115,9 @@ public class ZkDistributed {
         this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
         this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
         this.updateNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"updateNodelock"));
+        this.nettyRev = new NettyRev(this.localAddress);
+        this.nettyRev.startup();
+        logPool = LogPool.getInstance();
         this.routeSelect = new RouteSelect(this,this.hashKey);
         this.logstashHttpServer = new LogstashHttpServer(zkDistributed);
         this.logstashHttpClient = new LogstashHttpClient(zkDistributed);

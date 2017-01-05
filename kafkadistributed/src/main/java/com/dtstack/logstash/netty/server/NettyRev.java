@@ -19,7 +19,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * netty 接收zk动态平衡的时候其他服务发送的消息
+ * netty 接收路由的数据
  * Date: 2017/1/3
  * Company: www.dtstack.com
  *
@@ -50,9 +50,15 @@ public class NettyRev {
     private Executor workerExecutor;
 
     public NettyRev(int port){
-        this.port = port;
+    	NettyRev.port = port;
     }
-
+    
+    public NettyRev(String localAddress){
+    	String[] ls = localAddress.split(":");
+    	NettyRev.port = Integer.parseInt(ls[1]);
+    }
+    
+    
     public void startup(){
         try {
             bossExecutor = Executors.newCachedThreadPool();
