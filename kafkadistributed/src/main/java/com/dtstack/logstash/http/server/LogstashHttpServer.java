@@ -58,8 +58,12 @@ public class LogstashHttpServer {
 		init();
 	}
 	
+	public void stop(){
+		this.server.stop(1);
+	}
+	
 	private void init() throws Exception{
-		this.server = HttpServer.create(new InetSocketAddress(InetAddress.getByAddress(host.getBytes()),port), 0);
+		this.server = HttpServer.create(new InetSocketAddress(InetAddress.getByName(host),port), 0);
 		server.setExecutor(null);
 		setHandler();
 		this.server.start();

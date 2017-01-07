@@ -28,7 +28,7 @@ package com.dtstack.logstash.http.common;
 public class HttpCommon {
 
 	public static Object[] getUrlPort(String address){
-		Object[] object =new Object[]{}; 
+		Object[] object =new Object[2]; 
 		String[] la = address.split(":");
 		object[0] = la[0].trim();
 		object[1] = Integer.parseInt(la[1].trim())+1;

@@ -117,10 +117,10 @@ public class ZkDistributed {
         this.updateNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"updateNodelock"));
         this.nettyRev = new NettyRev(this.localAddress);
         this.nettyRev.startup();
-        logPool = LogPool.getInstance();
+//        logPool = LogPool.getInstance();
         this.routeSelect = new RouteSelect(this,this.hashKey,this.localAddress);
-        this.logstashHttpServer = new LogstashHttpServer(zkDistributed,this.localAddress);
-        this.logstashHttpClient = new LogstashHttpClient(zkDistributed,this.localAddress);
+        this.logstashHttpServer = new LogstashHttpServer(this,this.localAddress);
+        this.logstashHttpClient = new LogstashHttpClient(this,this.localAddress);
         initScheduledExecutorService();
 	}
     
@@ -131,12 +131,12 @@ public class ZkDistributed {
 	
 	private void initScheduledExecutorService(){
 		executors = Executors.newFixedThreadPool(5);
-		MasterCheck masterCheck = new MasterCheck(zkDistributed);
-		executors.submit(new HearBeat(zkDistributed,this.localAddress));
+		MasterCheck masterCheck = new MasterCheck(this);
+		executors.submit(new HearBeat(this,this.localAddress));
 		executors.submit(masterCheck);
-		executors.submit(new HeartBeatCheck(zkDistributed,masterCheck));
-		executors.submit(new DownReblance(zkDistributed,masterCheck));
-		executors.submit(new UpReblance(zkDistributed,masterCheck));
+		executors.submit(new HeartBeatCheck(this,masterCheck));
+		executors.submit(new DownReblance(this,masterCheck));
+		executors.submit(new UpReblance(this,masterCheck));
 	}
 	
 	private void checkDistributedConfig() throws Exception{
@@ -188,14 +188,16 @@ public class ZkDistributed {
 			this.masterlock.acquire(30,TimeUnit.SECONDS);
 			master = isHaveMaster();
             if(master==null||!getBrokerNodeData(master).isAlive()){
-          	   this.zkClient.setData().forPath(this.brokersNode, this.localAddress.getBytes());
+               BrokersNode brokersNode = BrokersNode.initBrokersNode();
+               brokersNode.setMaster(this.localAddress);
+          	   this.zkClient.setData().forPath(this.brokersNode,objectMapper.writeValueAsBytes(brokersNode));
           	   flag = true ;
             }
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		}finally{
 			try{
-				this.masterlock.release();
+				if(this.masterlock.isAcquiredInThisProcess())this.masterlock.release();
 			}catch(Exception e){
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}
@@ -206,6 +208,7 @@ public class ZkDistributed {
 	
    public String isHaveMaster() throws Exception{
 	   byte[] data = this.zkClient.getData().forPath(this.brokersNode);
+	   System.out.println(new String(data));
 	   if(data==null||StringUtils.isBlank(objectMapper.readValue(data, BrokersNode.class).getMaster())){
 		   return null;
 	   }
@@ -260,7 +263,7 @@ public class ZkDistributed {
 			logger.error("{}:updateBrokerNode error:{}",node,ExceptionUtil.getErrorMessage(e));
 		}finally{
 			try{
-				this.updateNodelock.release();
+				if(this.updateNodelock.isAcquiredInThisProcess())this.updateNodelock.release();
 			}catch(Exception e){
 				logger.error("{}:updateBrokerNode error:{}",node,ExceptionUtil.getErrorMessage(e));
 			}

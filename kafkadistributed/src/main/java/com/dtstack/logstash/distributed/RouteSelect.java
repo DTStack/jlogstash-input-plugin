@@ -84,7 +84,7 @@ public class RouteSelect {
 			}catch(Exception e){
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}finally{
-				zkDistributed.getNodeRouteSelectlock().release();
+				if(zkDistributed.getNodeRouteSelectlock().isAcquiredInThisProcess())zkDistributed.getNodeRouteSelectlock().release();
 			}
 		}
 		nettySend.emit(event);

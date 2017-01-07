@@ -37,4 +37,8 @@ public class BrokersNode {
 	public void setMaster(String master) {
 		this.master = master;
 	}
+	
+	public static BrokersNode initBrokersNode(){
+		return new BrokersNode();
+	}
 }
