@@ -52,7 +52,7 @@ public class UpReblance implements Runnable{
 			while(true){
 				Thread.sleep(INTERVAL);
 				if(this.masterCheck.isMaster()){
-					this.zkDistributed.upReblance();
+					this.zkDistributed.upTracsitionReblance();
 				}
 			}
 		}catch(Exception e){

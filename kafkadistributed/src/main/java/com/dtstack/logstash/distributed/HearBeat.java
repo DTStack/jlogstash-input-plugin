@@ -39,8 +39,11 @@ public class HearBeat implements Runnable{
 	
 	private ZkDistributed zkDistributed;
 	
-	public HearBeat(ZkDistributed zkDistributed){
+	private String localAddress;
+	
+	public HearBeat(ZkDistributed zkDistributed,String localAddress){
 		this.zkDistributed  = zkDistributed;
+		this.localAddress = localAddress;
 	}
 
 	@Override
@@ -50,7 +53,7 @@ public class HearBeat implements Runnable{
 			while(true){
 				BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
 				brokerNode.setSeq(1);
-				zkDistributed.updateBrokerNode(this.zkDistributed.getLocalAddress(), brokerNode);
+				zkDistributed.updateBrokerNode(this.localAddress, brokerNode);
 				Thread.sleep(HEATBEAT);
 			}
 

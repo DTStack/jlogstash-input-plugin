@@ -50,9 +50,12 @@ public class RouteSelect {
 	private String keyPrefix;
 	
 	private String keyHashCode;
+	
+	private String localAddress;
 
-	public RouteSelect(ZkDistributed zkDistributed,String hashKey){
+	public RouteSelect(ZkDistributed zkDistributed,String hashKey,String localAddress){
 		this.zkDistributed = zkDistributed;
+		this.localAddress = localAddress;
 		String[] ks= hashKey.split(":");
 		keyPrefix = ks[0];
 		keyHashCode = ks[1];
@@ -68,7 +71,7 @@ public class RouteSelect {
 			nettySend = getNettySend(broker);
 		}else{
 			try{
-				zkDistributed.getAddMetaToNodelock().acquire();
+				zkDistributed.getNodeRouteSelectlock().acquire();
 				zkDistributed.updateMemBrokersNodeData();
 				broker = getBroker(sign);
 				if(broker!=null){
@@ -81,7 +84,7 @@ public class RouteSelect {
 			}catch(Exception e){
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}finally{
-				zkDistributed.getAddMetaToNodelock().release();
+				zkDistributed.getNodeRouteSelectlock().release();
 			}
 		}
 		nettySend.emit(event);
@@ -99,7 +102,7 @@ public class RouteSelect {
 				route = node.getKey();
 			}
 		 }
-		 return route==null?zkDistributed.getLocalAddress():route;
+		 return route==null?this.localAddress:route;
 	}
 	
 	private NettySend getNettySend(String broker){

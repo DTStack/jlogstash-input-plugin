@@ -34,14 +34,17 @@ public class LogstashHttpClient {
 	
 	private static String tempalteUrl = "http://%s:%d%s";
 	
-	public LogstashHttpClient(ZkDistributed zkDistributed){
+	private String localAddress;
+	
+	public LogstashHttpClient(ZkDistributed zkDistributed,String localAddress){
 		this.zkDistributed = zkDistributed;
+		this.localAddress = localAddress;
 	}
 	
     public void sendImmediatelyLoadNodeData(){
     	Set<String> nodes = this.zkDistributed.getNodeDatas().keySet();
     	for(String node:nodes){
-    		if(!node.equals(this.zkDistributed.getLocalAddress())){
+    		if(!node.equals(this.localAddress)){
     			Object[] obj = HttpCommon.getUrlPort(node);
     			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOADNODEDATA));
     		}
@@ -51,7 +54,7 @@ public class LogstashHttpClient {
     public void sendImmediatelyLogPoolData(){
     	Set<String> nodes = this.zkDistributed.getNodeDatas().keySet();
     	for(String node:nodes){
-    		if(!node.equals(this.zkDistributed.getLocalAddress())){
+    		if(!node.equals(this.localAddress)){
     			Object[] obj = HttpCommon.getUrlPort(node);
     			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOGPOOLDATA));
     		}

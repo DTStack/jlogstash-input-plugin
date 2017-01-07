@@ -49,9 +49,12 @@ public class LogstashHttpServer {
 	
 	private HttpServer server;
 	
-	public LogstashHttpServer(ZkDistributed zkDistributed) throws Exception{
+	private String localAddress;
+	
+	public LogstashHttpServer(ZkDistributed zkDistributed,String localAddress) throws Exception{
 		this.zkDistributed = zkDistributed;
-		this.port = (int) HttpCommon.getUrlPort(zkDistributed.getLocalAddress())[1];
+		this.localAddress = localAddress;
+		this.port = (int) HttpCommon.getUrlPort(this.localAddress)[1];
 		init();
 	}
 	

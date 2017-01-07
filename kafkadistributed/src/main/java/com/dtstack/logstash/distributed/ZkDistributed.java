@@ -75,7 +75,7 @@ public class ZkDistributed {
 
 	private CuratorFramework zkClient;
 	
-	private InterProcessMutex addMetaToNodelock;
+	private InterProcessMutex nodeRouteSelectlock;
 	
 	private InterProcessMutex updateNodelock;
 	
@@ -112,15 +112,15 @@ public class ZkDistributed {
 		this.distributed = distribute;
 		checkDistributedConfig();
 		initZk();
-        this.addMetaToNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
+        this.nodeRouteSelectlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"addMetaToNodelock"));
         this.masterlock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"masterlock"));
         this.updateNodelock = new InterProcessMutex(zkClient,String.format("%s/%s", this.distributeRootNode,"updateNodelock"));
         this.nettyRev = new NettyRev(this.localAddress);
         this.nettyRev.startup();
         logPool = LogPool.getInstance();
-        this.routeSelect = new RouteSelect(this,this.hashKey);
-        this.logstashHttpServer = new LogstashHttpServer(zkDistributed);
-        this.logstashHttpClient = new LogstashHttpClient(zkDistributed);
+        this.routeSelect = new RouteSelect(this,this.hashKey,this.localAddress);
+        this.logstashHttpServer = new LogstashHttpServer(zkDistributed,this.localAddress);
+        this.logstashHttpClient = new LogstashHttpClient(zkDistributed,this.localAddress);
         initScheduledExecutorService();
 	}
     
@@ -132,7 +132,7 @@ public class ZkDistributed {
 	private void initScheduledExecutorService(){
 		executors = Executors.newFixedThreadPool(5);
 		MasterCheck masterCheck = new MasterCheck(zkDistributed);
-		executors.submit(new HearBeat(zkDistributed));
+		executors.submit(new HearBeat(zkDistributed,this.localAddress));
 		executors.submit(masterCheck);
 		executors.submit(new HeartBeatCheck(zkDistributed,masterCheck));
 		executors.submit(new DownReblance(zkDistributed,masterCheck));
@@ -297,16 +297,12 @@ public class ZkDistributed {
     	return null;
     }
     
-	public InterProcessMutex getAddMetaToNodelock() {
-		return addMetaToNodelock;
+	public InterProcessMutex getNodeRouteSelectlock() {
+		return nodeRouteSelectlock;
 	}
 
 	public Map<String, BrokerNode> getNodeDatas() {
 		return nodeDatas;
-	}
-
-	public String getLocalAddress() {
-		return localAddress;
 	}
 
 	public void route(Map<String, Object> event) throws Exception {
@@ -326,7 +322,15 @@ public class ZkDistributed {
 	
 	public void realse() throws Exception{
 		disableLocalNode(this.localAddress);
+		downTracsitionReblance();
+	}
+	
+	
+	public void downTracsitionReblance() throws Exception{
 		downReblance();
+		updateMemBrokersNodeData();
+		logstashHttpClient.sendImmediatelyLoadNodeData();
+		sendLogPoolData();
 	}
 	
 	public void downReblance() throws Exception{
@@ -397,10 +401,15 @@ public class ZkDistributed {
 				nodeSign.setMetas(Lists.newArrayList());
 				this.updateBrokerNode(failNode, nodeSign);
 			} 
-			this.updateMemBrokersNodeData();
-			logstashHttpClient.sendImmediatelyLoadNodeData();
-			sendLogPoolData();
 		 }
+	}
+	
+	public void upTracsitionReblance() throws Exception{
+		upReblance();
+		updateMemBrokersNodeData();
+		logstashHttpClient.sendImmediatelyLoadNodeData();
+		sendLogPoolData();
+		logstashHttpClient.sendImmediatelyLogPoolData();
 	}
 	
 	public void upReblance() throws Exception{
@@ -441,10 +450,6 @@ public class ZkDistributed {
 		for(Map.Entry<String,BrokerNode> entry:mnodes.entrySet()){
 				this.updateBrokerNode(entry.getKey(), entry.getValue());
 	    } 
-		this.updateMemBrokersNodeData();
-		logstashHttpClient.sendImmediatelyLoadNodeData();
-		sendLogPoolData();
-		logstashHttpClient.sendImmediatelyLogPoolData();
 	}
 	
 	public void sendLogPoolData() throws Exception{

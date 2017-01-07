@@ -63,10 +63,10 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	private  String encoding="UTF8";
 	
 	@Required(required=true)
-	private  Map<String, Integer> topic;
+	public  Map<String, Integer> topic;
 	
 	@Required(required=true)
-	private  Map<String, String> consumerSettings;
+	public  Map<String, String> consumerSettings;
 	
 	private ScheduledExecutorService scheduleExecutor;
 	
@@ -76,10 +76,11 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	/**
 	 *  是否开启分布式 null不开启，不为null开启
 	 * 	{"zkAddress":"127.0.0.1:2181/distributed",
-	 *   "localAddress":"127.0.0.1:2181",
+	 *   "localAddress":"127.0.0.1:8555",
+	 *   "hashKey":"%{tenant_id}:%{path}"
 	 *  }
 	 */
-	private  Map<String,Object> distributed;
+	public  Map<String,Object> distributed;
 	
 	private ZkDistributed zkDistributed;
 	

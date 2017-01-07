@@ -53,12 +53,11 @@ public class DownReblance implements Runnable{
 			while(true){
 				Thread.sleep(INTERVAL);
 				if(this.masterCheck.isMaster()){
-					this.zkDistributed.downReblance();
+					this.zkDistributed.downTracsitionReblance();
 				}
 			}
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		}
 	}
-
 }
