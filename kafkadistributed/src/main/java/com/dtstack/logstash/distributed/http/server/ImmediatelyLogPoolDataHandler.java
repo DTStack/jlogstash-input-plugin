@@ -19,6 +19,9 @@ package com.dtstack.logstash.distributed.http.server;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.dtstack.logstash.distributed.ZkDistributed;
 import com.dtstack.logstash.distributed.http.server.callback.ApiCallback;
 import com.dtstack.logstash.distributed.http.server.callback.ApiCallbackMethod;
@@ -37,6 +40,9 @@ import com.sun.net.httpserver.HttpExchange;
 @SuppressWarnings("restriction")
 public class ImmediatelyLogPoolDataHandler extends PostHandler{
 	
+	private final static Logger logger = LoggerFactory
+			.getLogger(ImmediatelyLogPoolDataHandler.class);
+	
 	private ZkDistributed zkDistributed;
 	
 	public ImmediatelyLogPoolDataHandler(ZkDistributed zkDistributed) {
@@ -51,6 +57,7 @@ public class ImmediatelyLogPoolDataHandler extends PostHandler{
 			@Override
 			public void execute(ApiResult apiResult) throws Exception {
 				// TODO Auto-generated method stub
+				logger.warn("");
 				zkDistributed.sendLogPoolData();
 			}
 		 }, he);

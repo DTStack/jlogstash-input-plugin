@@ -17,6 +17,7 @@
  */
 package com.dtstack.logstash.distributed;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -64,7 +65,7 @@ public class BrokerNode {
 	
 	public static BrokerNode initBrokerNode(){
 		BrokerNode brokerNode = new BrokerNode();
-		brokerNode.setMetas(Lists.newArrayList());
+		brokerNode.setMetas(new ArrayList<String>());
 		brokerNode.setAlive(true);
 		return brokerNode;
 	}

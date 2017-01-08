@@ -54,6 +54,7 @@ public class MasterCheck implements Runnable{
 		try{
 			int index=0;
 			while(true){
+				++index;
 				isMaster.getAndSet(zkDistributed.setMaster());
 				if(CountUtil.count(index,10))logger.warn("MasterCheck start again...");
 				Thread.sleep(MASTERCHECK);

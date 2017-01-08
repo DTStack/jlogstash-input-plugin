@@ -18,12 +18,7 @@
 package com.dtstack.logstash.distributed;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -123,7 +118,7 @@ public class ZkDistributed {
 				"%s/%s", this.distributeRootNode, "updateNodelock"));
 		this.nettyRev = new NettyRev(this.localAddress);
 		this.nettyRev.startup();
-		// logPool = LogPool.getInstance();
+//		this.logPool = LogPool.getInstance();
 		this.routeSelect = new RouteSelect(this, this.localAddress);
 		this.logstashHttpServer = new LogstashHttpServer(this,
 				this.localAddress);
@@ -359,13 +354,14 @@ public class ZkDistributed {
 	}
 
 	public void downTracsitionReblance() throws Exception {
-		downReblance();
-		updateMemBrokersNodeData();
-		logstashHttpClient.sendImmediatelyLoadNodeData();
-		sendLogPoolData();
+		if(downReblance()){
+			updateMemBrokersNodeData();
+			logstashHttpClient.sendImmediatelyLoadNodeData();
+			sendLogPoolData();
+		}
 	}
 
-	public void downReblance() throws Exception {
+	public boolean downReblance() throws Exception {
 		BrokerNode brokerNode = BrokerNode.initBrokerNode();
 		Map<String, BrokerNode> nodes = Maps.newConcurrentMap();
 		List<String> childrens = this.getBrokersChildren();
@@ -436,10 +432,12 @@ public class ZkDistributed {
 			}
 			for (String failNode : failNodes) {
 				BrokerNode nodeSign = BrokerNode.initNullBrokerNode();
-				nodeSign.setMetas(Lists.newArrayList());
+				nodeSign.setMetas(new ArrayList<String>());
 				this.updateBrokerNode(failNode, nodeSign);
 			}
+			return true;
 		}
+		return false;
 	}
 
 	public void upTracsitionReblance() throws Exception {
