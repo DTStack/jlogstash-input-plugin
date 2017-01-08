@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dtstack.logstash.distributed.netty.client.NettySend;
+import com.dtstack.logstash.distributed.util.RouteUtil;
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.dtstack.logstash.render.Formatter;
 import com.google.common.collect.Maps;
@@ -47,24 +48,16 @@ public class RouteSelect {
 	
 	private  ZkDistributed zkDistributed = null;
 	
-	private String keyPrefix;
-	
-	private String keyHashCode;
 	
 	private String localAddress;
 
-	public RouteSelect(ZkDistributed zkDistributed,String hashKey,String localAddress){
+	public RouteSelect(ZkDistributed zkDistributed,String localAddress){
 		this.zkDistributed = zkDistributed;
 		this.localAddress = localAddress;
-		String[] ks= hashKey.split(":");
-		keyPrefix = ks[0];
-		keyHashCode = ks[1];
 	}
 
 	public void route(Map<String,Object> event) throws Exception{
-		String prefix = Formatter.format(event,keyPrefix);
-		int hashcode  = Formatter.format(event,keyHashCode).hashCode();
-		String sign  = String.format("%s_%d", prefix,hashcode);
+        String sign = RouteUtil.getFormatHashKey(event);
 		String broker = getBroker(sign);
 		NettySend nettySend = null;
 		if(broker!=null){ 
