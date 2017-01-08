@@ -46,9 +46,9 @@ import com.netflix.curator.retry.ExponentialBackoffRetry;
 
 /**
  * 
- * Reason: TODO ADD REASON(可选) Date: 2016年12月27日 下午3:16:06 Company:
- * www.dtstack.com
- * 
+ * Reason: TODO ADD REASON(可选)
+ * Date: 2016年12月27日 下午3:16:06
+ * Company:www.dtstack.com
  * @author sishu.yss
  *
  */
@@ -441,14 +441,15 @@ public class ZkDistributed {
 	}
 
 	public void upTracsitionReblance() throws Exception {
-		upReblance();
-		updateMemBrokersNodeData();
-		logstashHttpClient.sendImmediatelyLoadNodeData();
-		sendLogPoolData();
-		logstashHttpClient.sendImmediatelyLogPoolData();
+		if(upReblance()){
+			updateMemBrokersNodeData();
+			logstashHttpClient.sendImmediatelyLoadNodeData();
+			sendLogPoolData();
+			logstashHttpClient.sendImmediatelyLogPoolData();
+		}
 	}
 
-	public void upReblance() throws Exception {
+	public boolean upReblance() throws Exception {
 		List<String> childrens = this.getBrokersChildren();
 		List<String> noneNode = Lists.newArrayList();
 		List<String> allNode = Lists.newArrayList();
@@ -481,11 +482,12 @@ public class ZkDistributed {
 				mnodes.put(allNode.get(i), brokerNode);
 				start = end;
 			}
+			for (Map.Entry<String, BrokerNode> entry : mnodes.entrySet()) {
+				this.updateBrokerNode(entry.getKey(), entry.getValue());
+			}
+			return true;
 		}
-
-		for (Map.Entry<String, BrokerNode> entry : mnodes.entrySet()) {
-			this.updateBrokerNode(entry.getKey(), entry.getValue());
-		}
+		return false;
 	}
 
 	public void sendLogPoolData() throws Exception {
