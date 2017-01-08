@@ -54,6 +54,7 @@ public class UpReblance implements Runnable{
 				if(this.masterCheck.isMaster()){
 					this.zkDistributed.upTracsitionReblance();
 				}
+				logger.warn("UpReblance start again...");
 			}
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));

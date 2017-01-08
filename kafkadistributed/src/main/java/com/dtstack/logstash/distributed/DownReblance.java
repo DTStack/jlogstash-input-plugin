@@ -19,6 +19,8 @@ package com.dtstack.logstash.distributed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.dtstack.logstash.distributed.util.CountUtil;
 import com.dtstack.logstash.exception.ExceptionUtil;
 
 
@@ -49,12 +51,15 @@ public class DownReblance implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		int index=0;
 		try{
+			++index;
 			while(true){
 				Thread.sleep(INTERVAL);
 				if(this.masterCheck.isMaster()){
 					this.zkDistributed.downTracsitionReblance();
 				}
+				if(CountUtil.count(index,5))logger.warn("DownReblance run again...");
 			}
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));

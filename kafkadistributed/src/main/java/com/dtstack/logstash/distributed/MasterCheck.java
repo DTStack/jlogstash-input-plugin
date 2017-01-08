@@ -18,8 +18,11 @@
 package com.dtstack.logstash.distributed;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.dtstack.logstash.distributed.util.CountUtil;
 import com.dtstack.logstash.exception.ExceptionUtil;
 
 
@@ -49,8 +52,10 @@ public class MasterCheck implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try{
+			int index=0;
 			while(true){
 				isMaster.getAndSet(zkDistributed.setMaster());
+				if(CountUtil.count(index,10))logger.warn("MasterCheck start again...");
 				Thread.sleep(MASTERCHECK);
 			}
 		}catch(Exception e){

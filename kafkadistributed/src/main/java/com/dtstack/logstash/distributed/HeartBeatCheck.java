@@ -23,6 +23,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dtstack.logstash.distributed.util.CountUtil;
 import com.dtstack.logstash.exception.ExceptionUtil;
 import com.google.common.collect.Maps;
 
@@ -60,10 +61,13 @@ public class HeartBeatCheck implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
+			int index = 0;
 			while(true){
+				++index;
 				if(this.masterCheck.isMaster()){
 					healthCheck();
 				}
+				if(CountUtil.count(index, 5))logger.warn("HeartBeatCheck start again...");
 				Thread.sleep(HEATBEATCHECK);
 			}
 

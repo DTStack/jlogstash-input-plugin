@@ -19,6 +19,8 @@ package com.dtstack.logstash.distributed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.dtstack.logstash.distributed.util.CountUtil;
 import com.dtstack.logstash.exception.ExceptionUtil;
 
 
@@ -50,10 +52,13 @@ public class HearBeat implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
+			int index =0 ;
 			while(true){
+				++index;
 				BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
 				brokerNode.setSeq(1);
 				zkDistributed.updateBrokerNode(this.localAddress, brokerNode);
+				if(CountUtil.count(index, 10))logger.error("HearBeat start again...");
 				Thread.sleep(HEATBEAT);
 			}
 
