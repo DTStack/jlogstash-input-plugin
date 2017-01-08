@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 
 
 /**
@@ -50,8 +51,11 @@ public class ManuallyLogPoolDataHandler extends PostHandler{
 	}
 
 	@Override
-	public void handle(final HttpExchange he) throws IOException {
+	public void handle(HttpExchange he) throws IOException {
 		// TODO Auto-generated method stub
+
+		final Map<String,Object> paramters = this.parseQuery(getQueryString(he));
+
 		 ApiCallbackMethod.doCallback(new ApiCallback(){
 			@Override
 			public void execute(ApiResult apiResult) throws Exception {
