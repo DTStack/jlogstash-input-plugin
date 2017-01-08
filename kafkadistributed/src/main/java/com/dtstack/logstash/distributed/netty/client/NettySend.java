@@ -143,9 +143,7 @@ class NettyClient{
 	private volatile ClientBootstrap bootstrap;
 	
 	private final Timer timer = new HashedWheelTimer();
-	
-//	public Object lock = new Object();
-	
+
     private static String multilineDelimiter = (char)29 +"";
     
     private static String delimiter = System.getProperty("line.separator");

@@ -19,7 +19,6 @@ package com.dtstack.logstash.distributed.http.server;
 
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -45,8 +44,7 @@ public abstract class PostHandler implements HttpHandler{
 		// TODO Auto-generated method stub
 	}
 	
-	@SuppressWarnings("unchecked")
-	protected static void parseQuery(String query, Map<String, 
+	protected void parseQuery(String query, Map<String,
 			Object> parameters) throws UnsupportedEncodingException {
 		         if (query != null) {
 		                 String pairs[] = query.split("[&]");
@@ -82,5 +80,4 @@ public abstract class PostHandler implements HttpHandler{
 		                 }
 		         }
 		}
-
 }

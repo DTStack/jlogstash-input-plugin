@@ -494,4 +494,8 @@ public class ZkDistributed {
 		List<Map<String, Object>> events = this.logPool.getNotCompleteLog();
 		route(events);
 	}
+
+	public void migration(String source,String target){
+
+	}
 }
