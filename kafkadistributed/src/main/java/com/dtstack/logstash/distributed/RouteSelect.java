@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import com.netflix.curator.framework.recipes.locks.InterProcessMutex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,8 +75,7 @@ public class RouteSelect {
 					nettySend = getNettySend(broker);
 				}else{
 					broker = selectRoute();
-					List<String> datas = new ArrayList<String>();
-					datas.add(sign);
+					List<String> datas = Lists.newArrayList(sign);
 					zkDistributed.updateBrokerNodeMeta(broker,datas,true);
 					nettySend = getNettySend(broker);
 				}
