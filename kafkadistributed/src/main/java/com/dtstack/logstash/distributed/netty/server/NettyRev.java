@@ -126,4 +126,9 @@ public class NettyRev {
         }
 
     }
+
+    public void release() {
+        // TODO Auto-generated method stub
+        if(bootstrap!=null)bootstrap.shutdown();
+    }
 }

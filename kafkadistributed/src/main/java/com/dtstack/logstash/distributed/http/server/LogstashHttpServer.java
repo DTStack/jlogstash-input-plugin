@@ -58,7 +58,7 @@ public class LogstashHttpServer {
 		init();
 	}
 	
-	public void stop(){
+	public void release(){
 		this.server.stop(1);
 	}
 	

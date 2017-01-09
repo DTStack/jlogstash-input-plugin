@@ -26,12 +26,12 @@ package com.dtstack.logstash.distributed.http.common;
  *
  */
 public class Urls {
+
+	public final static String ROOT = "/distributed";
 	
-	public final static String LOADNODEDATA = "/loadNodeData";
+	public final static String LOADNODEDATA = ROOT+"/loadNodeData";
 	
-	public final static String LOGPOOLDATA = "/logPoolData";
+	public final static String LOGPOOLDATA = ROOT+"/logPoolData";
 
-	public final static String MANUALLYDATA = "/manuallyData";
-
-
+	public final static String MANUALLYDATA = ROOT+"/manuallyData";
 }
