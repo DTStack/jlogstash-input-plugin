@@ -87,7 +87,7 @@ public class HeartBeatCheck implements Runnable{
 					if(brokerNodeCount==null){
 						brokerNodeCount = new BrokerNodeCount(0,brokerNode);
 					}
-					if(brokerNodeCount.getBrokerNode().getSeq()==brokerNode.getSeq()){
+					if(brokerNodeCount.getBrokerNode().getSeq().longValue()==brokerNode.getSeq().longValue()){
 						brokerNodeCount.setCount(brokerNodeCount.getCount()+1);
 					}else{
 						brokerNodeCount.setCount(0);

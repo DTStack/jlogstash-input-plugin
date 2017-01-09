@@ -1,7 +1,9 @@
 package com.dtstack.logstash.distributed.logmerge;
 
 import com.dtstack.logstash.distributed.util.RouteUtil;
-import com.google.gson.Gson;
+import com.dtstack.logstash.exception.ExceptionUtil;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,7 @@ public class ClusterLog {
 
     private static final Logger logger = LoggerFactory.getLogger(ClusterLog.class);
 
-    private static Gson gson = new Gson();
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
     private long logTime;
 
@@ -83,38 +85,34 @@ public class ClusterLog {
     public Map<String, Object> getBaseInfo(){
         Map<String, Object> eventMap = null;
         try{
-            eventMap = gson.fromJson(originalLog, Map.class);
+            eventMap = objectMapper.readValue(originalLog,Map.class);
+            eventMap.remove("message");
         }catch (Exception e){
-            logger.error("解析 log json 对象异常", e);
-            return null;
+            logger.error("parse log json error:{}", ExceptionUtil.getErrorMessage(e));
         }
-
-        eventMap.remove("message");
         return eventMap;
     }
 
     /**
-     * 获取除了message字段以外的信息
+     * 获取所有字段信息
      * @return
      */
     public Map<String, Object> getEventMap(){
         Map<String, Object> eventMap = null;
         try{
-            eventMap = gson.fromJson(originalLog, Map.class);
+            eventMap = objectMapper.readValue(originalLog,Map.class);
         }catch (Exception e){
-            logger.error("解析 log json 对象异常", e);
-            return null;
+            logger.error("parse log json error:{}", ExceptionUtil.getErrorMessage(e));
         }
-
         return eventMap;
     }
 
     public static ClusterLog generateClusterLog(String log) {
         Map<String, Object> eventMap = null;
         try{
-           eventMap = gson.fromJson(log, Map.class);
+            eventMap = objectMapper.readValue(log,Map.class);
         }catch (Exception e){
-            logger.error("解析 log json 对象异常", e);
+            logger.error("parse log json error:{}", ExceptionUtil.getErrorMessage(e));
             return null;
         }
 
@@ -135,6 +133,7 @@ public class ClusterLog {
     }
 
     private static Long getMillTimestamp(Map<String,Object> event){
-        return 0l;
+        String timestamp = (String)event.get("@timestamp");
+        return DateTime.parse(timestamp).getMillis();
     }
 }

@@ -57,8 +57,9 @@ public class HearBeat implements Runnable{
 				++index;
 				BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
 				brokerNode.setSeq(1);
+				brokerNode.setAlive(true);
 				zkDistributed.updateBrokerNodeWithLock(this.localAddress, brokerNode);
-				if(CountUtil.count(index, 10))logger.error("HearBeat start again...");
+				if(CountUtil.count(index, 10))logger.warn("HearBeat start again...");
 				Thread.sleep(HEATBEAT);
 			}
 

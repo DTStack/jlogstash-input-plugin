@@ -67,6 +67,7 @@ public class BrokerNode {
 		BrokerNode brokerNode = new BrokerNode();
 		brokerNode.setMetas(new ArrayList<String>());
 		brokerNode.setAlive(true);
+		brokerNode.setSeq(0);
 		return brokerNode;
 	}
 	

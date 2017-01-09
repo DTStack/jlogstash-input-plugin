@@ -118,13 +118,12 @@ public class ZkDistributed {
 				"%s/%s", this.distributeRootNode, "updateNodelock"));
 		this.nettyRev = new NettyRev(this.localAddress);
 		this.nettyRev.startup();
-		this.logPool = LogPool.getInstance();
+//		this.logPool = LogPool.getInstance();
 		this.routeSelect = new RouteSelect(this, this.localAddress,this.nodeRouteSelectlock);
 		this.logstashHttpServer = new LogstashHttpServer(this,
 				this.localAddress);
 		this.logstashHttpClient = new LogstashHttpClient(this,
 				this.localAddress);
-		initScheduledExecutorService();
 	}
 
 	private void initZk() throws IOException {
@@ -183,22 +182,21 @@ public class ZkDistributed {
 		if (stat == null) {
 			createLocalNode();
 		} else {
-			this.updateBrokerNodeNoLock(this.localAddress,
+			this.updateBrokerNodeWithLock(this.localAddress,
 					BrokerNode.initBrokerNode());
 		}
 		updateMemBrokersNodeData();
 		setMaster();
+		initScheduledExecutorService();
 	}
 
 	public boolean setMaster() {
 		boolean flag = false;
 		try {
 			String master = isHaveMaster();
-			if (this.localAddress.equals(master))
-				return true;
-			this.masterlock.acquire(30, TimeUnit.SECONDS);
-			master = isHaveMaster();
-			if (master == null || !getBrokerNodeData(master).isAlive()) {
+			if (this.localAddress.equals(master))return true;
+			boolean isMaster = this.masterlock.acquire(10, TimeUnit.SECONDS);
+			if(isMaster){
 				BrokersNode brokersNode = BrokersNode.initBrokersNode();
 				brokersNode.setMaster(this.localAddress);
 				this.zkClient.setData().forPath(this.brokersNode,
@@ -207,12 +205,6 @@ public class ZkDistributed {
 			}
 		} catch (Exception e) {
 			logger.error(ExceptionUtil.getErrorMessage(e));
-		} finally {
-			try {
-				if (this.masterlock.isAcquiredInThisProcess())this.masterlock.release();
-			} catch (Exception e) {
-				logger.error(ExceptionUtil.getErrorMessage(e));
-			}
 		}
 		return flag;
 	}
@@ -274,10 +266,11 @@ public class ZkDistributed {
 	public void updateBrokerNodeWithLock(String node, BrokerNode nodeSign) {
 		try {
 			this.updateNodelock.acquire(30, TimeUnit.SECONDS);
-			String nodePath = String.format("%s/%s", this.brokersNode, node);
 			BrokerNode brokerNode = this.getBrokerNodeData(node);
 			BrokerNode.copy(nodeSign, brokerNode);
-			updateBrokerNodeNoLock(nodePath,brokerNode);
+			String nodePath = String.format("%s/%s", this.brokersNode, node);
+			zkClient.setData().forPath(nodePath,
+					objectMapper.writeValueAsBytes(brokerNode));
 		} catch (Exception e) {
 			logger.error("{}:updateBrokerNodeWithLock error:{}", node,
 					ExceptionUtil.getErrorMessage(e));
@@ -292,10 +285,10 @@ public class ZkDistributed {
 	}
 
 	private void updateBrokerNodeNoLock(String node, BrokerNode nodeSign) throws Exception {
-		String nodePath = String.format("%s/%s", this.brokersNode, node);
-		BrokerNode brokerNode = this.getBrokerNodeData(nodePath);
+		BrokerNode brokerNode = this.getBrokerNodeData(node);
 		BrokerNode.copy(nodeSign, brokerNode);
-		zkClient.setData().forPath(node,
+		String nodePath = String.format("%s/%s", this.brokersNode, node);
+		zkClient.setData().forPath(nodePath,
 				objectMapper.writeValueAsBytes(brokerNode));
 	}
 
@@ -354,12 +347,10 @@ public class ZkDistributed {
 	}
 
 	public void route(Map<String, Object> event) throws Exception {
-		// TODO Auto-generated method stub
 		this.routeSelect.route(event);
 	}
 
 	public void route(List<Map<String, Object>> events) throws Exception {
-		// TODO Auto-generated method stub
 		if (events != null) {
 			for (Map<String, Object> event : events) {
 				this.routeSelect.route(event);
