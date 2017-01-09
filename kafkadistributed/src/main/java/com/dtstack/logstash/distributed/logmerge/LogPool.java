@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -92,6 +93,21 @@ public class LogPool {
         List<Map<String, Object>> notCompleteList = Lists.newArrayList();
         for (IPreLog preLog : logInfoMap.values()){
             notCompleteList.addAll(preLog.getNotCompleteLog());
+        }
+        return  notCompleteList;
+    }
+
+
+    /**
+     * 获取指定未完成的日志信息
+     */
+    public List<Map<String,Object>> getNotCompleteLog(List<String> nodes){
+        List<Map<String, Object>> notCompleteList = Lists.newArrayList();
+        Set<Map.Entry<String,IPreLog>> sets = logInfoMap.entrySet();
+        for(Map.Entry<String,IPreLog> entry:sets){
+          if(nodes.contains(entry.getKey())){
+              notCompleteList.addAll(entry.getValue().getNotCompleteLog());
+          }
         }
         return  notCompleteList;
     }

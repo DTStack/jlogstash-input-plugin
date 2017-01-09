@@ -47,7 +47,7 @@ public class LogstashHttpClient {
     	for(String node:nodes){
     		if(!node.equals(this.localAddress)){
     			Object[] obj = HttpCommon.getUrlPort(node);
-    			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOADNODEDATA));
+    			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOADNODEDATA),null);
     		}
     	}
     }
@@ -57,7 +57,7 @@ public class LogstashHttpClient {
     	for(String node:nodes){
     		if(!node.equals(this.localAddress)){
     			Object[] obj = HttpCommon.getUrlPort(node);
-    			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOGPOOLDATA));
+    			HttpClient.post(String.format(tempalteUrl, obj[0],obj[1],Urls.LOGPOOLDATA),null);
     		}
     	}
     }

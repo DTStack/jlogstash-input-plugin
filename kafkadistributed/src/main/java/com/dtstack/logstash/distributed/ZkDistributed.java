@@ -183,7 +183,7 @@ public class ZkDistributed {
 		if (stat == null) {
 			createLocalNode();
 		} else {
-			this.updateBrokerNode(this.localAddress,
+			this.updateBrokerNodeNoLock(this.localAddress,
 					BrokerNode.initBrokerNode());
 		}
 		updateMemBrokersNodeData();
@@ -209,8 +209,7 @@ public class ZkDistributed {
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		} finally {
 			try {
-				if (this.masterlock.isAcquiredInThisProcess())
-					this.masterlock.release();
+				if (this.masterlock.isAcquiredInThisProcess())this.masterlock.release();
 			} catch (Exception e) {
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}
@@ -269,37 +268,56 @@ public class ZkDistributed {
 	public void disableLocalNode(String node) {
 		BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
 		brokerNode.setAlive(false);
-		updateBrokerNode(node, brokerNode);
+		updateBrokerNodeWithLock(node, brokerNode);
 	}
 
-	public void updateBrokerNode(String node, BrokerNode nodeSign) {
+	public void updateBrokerNodeWithLock(String node, BrokerNode nodeSign) {
 		try {
 			this.updateNodelock.acquire(30, TimeUnit.SECONDS);
 			String nodePath = String.format("%s/%s", this.brokersNode, node);
 			BrokerNode brokerNode = this.getBrokerNodeData(node);
 			BrokerNode.copy(nodeSign, brokerNode);
-			zkClient.setData().forPath(nodePath,
-					objectMapper.writeValueAsBytes(brokerNode));
+			updateBrokerNodeNoLock(nodePath,brokerNode);
 		} catch (Exception e) {
-			logger.error("{}:updateBrokerNode error:{}", node,
+			logger.error("{}:updateBrokerNodeWithLock error:{}", node,
 					ExceptionUtil.getErrorMessage(e));
 		} finally {
 			try {
-				if (this.updateNodelock.isAcquiredInThisProcess())
-					this.updateNodelock.release();
+				if (this.updateNodelock.isAcquiredInThisProcess()) this.updateNodelock.release();
 			} catch (Exception e) {
-				logger.error("{}:updateBrokerNode error:{}", node,
+				logger.error("{}:updateBrokerNodeWithLock error:{}", node,
 						ExceptionUtil.getErrorMessage(e));
 			}
 		}
 	}
 
-	public void updateBrokerNodeMeta(String node, String sign) throws Exception {
-		BrokerNode nodeSign = getBrokerNodeData(node);
-		if (nodeSign != null) {
-			nodeSign.getMetas().add(sign);
-			updateBrokerNode(node, nodeSign);
-			updateMemBrokersNodeData();
+	private void updateBrokerNodeNoLock(String node, BrokerNode nodeSign) throws Exception {
+		String nodePath = String.format("%s/%s", this.brokersNode, node);
+		BrokerNode brokerNode = this.getBrokerNodeData(nodePath);
+		BrokerNode.copy(nodeSign, brokerNode);
+		zkClient.setData().forPath(node,
+				objectMapper.writeValueAsBytes(brokerNode));
+	}
+
+	public void updateBrokerNodeMeta(String node, List<String> nDatas,boolean operation) throws Exception {
+		try{
+			this.updateNodelock.acquire(30,TimeUnit.SECONDS);
+			BrokerNode nodeSign = getBrokerNodeData(node);
+			if (nodeSign != null) {
+				if(operation){
+					nodeSign.getMetas().addAll(nDatas);
+				}else{
+					nodeSign.getMetas().removeAll(nDatas);
+				}
+				String nodePath = String.format("%s/%s", this.brokersNode, node);
+				zkClient.setData().forPath(nodePath, objectMapper.writeValueAsBytes(nodeSign));
+				updateMemBrokersNodeData();
+			}
+		}catch(Exception e){
+			logger.error("{}:updateBrokerNodeMeta error:{}", node,
+					ExceptionUtil.getErrorMessage(e));
+		}finally {
+			if (this.updateNodelock.isAcquiredInThisProcess()) this.updateNodelock.release();
 		}
 	}
 
@@ -362,82 +380,98 @@ public class ZkDistributed {
 	}
 
 	public boolean downReblance() throws Exception {
-		BrokerNode brokerNode = BrokerNode.initBrokerNode();
-		Map<String, BrokerNode> nodes = Maps.newConcurrentMap();
+		boolean result = false;
 		List<String> childrens = this.getBrokersChildren();
-		List<String> failNodes = Lists.newArrayList();
 		for (String child : childrens) {
 			BrokerNode bb = this.getBrokerNodeData(child);
 			if (!bb.isAlive() && bb.getMetas().size() > 0) {
-				brokerNode.getMetas().addAll(bb.getMetas());
-				failNodes.add(child);
-			} else {
-				nodes.put(child, bb);
+				result = true;
+				break;
 			}
 		}
-		if (brokerNode.getMetas().size() > 0) {
-			int total = brokerNode.getMetas().size();
-			List<Map.Entry<String, BrokerNode>> entries = new LinkedList<Map.Entry<String, BrokerNode>>(
-					nodes.entrySet());
+        if(result){
+          try{
+			  this.updateNodelock.acquire(30,TimeUnit.SECONDS);
+			  BrokerNode brokerNode = BrokerNode.initBrokerNode();
+			  Map<String, BrokerNode> nodes = Maps.newConcurrentMap();
+			  List<String> failNodes = Lists.newArrayList();
+			  for (String child : childrens) {
+				  BrokerNode bb = this.getBrokerNodeData(child);
+				  if (!bb.isAlive() && bb.getMetas().size() > 0) {
+					  brokerNode.getMetas().addAll(bb.getMetas());
+					  failNodes.add(child);
+				  } else {
+					  nodes.put(child, bb);
+				  }
+			  }
+			  if (brokerNode.getMetas().size() > 0) {
+				  int total = brokerNode.getMetas().size();
+				  List<Map.Entry<String, BrokerNode>> entries = new LinkedList<Map.Entry<String, BrokerNode>>(
+						  nodes.entrySet());
 
-			Collections.sort(entries,
-					new Comparator<Map.Entry<String, BrokerNode>>() {
+				  Collections.sort(entries,
+						  new Comparator<Map.Entry<String, BrokerNode>>() {
 
-						@Override
-						public int compare(Map.Entry<String, BrokerNode> o1,
-								Map.Entry<String, BrokerNode> o2) {
-							return o1.getValue().getMetas().size()
-									- o2.getValue().getMetas().size();
-						}
-					});
+							  @Override
+							  public int compare(Map.Entry<String, BrokerNode> o1,
+												 Map.Entry<String, BrokerNode> o2) {
+								  return o1.getValue().getMetas().size()
+										  - o2.getValue().getMetas().size();
+							  }
+						  });
 
-			for (Map.Entry<String, BrokerNode> entry : entries) {
-				total = total + entry.getValue().getMetas().size();
-			}
-			int avg = total / nodes.size();
-			int start = 0;
-			int end = 0;
-			int resultTotal = 0;
-			for (Map.Entry<String, BrokerNode> entry : entries) {
-				List<String> metas = entry.getValue().getMetas();
-				int msize = metas.size();
-				if (msize < avg) {
-					end = end + (avg - msize);
-					metas.addAll(brokerNode.getMetas().subList(start, end));
-					start = end;
-					resultTotal = resultTotal + metas.size();
-					continue;
-				}
-				resultTotal = resultTotal + metas.size();
-			}
-			if (total > resultTotal) {
-				int c = total - resultTotal;
-				int index = 0;
-				for (Map.Entry<String, BrokerNode> entry : entries) {
-					if (index < c) {
-						end = end + 1;
-						entry.getValue()
-								.getMetas()
-								.addAll(brokerNode.getMetas().subList(start,
-										end));
-						start = end;
-						index++;
-					}
-				}
-			}
-			for (Map.Entry<String, BrokerNode> entry : entries) {
-				BrokerNode nodeSign = BrokerNode.initNullBrokerNode();
-				nodeSign.setMetas(entry.getValue().getMetas());
-				this.updateBrokerNode(entry.getKey(), nodeSign);
-			}
-			for (String failNode : failNodes) {
-				BrokerNode nodeSign = BrokerNode.initNullBrokerNode();
-				nodeSign.setMetas(new ArrayList<String>());
-				this.updateBrokerNode(failNode, nodeSign);
-			}
-			return true;
+				  for (Map.Entry<String, BrokerNode> entry : entries) {
+					  total = total + entry.getValue().getMetas().size();
+				  }
+				  int avg = total / nodes.size();
+				  int start = 0;
+				  int end = 0;
+				  int resultTotal = 0;
+				  for (Map.Entry<String, BrokerNode> entry : entries) {
+					  List<String> metas = entry.getValue().getMetas();
+					  int msize = metas.size();
+					  if (msize < avg) {
+						  end = end + (avg - msize);
+						  metas.addAll(brokerNode.getMetas().subList(start, end));
+						  start = end;
+						  resultTotal = resultTotal + metas.size();
+						  continue;
+					  }
+					  resultTotal = resultTotal + metas.size();
+				  }
+				  if (total > resultTotal) {
+					  int c = total - resultTotal;
+					  int index = 0;
+					  for (Map.Entry<String, BrokerNode> entry : entries) {
+						  if (index < c) {
+							  end = end + 1;
+							  entry.getValue()
+									  .getMetas()
+									  .addAll(brokerNode.getMetas().subList(start,
+											  end));
+							  start = end;
+							  index++;
+						  }
+					  }
+				  }
+				  for (Map.Entry<String, BrokerNode> entry : entries) {
+					  BrokerNode nodeSign = BrokerNode.initNullBrokerNode();
+					  nodeSign.setMetas(entry.getValue().getMetas());
+					  this.updateBrokerNodeNoLock(entry.getKey(), nodeSign);
+				  }
+				  for (String failNode : failNodes) {
+					  BrokerNode nodeSign = BrokerNode.initNullBrokerNode();
+					  nodeSign.setMetas(new ArrayList<String>());
+					  this.updateBrokerNodeNoLock(failNode, nodeSign);
+				  }
+			  }
+		  }catch(Exception e){
+                 logger.error(ExceptionUtil.getErrorMessage(e));
+		  }finally {
+              if(this.updateNodelock.isAcquiredInThisProcess())this.updateNodelock.release();
+		  }
 		}
-		return false;
+		return result;
 	}
 
 	public void upTracsitionReblance() throws Exception {
@@ -450,44 +484,61 @@ public class ZkDistributed {
 	}
 
 	public boolean upReblance() throws Exception {
-		List<String> childrens = this.getBrokersChildren();
-		List<String> noneNode = Lists.newArrayList();
-		List<String> allNode = Lists.newArrayList();
-		List<String> nodes = Lists.newArrayList();
-		Map<String, BrokerNode> mnodes = Maps.newConcurrentMap();
-		for (String child : childrens) {
-			BrokerNode brokerNode = this.getBrokerNodeData(child);
-			if (brokerNode.isAlive()) {
-				if (brokerNode.getMetas().size() > 0) {
-					nodes.addAll(brokerNode.getMetas());
-				} else {
-					noneNode.add(child);
+		boolean result = false;
+			List<String> childrens = this.getBrokersChildren();
+			for (String child : childrens) {
+				BrokerNode brokerNode = this.getBrokerNodeData(child);
+				if(brokerNode.isAlive()&&brokerNode.getMetas().size()==0){
+					result = true;
+					break;
 				}
-				allNode.add(child);
 			}
-		}
-		int avg = nodes.size() / allNode.size();
-		int yu = nodes.size() % allNode.size();
-		int start = 0;
-		int end = 0;
-		if (noneNode.size() > 0) {
-			for (int i = 0; i < allNode.size(); i++) {
-				if (i == allNode.size() - 1) {
-					end = end + yu;
-				} else {
-					end = end + avg;
+			if(result){
+				try{
+				this.updateNodelock.acquire(30,TimeUnit.SECONDS);
+				List<String> noneNode = Lists.newArrayList();
+				List<String> allNode = Lists.newArrayList();
+				List<String> nodes = Lists.newArrayList();
+				Map<String, BrokerNode> mnodes = Maps.newConcurrentMap();
+				for (String child : childrens) {
+					BrokerNode brokerNode = this.getBrokerNodeData(child);
+					if (brokerNode.isAlive()) {
+						if (brokerNode.getMetas().size() > 0) {
+							nodes.addAll(brokerNode.getMetas());
+						} else {
+							noneNode.add(child);
+						}
+						allNode.add(child);
+					}
 				}
-				BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
-				brokerNode.setMetas(nodes.subList(start, end));
-				mnodes.put(allNode.get(i), brokerNode);
-				start = end;
-			}
-			for (Map.Entry<String, BrokerNode> entry : mnodes.entrySet()) {
-				this.updateBrokerNode(entry.getKey(), entry.getValue());
-			}
-			return true;
+				int avg = nodes.size() / allNode.size();
+				int yu = nodes.size() % allNode.size();
+				int start = 0;
+				int end = 0;
+				if (noneNode.size() > 0) {
+					for (int i = 0; i < allNode.size(); i++) {
+						if (i == allNode.size() - 1) {
+							end = end + yu;
+						} else {
+							end = end + avg;
+						}
+						BrokerNode brokerNode = BrokerNode.initNullBrokerNode();
+						brokerNode.setMetas(nodes.subList(start, end));
+						mnodes.put(allNode.get(i), brokerNode);
+						start = end;
+					}
+					for (Map.Entry<String, BrokerNode> entry : mnodes.entrySet()) {
+						this.updateBrokerNodeNoLock(entry.getKey(), entry.getValue());
+					}
+					result = true;
+				}
+			}catch(Exception e){
+					logger.error(ExceptionUtil.getErrorMessage(e));
+				}finally {
+					if(this.updateNodelock.isAcquiredInThisProcess())this.updateNodelock.release();
+				}
 		}
-		return false;
+		return result;
 	}
 
 	public void sendLogPoolData() throws Exception {
@@ -495,7 +546,19 @@ public class ZkDistributed {
 		route(events);
 	}
 
-	public void migration(String source,String target){
+	public void sendLogPoolData(List<String> nodes) throws Exception {
+		List<Map<String, Object>> events = this.logPool.getNotCompleteLog(nodes);
+		route(events);
+	}
+
+	public void migration(String target,String source,List<String> datas) throws Exception {
+		  BrokerNode sourceBrokerNode =  this.getBrokerNodeData(source);
+		  BrokerNode targetBrokerNode =  this.getBrokerNodeData(target);
+		  if(sourceBrokerNode.getMetas().containsAll(datas)&&!targetBrokerNode.getMetas().containsAll(datas)){
+			  this.updateBrokerNodeMeta(target,datas,true);
+			  this.updateBrokerNodeMeta(source,datas,false);
+			  sendLogPoolData(datas);
+		  }
 
 	}
 }

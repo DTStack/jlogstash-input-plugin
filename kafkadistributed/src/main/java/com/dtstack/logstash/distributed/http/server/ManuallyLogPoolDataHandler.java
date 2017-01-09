@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 
@@ -54,16 +55,19 @@ public class ManuallyLogPoolDataHandler extends PostHandler{
 	public void handle(HttpExchange he) throws IOException {
 		// TODO Auto-generated method stub
 
-		final Map<String,Object> paramters = this.parseQuery(getQueryString(he));
+		 final Map<String,Object> paramters = this.parseQuery(getQueryString(he));
 
 		 ApiCallbackMethod.doCallback(new ApiCallback(){
 			@Override
 			public void execute(ApiResult apiResult) throws Exception {
 				// TODO Auto-generated method stub
 				logger.warn("Trigger ManuallyLogPoolData...");
-				String source = null;
-				String target = null;
-				zkDistributed.migration(source,target);
+				if(paramters.size()>0){
+					String target = (String)paramters.get("target");
+					String source = (String)paramters.get("source");
+					List<String> datas = (List<String>)paramters.get("datas");
+					zkDistributed.migration(target,source,datas);
+				}
 			}
 		 }, he);
 	}

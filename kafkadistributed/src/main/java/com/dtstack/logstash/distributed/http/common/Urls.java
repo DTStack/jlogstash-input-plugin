@@ -31,4 +31,7 @@ public class Urls {
 	
 	public final static String LOGPOOLDATA = "/logPoolData";
 
+	public final static String MANUALLYDATA = "/manuallyData";
+
+
 }

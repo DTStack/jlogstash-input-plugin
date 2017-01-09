@@ -17,11 +17,13 @@
  */
 package com.dtstack.logstash.distributed;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +73,9 @@ public class RouteSelect {
 					nettySend = getNettySend(broker);
 				}else{
 					broker = selectRoute();
-					zkDistributed.updateBrokerNodeMeta(broker, sign);
+					List<String> datas = new ArrayList<String>();
+					datas.add(sign);
+					zkDistributed.updateBrokerNodeMeta(broker,datas,true);
 					nettySend = getNettySend(broker);
 				}
 			}catch(Exception e){

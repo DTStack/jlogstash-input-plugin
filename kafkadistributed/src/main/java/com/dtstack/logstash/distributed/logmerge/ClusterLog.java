@@ -1,5 +1,6 @@
 package com.dtstack.logstash.distributed.logmerge;
 
+import com.dtstack.logstash.distributed.util.RouteUtil;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,12 @@ public class ClusterLog {
 
     private String logType;
 
+    private String flag;
+
+    public String getLogFlag(){
+       return this.flag;
+    }
+
     public long getLogTime() {
         return logTime;
     }
@@ -51,10 +58,6 @@ public class ClusterLog {
     @Override
     public String toString() {
         return loginfo;
-    }
-
-    public String getLogFlag(){
-        return host + ":" + path;
     }
 
     public String getOriginalLog() {
@@ -107,7 +110,7 @@ public class ClusterLog {
     }
 
     public static ClusterLog generateClusterLog(String log) {
-        Map<String, String> eventMap = null;
+        Map<String, Object> eventMap = null;
         try{
            eventMap = gson.fromJson(log, Map.class);
         }catch (Exception e){
@@ -116,19 +119,22 @@ public class ClusterLog {
         }
 
         ClusterLog clusterLog = new ClusterLog();
-        long time = Long.valueOf(eventMap.get("timestamp"));
-        String msg = eventMap.get("message");
-        String host = eventMap.get("host");
-        String path = eventMap.get("path");
-        String logType = eventMap.get("logtype");
-
+        long time = getMillTimestamp(eventMap);
+        String msg = (String)eventMap.get("message");
+        String host = (String)eventMap.get("host");
+        String path = (String)eventMap.get("path");
+        String logType = (String)eventMap.get("logtype");
         clusterLog.setLogTime(time);
         clusterLog.setLoginfo(msg);
         clusterLog.originalLog = log;
         clusterLog.host = host;
         clusterLog.path = path;
         clusterLog.logType = logType;
-
+        clusterLog.flag = RouteUtil.getFormatHashKey(eventMap);
         return clusterLog;
+    }
+
+    private static Long getMillTimestamp(Map<String,Object> event){
+        return 0l;
     }
 }

@@ -7,7 +7,6 @@ import java.util.Map;
  * 未处理日志存放接口
  * Date: 2016/12/30
  * Company: www.dtstack.com
- *
  * @ahthor xuchao
  */
 public interface IPreLog {
@@ -17,6 +16,8 @@ public interface IPreLog {
      * @return
      */
     boolean checkIsCompleteLog();
+
+
 
     /**
      * 执行日志合并
@@ -41,4 +42,5 @@ public interface IPreLog {
      * 暂时未想到比较好的解决办法,当前处理是每次超过过期时间就删除第一条数据
      */
     void dealTimeout();
+
 }

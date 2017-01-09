@@ -23,13 +23,17 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dtstack.logstash.exception.ExceptionUtil;
+
+import java.util.Map;
 
 
 /**
@@ -48,24 +52,31 @@ public class HttpClient {
     
     private static int ConnectTimeout = 10000;//10秒 
     
-    private static Boolean SetTimeOut = true;  
-    
+    private static Boolean SetTimeOut = true;
+
+    private static ObjectMapper objectMapper = new ObjectMapper();
+
+
     private static CloseableHttpClient getHttpClient(){
         return HttpClientBuilder.create().build();  
     }
     
-    public static String post(String url){  
-        String responseBody = null;  
-        CloseableHttpClient httpClient = getHttpClient();  
-        HttpPost httPost = new HttpPost(url);  
-        if (SetTimeOut) {  
-            RequestConfig requestConfig = RequestConfig.custom()  
-                    .setSocketTimeout(SocketTimeout)  
-                    .setConnectTimeout(ConnectTimeout).build();//设置请求和传输超时时间  
-            httPost.setConfig(requestConfig);  
-        }  
-        try {  
-            //请求数据  
+    public static String post(String url,Map<String,Object> bodyData){
+        String responseBody = null;
+        CloseableHttpClient httpClient = null;
+        try {
+            httpClient  = getHttpClient();
+            HttpPost httPost = new HttpPost(url);
+            if (SetTimeOut) {
+                RequestConfig requestConfig = RequestConfig.custom()
+                        .setSocketTimeout(SocketTimeout)
+                        .setConnectTimeout(ConnectTimeout).build();//设置请求和传输超时时间
+                httPost.setConfig(requestConfig);
+            }
+            if(bodyData!=null&&bodyData.size()>0){
+                httPost.setEntity(new StringEntity(objectMapper.writeValueAsString(bodyData)));
+            }
+            //请求数据
             CloseableHttpResponse response = httpClient.execute(httPost);  
             int status = response.getStatusLine().getStatusCode();  
             if (status == HttpStatus.SC_OK) {  

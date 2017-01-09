@@ -3,10 +3,8 @@ package com.dtstack.logstash.distributed.gclog;
 import com.dtstack.logstash.distributed.logmerge.*;
 import com.dtstack.logstash.inputs.BaseInput;
 import com.google.common.collect.Lists;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,18 +25,17 @@ public class CMSPreLogInfo implements IPreLog {
     /**整合一条cms消息的超时时间*/
     private static final int TIME_OUT = 60 * 1000;
 
-    /**该日志的标识(host:path)*/
-    private String flag = "";
-
     private long firstEleTime = 0;
 
     private CMSLogPattern logMerge = new CMSLogPattern();
 
     private List<ClusterLog> logList;
 
+    private String flag;
+
     public CMSPreLogInfo(String flag){
         this.flag  = flag;
-        logList = new LinkedList<>();
+        logList = new LinkedList<ClusterLog>();
     }
 
     /**

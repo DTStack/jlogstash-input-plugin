@@ -21,14 +21,12 @@ package com.dtstack.logstash.distributed.http.server;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import com.google.common.collect.Maps;
 import com.sun.net.httpserver.HttpExchange;
-import  com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpHandler;
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 /**
@@ -43,6 +41,8 @@ import  com.sun.net.httpserver.HttpHandler;
 public abstract class PostHandler implements HttpHandler{
 
 	private static String encoding = "utf-8";
+
+	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
 	public void handle(HttpExchange he) throws IOException {
@@ -66,39 +66,11 @@ public abstract class PostHandler implements HttpHandler{
 	}
 
 
-	protected Map<String,Object> parseQuery(String query) throws UnsupportedEncodingException {
+	protected Map<String,Object> parseQuery(String query) throws IOException {
 		         Map<String,Object> parameters = Maps.newConcurrentMap();
-		         if (query != null) {
-		                 String pairs[] = query.split("[&]");
-		                 for (String pair : pairs) {
-		                          String param[] = pair.split("[=]");
-		                          String key = null;
-		                          String value = null;
-		                          if (param.length > 0) {
-		                          key = URLDecoder.decode(param[0],encoding);
-		                          }
-
-		                          if (param.length > 1) {
-		                                   value = URLDecoder.decode(param[1],encoding);
-		                          }
-
-		                          if (parameters.containsKey(key)) {
-		                                   Object obj = parameters.get(key);
-		                                   if (obj instanceof List<?>) {
-		                                            List<String> values = (List<String>) obj;
-		                                            values.add(value);
-
-		                                   } else if (obj instanceof String) {
-		                                            List<String> values = new ArrayList<String>();
-		                                            values.add((String) obj);
-		                                            values.add(value);
-		                                            parameters.put(key, values);
-		                                   }
-		                          } else {
-		                                   parameters.put(key, value);
-		                          }
-		                 }
+		         if (StringUtils.isNotBlank(query)) {
+					 parameters.putAll(objectMapper.readValue(query.getBytes(),Map.class));
 		         }
-		return parameters;
+		         return parameters;
 		}
 }
