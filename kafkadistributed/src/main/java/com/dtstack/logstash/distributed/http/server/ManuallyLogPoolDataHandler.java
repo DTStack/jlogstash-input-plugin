@@ -55,17 +55,17 @@ public class ManuallyLogPoolDataHandler extends PostHandler{
 	public void handle(HttpExchange he) throws IOException {
 		// TODO Auto-generated method stub
 
-		 final Map<String,Object> paramters = this.parseQuery(getQueryString(he));
+		 final Map<String,Object> paramaters = this.parseQuery(getQueryString(he));
 
 		 ApiCallbackMethod.doCallback(new ApiCallback(){
 			@Override
 			public void execute(ApiResult apiResult) throws Exception {
 				// TODO Auto-generated method stub
 				logger.warn("Trigger ManuallyLogPoolData...");
-				if(paramters.size()>0){
-					String target = (String)paramters.get("target");
-					String source = (String)paramters.get("source");
-					List<String> datas = (List<String>)paramters.get("datas");
+				if(paramaters.size()>0){
+					String target = (String)paramaters.get("target");
+					String source = (String)paramaters.get("source");
+					List<String> datas = (List<String>)paramaters.get("datas");
 					zkDistributed.migration(target,source,datas);
 				}
 			}
