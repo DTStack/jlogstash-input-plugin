@@ -118,8 +118,8 @@ public class ZkDistributed {
 				"%s/%s", this.distributeRootNode, "updateNodelock"));
 		this.nettyRev = new NettyRev(this.localAddress);
 		this.nettyRev.startup();
-//		this.logPool = LogPool.getInstance();
-		this.routeSelect = new RouteSelect(this, this.localAddress);
+		this.logPool = LogPool.getInstance();
+		this.routeSelect = new RouteSelect(this, this.localAddress,this.nodeRouteSelectlock);
 		this.logstashHttpServer = new LogstashHttpServer(this,
 				this.localAddress);
 		this.logstashHttpClient = new LogstashHttpClient(this,
@@ -299,7 +299,7 @@ public class ZkDistributed {
 				objectMapper.writeValueAsBytes(brokerNode));
 	}
 
-	public void updateBrokerNodeMeta(String node, List<String> nDatas,boolean operation) throws Exception {
+	public void updateBrokerNodeMeta(String node, List<String> nDatas,boolean operation){
 		try{
 			this.updateNodelock.acquire(30,TimeUnit.SECONDS);
 			BrokerNode nodeSign = getBrokerNodeData(node);
@@ -317,7 +317,12 @@ public class ZkDistributed {
 			logger.error("{}:updateBrokerNodeMeta error:{}", node,
 					ExceptionUtil.getErrorMessage(e));
 		}finally {
-			if (this.updateNodelock.isAcquiredInThisProcess()) this.updateNodelock.release();
+		  try{
+			  if (this.updateNodelock.isAcquiredInThisProcess()) this.updateNodelock.release();
+		  }catch(Exception e){
+			  logger.error("{}:updateBrokerNodeMeta error:{}", node,
+					  ExceptionUtil.getErrorMessage(e));
+		  }
 		}
 	}
 
@@ -342,10 +347,6 @@ public class ZkDistributed {
 					ExceptionUtil.getErrorMessage(e));
 		}
 		return null;
-	}
-
-	public InterProcessMutex getNodeRouteSelectlock() {
-		return nodeRouteSelectlock;
 	}
 
 	public Map<String, BrokerNode> getNodeDatas() {

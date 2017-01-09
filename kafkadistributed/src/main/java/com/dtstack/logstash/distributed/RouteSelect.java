@@ -22,15 +22,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Lists;
+import com.netflix.curator.framework.recipes.locks.InterProcessMutex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.distributed.netty.client.NettySend;
 import com.dtstack.logstash.distributed.util.RouteUtil;
 import com.dtstack.logstash.exception.ExceptionUtil;
-import com.dtstack.logstash.render.Formatter;
 import com.google.common.collect.Maps;
 
 
@@ -49,16 +48,18 @@ public class RouteSelect {
 	private Map<String,NettySend> nettySends = Maps.newConcurrentMap();
 	
 	private  ZkDistributed zkDistributed = null;
-	
-	
+
 	private String localAddress;
 
-	public RouteSelect(ZkDistributed zkDistributed,String localAddress){
+	private InterProcessMutex nodeRouteSelectlock;
+
+	public RouteSelect(ZkDistributed zkDistributed, String localAddress, InterProcessMutex nodeRouteSelectlock){
 		this.zkDistributed = zkDistributed;
 		this.localAddress = localAddress;
+		this.nodeRouteSelectlock = nodeRouteSelectlock;
 	}
 
-	public void route(Map<String,Object> event) throws Exception{
+	public void route(Map<String,Object> event){
         String sign = RouteUtil.getFormatHashKey(event);
 		String broker = getBroker(sign);
 		NettySend nettySend = null;
@@ -66,7 +67,7 @@ public class RouteSelect {
 			nettySend = getNettySend(broker);
 		}else{
 			try{
-				zkDistributed.getNodeRouteSelectlock().acquire();
+				this.nodeRouteSelectlock.acquire(30, TimeUnit.SECONDS);
 				zkDistributed.updateMemBrokersNodeData();
 				broker = getBroker(sign);
 				if(broker!=null){
@@ -81,7 +82,11 @@ public class RouteSelect {
 			}catch(Exception e){
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}finally{
-				if(zkDistributed.getNodeRouteSelectlock().isAcquiredInThisProcess())zkDistributed.getNodeRouteSelectlock().release();
+				try{
+					if(this.nodeRouteSelectlock.isAcquiredInThisProcess())this.nodeRouteSelectlock.release();
+				}catch(Exception e){
+					logger.error(ExceptionUtil.getErrorMessage(e));
+				}
 			}
 		}
 		nettySend.emit(event);
