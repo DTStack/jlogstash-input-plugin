@@ -27,5 +27,7 @@ package com.dtstack.logstash.distributed.logmerge;
 
 public class LogTypeConstant {
 
-    public static final String CMS_LOG_TYPE = "cmslog";
+    public static final String CMS_LOG_TYPE = "cmsgc";
+
+    public static final String YOUNG_LOG_TYPE = "younggc";
 }
