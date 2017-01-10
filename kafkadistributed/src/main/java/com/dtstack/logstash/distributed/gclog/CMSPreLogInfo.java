@@ -64,7 +64,12 @@ public class CMSPreLogInfo implements IPreLog {
     public boolean addLog(ClusterLog addLog){//插入的时候根据时间排序,升序
 
         if(!logMerge.checkIsFullGC(addLog.getLoginfo())){//非full gc 直接添加到inputlist
-            BaseInput.getInputQueueList().put(addLog.getEventMap());
+            Map<String, Object> eventMap = addLog.getOriginalLog();
+            if(logMerge.checkIsYoungGC(addLog.getLoginfo())){//判断是不是younggc
+                eventMap.put("logtype", LogTypeConstant.YOUNG_LOG_TYPE);
+            }
+
+            BaseInput.getInputQueueList().put(eventMap);
             return true;
         }
 
@@ -97,7 +102,7 @@ public class CMSPreLogInfo implements IPreLog {
     public CompletedLog mergeGcLog(){
 
         if(!checkIsCompleteLog()){
-           return null;
+            return null;
         }
 
         //从列表中抽取出CMS记录
@@ -139,7 +144,7 @@ public class CMSPreLogInfo implements IPreLog {
     public List<Map<String, Object>> getNotCompleteLog() {
         List<Map<String, Object>> rstList = Lists.newArrayList();
         for (ClusterLog log : logList){
-            rstList.add(log.getEventMap());
+            rstList.add(log.getOriginalLog());
         }
 
         return rstList;
