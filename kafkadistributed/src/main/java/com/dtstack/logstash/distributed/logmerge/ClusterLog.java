@@ -116,11 +116,12 @@ public class ClusterLog {
         String logType = (String)eventMap.get("logtype");
         clusterLog.setLogTime(time);
         clusterLog.setLoginfo(msg);
-        clusterLog.originalLog = eventMap;
         clusterLog.host = host;
         clusterLog.path = path;
         clusterLog.logType = logType;
         clusterLog.flag = RouteUtil.getFormatHashKey(eventMap);
+        eventMap.put("logFlag",clusterLog.flag);
+        clusterLog.originalLog = eventMap;
         return clusterLog;
     }
 
