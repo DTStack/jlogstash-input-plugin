@@ -120,7 +120,7 @@ public class ClusterLog {
         clusterLog.path = path;
         clusterLog.logType = logType;
         clusterLog.flag = RouteUtil.getFormatHashKey(eventMap);
-        eventMap.put("logFlag",clusterLog.flag);
+        eventMap.put("logflag",clusterLog.flag);
         clusterLog.originalLog = eventMap;
         return clusterLog;
     }
