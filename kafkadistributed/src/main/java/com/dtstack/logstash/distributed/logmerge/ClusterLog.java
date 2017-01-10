@@ -18,12 +18,11 @@
 package com.dtstack.logstash.distributed.logmerge;
 
 import com.dtstack.logstash.distributed.util.RouteUtil;
-import com.dtstack.logstash.exception.ExceptionUtil;
+import com.google.common.collect.Maps;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 
 /**
@@ -48,7 +47,7 @@ public class ClusterLog {
 
     private String loginfo;
 
-    private String originalLog;
+    private Map<String,Object> originalLog;
 
     private String logType;
 
@@ -79,11 +78,11 @@ public class ClusterLog {
         return loginfo;
     }
 
-    public String getOriginalLog() {
+    public Map<String,Object> getOriginalLog() {
         return originalLog;
     }
 
-    public void setOriginalLog(String originalLog) {
+    public void setOriginalLog(Map<String,Object> originalLog) {
         this.originalLog = originalLog;
     }
 
@@ -100,39 +99,15 @@ public class ClusterLog {
      * @return
      */
     public Map<String, Object> getBaseInfo(){
-        Map<String, Object> eventMap = null;
-        try{
-            eventMap = objectMapper.readValue(originalLog,Map.class);
-            eventMap.remove("message");
-        }catch (Exception e){
-            logger.error("parse log json error:{}", ExceptionUtil.getErrorMessage(e));
-        }
+        Map<String,Object> eventMap  = Maps.newHashMap();
+        eventMap.putAll(this.originalLog);
+        eventMap.remove("message");
         return eventMap;
     }
 
-    /**
-     * 获取所有字段信息
-     * @return
-     */
-    public Map<String, Object> getEventMap(){
-        Map<String, Object> eventMap = null;
-        try{
-            eventMap = objectMapper.readValue(originalLog,Map.class);
-        }catch (Exception e){
-            logger.error("parse log json error:{}", ExceptionUtil.getErrorMessage(e));
-        }
-        return eventMap;
-    }
 
-    public static ClusterLog generateClusterLog(String log) {
-        Map<String, Object> eventMap = null;
-        try{
-            eventMap = objectMapper.readValue(log,Map.class);
-        }catch (Exception e){
-            logger.error("parse log json error:{}", ExceptionUtil.getErrorMessage(e));
-            return null;
-        }
-
+    public static ClusterLog generateClusterLog(String log) throws Exception {
+        Map<String, Object> eventMap  = objectMapper.readValue(log,Map.class);
         ClusterLog clusterLog = new ClusterLog();
         long time = getMillTimestamp(eventMap);
         String msg = (String)eventMap.get("message");
@@ -141,11 +116,12 @@ public class ClusterLog {
         String logType = (String)eventMap.get("logtype");
         clusterLog.setLogTime(time);
         clusterLog.setLoginfo(msg);
-        clusterLog.originalLog = log;
         clusterLog.host = host;
         clusterLog.path = path;
         clusterLog.logType = logType;
         clusterLog.flag = RouteUtil.getFormatHashKey(eventMap);
+        eventMap.put("logFlag",clusterLog.flag);
+        clusterLog.originalLog = eventMap;
         return clusterLog;
     }
 
