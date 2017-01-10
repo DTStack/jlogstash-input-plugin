@@ -60,9 +60,13 @@ public class CompletedLog {
         this.eventMap = eventMap;
     }
 
-    public void complete(){
+    public void complete(Map<String, Object> extInfo){
         String msg = StringUtils.join(logInfo, lineSP);
         eventMap.put("message", msg);
+
+        if(extInfo != null){
+            eventMap.putAll(extInfo);
+        }
     }
 
     @Override

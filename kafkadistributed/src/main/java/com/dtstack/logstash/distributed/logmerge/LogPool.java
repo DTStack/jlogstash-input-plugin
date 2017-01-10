@@ -59,12 +59,14 @@ public class LogPool {
         logWatcher.startup();
     }
 
-    public void addLog(String log) throws Exception{
+    public void addLog(String log){
+
+        ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
         if(log == null){
             logger.info("analyse msg from log err:{}.", log);
             return;
         }
-        ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
+
         String flag = clusterLog.getLogFlag();
         IPreLog preLogInfo = logInfoMap.get(flag);
         if(preLogInfo == null){
@@ -72,6 +74,7 @@ public class LogPool {
             if (preLogInfo == null) return;
             logInfoMap.put(flag, preLogInfo);
         }
+
         preLogInfo.addLog(clusterLog);
     }
 

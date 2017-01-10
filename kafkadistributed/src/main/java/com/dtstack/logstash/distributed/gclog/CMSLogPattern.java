@@ -94,6 +94,24 @@ public class CMSLogPattern {
             timestamp_re + "\\[(AS)?CMS-concurrent-reset:\\s*" + gc_time_re + "/" + gc_time_secs_re + "\\]");
 
 
+    private static String young_gc_re = "(([0-9]+\\.[0-9]+):*)?\\s*\\[GC\\s*\\(.*\\).*(([0-9]+\\.[0-9]+):*)?" +
+            "\\[(DefNew|(AS)?ParNew)(.*\\r?\\n)*(-\\s*age\\s*([0-9]):\\s*[0-9]+\\s*bytes,\\s*" +
+            "[0-9]+\\s*total\\r?\\n)*:\\s*([0-9]+)([KM])->([0-9]+)([KM])?\\(([0-9]+)([KM])\\)," +
+            "\\s*([0-9]+\\.[0-9]+)\\s*(secs)\\]\\s*([0-9]+)([KM])->([0-9]+)([KM])?\\(([0-9]+)([KM])\\)," +
+            "\\s*([0-9]+\\.[0-9]+)\\s*(secs)\\]\\s*\\[Times:\\s*user=([0-9]+\\.[0-9]+)\\s*" +
+            "sys=([0-9]+\\.[0-9]+),\\s*real=([0-9]+\\.[0-9]+)\\s*(secs)\\]";
+
+    private static Pattern young_gc_pattern = Pattern.compile(young_gc_re);
+
+    public boolean checkIsYoungGC(String log){
+        Matcher matcher = young_gc_pattern.matcher(log);
+        if(matcher.find()){
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * 判断是不是cms的full gc
      * @param log

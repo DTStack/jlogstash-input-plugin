@@ -20,6 +20,7 @@ package com.dtstack.logstash.distributed.gclog;
 import com.dtstack.logstash.distributed.logmerge.*;
 import com.dtstack.logstash.inputs.BaseInput;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
@@ -63,7 +64,7 @@ public class CMSPreLogInfo implements IPreLog {
     public boolean addLog(ClusterLog addLog){//插入的时候根据时间排序,升序
 
         if(!logMerge.checkIsFullGC(addLog.getLoginfo())){//非full gc 直接添加到inputlist
-            BaseInput.getInputQueueList().put(addLog.getOriginalLog());
+            BaseInput.getInputQueueList().put(addLog.getEventMap());
             return true;
         }
 
@@ -114,7 +115,9 @@ public class CMSPreLogInfo implements IPreLog {
             cmsLog.addLog(currLog.getLoginfo());
         }
 
-        cmsLog.complete();
+        Map<String, Object> extInfo = Maps.newHashMap();
+        extInfo.put("logtype", LogTypeConstant.CMS_LOG_TYPE);
+        cmsLog.complete(extInfo);
         if(logList.size() > 0){
             firstEleTime = System.currentTimeMillis();
         }
@@ -136,7 +139,7 @@ public class CMSPreLogInfo implements IPreLog {
     public List<Map<String, Object>> getNotCompleteLog() {
         List<Map<String, Object>> rstList = Lists.newArrayList();
         for (ClusterLog log : logList){
-            rstList.add(log.getOriginalLog());
+            rstList.add(log.getEventMap());
         }
 
         return rstList;
