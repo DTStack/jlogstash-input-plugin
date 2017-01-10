@@ -59,7 +59,7 @@ public class LogPool {
         logWatcher.startup();
     }
 
-    public void addLog(String log){
+    public void addLog(String log) throws Exception{
 
         ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
         if(log == null){
