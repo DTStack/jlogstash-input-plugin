@@ -17,13 +17,11 @@
  */
 package com.dtstack.logstash.distributed;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import com.google.common.collect.Lists;
 import com.netflix.curator.framework.recipes.locks.InterProcessMutex;
 import org.slf4j.Logger;

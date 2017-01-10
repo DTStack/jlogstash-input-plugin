@@ -1,8 +1,6 @@
 package com.dtstack.logstash.distributed.netty.server;
 
-import com.dtstack.logstash.annotation.Required;
 import com.dtstack.logstash.distributed.logmerge.LogPool;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -31,7 +29,6 @@ public class NettyRev {
 
     private static Logger logger = LoggerFactory.getLogger(NettyRev.class);
 
-    @Required(required = true)
     private static int port;
 
     private static String host = "0.0.0.0";
@@ -111,7 +108,6 @@ public class NettyRev {
                 if(!StringUtils.isNoneBlank(mes)){
                     return;
                 }
-
                 //将数据加入到merge队列里面
                 mes = mes.replaceAll(multilineDelimiter, delimiter);
                 LogPool.getInstance().addLog(mes);

@@ -75,9 +75,10 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	
 	/**
 	 *  是否开启分布式 null不开启，不为null开启
-	 * 	{"zkAddress":"127.0.0.1:2181/distributed",
+	 * 	{
+	 * 	 "zkAddress":"127.0.0.1:2181/distributed",
 	 *   "localAddress":"127.0.0.1:8555",
-	 *   "hashKey":"%{tenant_id}:%{path}"
+	 *   "hashKey":"%{tenant_id}:%{hostname}_%{appname}_%{path}"
 	 *  }
 	 */
 	public  Map<String,Object> distributed;

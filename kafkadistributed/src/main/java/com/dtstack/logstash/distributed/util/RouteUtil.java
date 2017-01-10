@@ -49,7 +49,7 @@ public class RouteUtil {
 
 	public static void setHashKey(String hashKey) {
 		RouteUtil.hashKey = hashKey;
-		if(StringUtils.isNotBlank(hashKey)){
+		if(StringUtils.isNotBlank(RouteUtil.hashKey)){
 			String[] hs = hashKey.split(":");
 			keyPrefix = hs[0];
 			keyHashCode = hs[1];
