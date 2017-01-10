@@ -99,7 +99,7 @@ public class NettyRev {
             });
             bootstrap.setOption("child.receiveBufferSize", receiveBufferSize);
             bootstrap.setOption("child.keepAlive", true);
-            bootstrap.setOption("child.tcpNoDelay", true);
+//            bootstrap.setOption("child.tcpNoDelay", true);
             bootstrap.bind(new InetSocketAddress(InetAddress.getByName(host),
                     port));
 

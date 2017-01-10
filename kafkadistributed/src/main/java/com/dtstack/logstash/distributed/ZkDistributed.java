@@ -361,6 +361,7 @@ public class ZkDistributed {
 	public void realse() throws Exception {
 		disableLocalNode(this.localAddress);
 		downTracsitionReblance();
+		this.routeSelect.release();
 		this.logstashHttpServer.release();
 		this.nettyRev.release();
 	}

@@ -81,6 +81,11 @@ public class NettySend{
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		}
 	}
+
+
+	public void release(){
+		this.client.getBootstrap().shutdown();
+	}
 }
 
 class NettyClientHandler extends SimpleChannelHandler {
@@ -161,7 +166,7 @@ class NettyClient{
 				Executors.newCachedThreadPool()));
 		bootstrap.setOption("tcpNoDelay", false);
 		bootstrap.setOption("keepAlive", true);
-		
+
 		final NettyClientHandler handler = new NettyClientHandler(this, timer);
 		
 		bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
@@ -206,5 +211,4 @@ class NettyClient{
 	public void setChannel(ChannelFuture channelfuture) {
 		this.channel = channelfuture.getChannel();
 	}
-	
 }

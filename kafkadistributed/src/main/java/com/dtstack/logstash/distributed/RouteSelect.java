@@ -124,4 +124,12 @@ public class RouteSelect {
 	      }
 		return null;
 	}
+
+
+	public void release(){
+		Set<Map.Entry<String,NettySend>> clients =  this.nettySends.entrySet();
+		for(Map.Entry<String,NettySend> client:clients){
+			client.getValue().release();
+		}
+	}
 }

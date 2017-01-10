@@ -23,9 +23,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 接收发送过来的日志容器,日志根据时间排序(升序)
@@ -53,7 +53,7 @@ public class CMSPreLogInfo implements IPreLog {
 
     public CMSPreLogInfo(String flag){
         this.flag  = flag;
-        logList = new LinkedList<ClusterLog>();
+        logList = new CopyOnWriteArrayList<ClusterLog>();
     }
 
     /**
