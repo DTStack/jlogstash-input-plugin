@@ -59,7 +59,7 @@ public class LogstashHttpServer {
 	}
 	
 	public void release(){
-		this.server.stop(1);
+		this.server.stop(-1);
 	}
 	
 	private void init() throws Exception{

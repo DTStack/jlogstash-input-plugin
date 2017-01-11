@@ -369,13 +369,15 @@ public class ZkDistributed {
 
 	public void downTracsitionReblance() throws Exception {
 		logger.warn("downTracsitionReblance start...");
-		downReblance();
-		updateMemBrokersNodeData();
-		logstashHttpClient.sendImmediatelyLoadNodeData();
-		sendLogPoolData();
+		if(downReblance()){
+			updateMemBrokersNodeData();
+			logstashHttpClient.sendImmediatelyLoadNodeData();
+			sendLogPoolData();
+		}
 	}
 
-	public void downReblance() throws Exception {
+	public boolean downReblance() throws Exception {
+		 boolean result = false;
           try{
 			  this.updateNodelock.acquire(30,TimeUnit.SECONDS);
 			  BrokerNode brokerNode = BrokerNode.initBrokerNode();
@@ -451,12 +453,14 @@ public class ZkDistributed {
 					  nodeSign.setMetas(new ArrayList<String>());
 					  this.updateBrokerNodeNoLock(failNode, nodeSign);
 				  }
+				  result = true;
 			  }
 		  }catch(Exception e){
                  logger.error(ExceptionUtil.getErrorMessage(e));
 		  }finally {
               if(this.updateNodelock.isAcquiredInThisProcess())this.updateNodelock.release();
 		  }
+		 return result;
 		}
 
 	public void upTracsitionReblance() throws Exception {
