@@ -118,7 +118,7 @@ public class ZkDistributed {
 				"%s/%s", this.distributeRootNode, "updateNodelock"));
 		this.nettyRev = new NettyRev(this.localAddress);
 		this.nettyRev.startup();
-		this.logPool = LogPool.getInstance();
+//		this.logPool = LogPool.getInstance();
 		this.routeSelect = new RouteSelect(this, this.localAddress,this.nodeRouteSelectlock);
 		this.logstashHttpServer = new LogstashHttpServer(this,
 				this.localAddress);
@@ -359,33 +359,29 @@ public class ZkDistributed {
 	}
 
 	public void realse() throws Exception {
+		this.executors.shutdownNow();
+		disableLocalNode(this.localAddress);
 		downTracsitionReblance();
 		this.routeSelect.release();
 		this.logstashHttpServer.release();
 		this.nettyRev.release();
-		this.executors.shutdownNow();
-		disableLocalNode(this.localAddress);
 	}
 
 	public void downTracsitionReblance() throws Exception {
 		logger.warn("downTracsitionReblance start...");
-		if(downReblance()){
-			logger.warn("downReblance start...");
-			updateMemBrokersNodeData();
-			logstashHttpClient.sendImmediatelyLoadNodeData();
-			sendLogPoolData();
-		}
+		downReblance();
+		updateMemBrokersNodeData();
+		logstashHttpClient.sendImmediatelyLoadNodeData();
+		sendLogPoolData();
 	}
 
-	public boolean downReblance() throws Exception {
-		List<String> childrens = this.getBrokersChildren();
-        if(childrens.size()>1){
+	public void downReblance() throws Exception {
           try{
 			  this.updateNodelock.acquire(30,TimeUnit.SECONDS);
-			  BrokerNode brokerNode = this.nodeDatas.get(this.localAddress);
+			  BrokerNode brokerNode = BrokerNode.initBrokerNode();
 			  Map<String, BrokerNode> nodes = Maps.newConcurrentMap();
 			  List<String> failNodes = Lists.newArrayList();
-			  failNodes.add(this.localAddress);
+			  List<String> childrens = this.getBrokersChildren();
 			  for (String child : childrens) {
 				  BrokerNode bb = this.getBrokerNodeData(child);
 				  if (!bb.isAlive() && bb.getMetas().size() > 0) {
@@ -461,10 +457,7 @@ public class ZkDistributed {
 		  }finally {
               if(this.updateNodelock.isAcquiredInThisProcess())this.updateNodelock.release();
 		  }
-			return true;
 		}
-		return false;
-	}
 
 	public void upTracsitionReblance() throws Exception {
 		if(upReblance()){
@@ -553,6 +546,5 @@ public class ZkDistributed {
 			  this.updateBrokerNodeMeta(source,datas,false);
 			  sendLogPoolData(datas);
 		  }
-
 	}
 }
