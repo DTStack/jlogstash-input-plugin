@@ -359,11 +359,12 @@ public class ZkDistributed {
 	}
 
 	public void realse() throws Exception {
-		disableLocalNode(this.localAddress);
 		downTracsitionReblance();
 		this.routeSelect.release();
 		this.logstashHttpServer.release();
 		this.nettyRev.release();
+		this.executors.shutdownNow();
+		disableLocalNode(this.localAddress);
 	}
 
 	public void downTracsitionReblance() throws Exception {
@@ -377,21 +378,14 @@ public class ZkDistributed {
 	}
 
 	public boolean downReblance() throws Exception {
-		boolean result = false;
 		List<String> childrens = this.getBrokersChildren();
-		for (String child : childrens) {
-			BrokerNode bb = this.getBrokerNodeData(child);
-			if (!bb.isAlive() && bb.getMetas().size() > 0) {
-				result = true;
-				break;
-			}
-		}
-        if(result){
+        if(childrens.size()>1){
           try{
 			  this.updateNodelock.acquire(30,TimeUnit.SECONDS);
-			  BrokerNode brokerNode = BrokerNode.initBrokerNode();
+			  BrokerNode brokerNode = this.nodeDatas.get(this.localAddress);
 			  Map<String, BrokerNode> nodes = Maps.newConcurrentMap();
 			  List<String> failNodes = Lists.newArrayList();
+			  failNodes.add(this.localAddress);
 			  for (String child : childrens) {
 				  BrokerNode bb = this.getBrokerNodeData(child);
 				  if (!bb.isAlive() && bb.getMetas().size() > 0) {
@@ -467,8 +461,9 @@ public class ZkDistributed {
 		  }finally {
               if(this.updateNodelock.isAcquiredInThisProcess())this.updateNodelock.release();
 		  }
+			return true;
 		}
-		return result;
+		return false;
 	}
 
 	public void upTracsitionReblance() throws Exception {
@@ -541,12 +536,13 @@ public class ZkDistributed {
 	public void sendLogPoolData() throws Exception {
 		List<Map<String, Object>> events = this.logPool.getNotCompleteLog();
 		route(events);
-		logger.warn("sendLogPoolData:{}",events);
+		logger.warn("all sendLogPoolData:{}",events);
 	}
 
 	public void sendLogPoolData(List<String> nodes) throws Exception {
 		List<Map<String, Object>> events = this.logPool.getNotCompleteLog(nodes);
 		route(events);
+		logger.warn("{}:sendLogPoolData:{}",nodes,events);
 	}
 
 	public void migration(String target,String source,List<String> datas) throws Exception {

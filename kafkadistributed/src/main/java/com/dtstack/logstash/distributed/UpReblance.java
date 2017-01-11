@@ -34,7 +34,7 @@ public class UpReblance implements Runnable{
 	
 	private static final Logger logger = LoggerFactory.getLogger(HeartBeatCheck.class);
 
-	private final static int INTERVAL = 10*60*1000;
+	private final static int INTERVAL = 5*60*1000;
 	
 	private ZkDistributed zkDistributed;
 	
