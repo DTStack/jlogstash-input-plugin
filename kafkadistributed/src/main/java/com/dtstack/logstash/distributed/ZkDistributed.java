@@ -362,7 +362,6 @@ public class ZkDistributed {
 		disableLocalNode(this.localAddress);
 		downTracsitionReblance();
 		this.routeSelect.release();
-		this.logstashHttpServer.release();
 		this.nettyRev.release();
 	}
 
