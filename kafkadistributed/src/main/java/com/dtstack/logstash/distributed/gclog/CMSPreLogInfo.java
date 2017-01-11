@@ -21,6 +21,7 @@ import com.dtstack.logstash.distributed.logmerge.*;
 import com.dtstack.logstash.inputs.BaseInput;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -142,10 +143,13 @@ public class CMSPreLogInfo implements IPreLog {
 
     @Override
     public List<Map<String, Object>> getNotCompleteLog() {
+        Gson gson = new Gson();
         List<Map<String, Object>> rstList = Lists.newArrayList();
         for (ClusterLog log : logList){
             rstList.add(log.getOriginalLog());
         }
+
+        logger.warn("----getnotcomp----:{}", gson.toJson(rstList));
 
         return rstList;
     }
