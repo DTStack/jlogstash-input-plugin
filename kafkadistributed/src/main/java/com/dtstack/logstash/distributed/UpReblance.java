@@ -32,7 +32,7 @@ import com.dtstack.logstash.exception.ExceptionUtil;
  */
 public class UpReblance implements Runnable{
 	
-	private static final Logger logger = LoggerFactory.getLogger(HeartBeatCheck.class);
+	private static final Logger logger = LoggerFactory.getLogger(UpReblance.class);
 
 	private final static int INTERVAL = 5*60*1000;
 	

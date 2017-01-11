@@ -35,7 +35,7 @@ import com.dtstack.logstash.exception.ExceptionUtil;
 public class DownReblance implements Runnable{
 	
 	
-	private static final Logger logger = LoggerFactory.getLogger(HeartBeatCheck.class);
+	private static final Logger logger = LoggerFactory.getLogger(DownReblance.class);
 
 	private final static int INTERVAL = 2000;
 	
@@ -59,7 +59,7 @@ public class DownReblance implements Runnable{
 				if(this.masterCheck.isMaster()){
 					this.zkDistributed.downTracsitionReblance();
 				}
-				if(CountUtil.count(index,5))logger.warn("DownReblance run again...");
+				if(CountUtil.count(index, 5))logger.warn("DownReblance start again...");
 			}
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
