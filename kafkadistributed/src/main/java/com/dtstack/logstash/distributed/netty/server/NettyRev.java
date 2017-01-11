@@ -102,7 +102,7 @@ public class NettyRev {
 //            bootstrap.setOption("child.tcpNoDelay", true);
             bootstrap.bind(new InetSocketAddress(InetAddress.getByName(host),
                     port));
-            logger.info("netty server start up success port:{}.", port);
+            logger.warn("netty server start up success port:{}.", port);
         } catch (Exception e) {
             logger.error(e.getMessage());
             System.exit(1);

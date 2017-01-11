@@ -81,7 +81,7 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	 *   "hashKey":"%{tenant_id}:%{hostname}_%{appname}_%{path}"
 	 *  }
 	 */
-	public  Map<String,Object> distributed;
+	public Map<String,Object> distributed;
 	
 	private ZkDistributed zkDistributed;
 	
@@ -145,6 +145,7 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 		}
 		if(distributed!=null){
 			try {
+				logger.warn("zkDistributed is start...");
 				zkDistributed = ZkDistributed.getSingleZkDistributed(distributed);
 				zkDistributed.zkRegistration();
 			} catch (Exception e) {
