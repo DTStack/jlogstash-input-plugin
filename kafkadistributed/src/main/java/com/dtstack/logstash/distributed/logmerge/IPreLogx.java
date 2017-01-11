@@ -108,17 +108,17 @@ public abstract class IPreLogx {
     }
 
     boolean removeLogList(Object obj){
-        boolean result = logList.remove(obj);
-        if(logList.size()<maxClusterLogSize){
-            try{
-                lock.lockInterruptibly();
-                notFull.signalAll();
-            }catch(Exception e){
-                logger.error(ExceptionUtil.getErrorMessage(e));
-            }finally {
-                lock.unlock();
+            boolean result = logList.remove(obj);
+            if(logList.size()<maxClusterLogSize){
+                try{
+                    lock.lockInterruptibly();
+                    notFull.signalAll();
+                }catch(Exception e){
+                    logger.error(ExceptionUtil.getErrorMessage(e));
+                }finally {
+                    lock.unlock();
+                }
             }
-        }
-        return result;
+            return result;
     }
 }

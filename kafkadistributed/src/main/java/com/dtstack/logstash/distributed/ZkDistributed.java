@@ -368,7 +368,6 @@ public class ZkDistributed {
 	}
 
 	public void downTracsitionReblance() throws Exception {
-		logger.warn("downTracsitionReblance start...");
 		if(downReblance()){
 			updateMemBrokersNodeData();
 			logstashHttpClient.sendImmediatelyLoadNodeData();

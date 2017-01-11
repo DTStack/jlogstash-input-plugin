@@ -59,7 +59,7 @@ public class DownReblance implements Runnable{
 				if(this.masterCheck.isMaster()){
 					this.zkDistributed.downTracsitionReblance();
 				}
-				if(CountUtil.count(index,5))logger.warn("DownReblance run again...");
+				if(CountUtil.count(index,10))logger.warn("DownReblance run again...");
 			}
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
