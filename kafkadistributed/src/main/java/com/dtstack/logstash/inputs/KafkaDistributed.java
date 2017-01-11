@@ -216,7 +216,11 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 			for(ExecutorService executor : executorMap.values()){
 				executor.shutdownNow();
 			}
-			scheduleExecutor.shutdownNow();
+
+			if(scheduleExecutor != null){
+				scheduleExecutor.shutdownNow();
+			}
+
 			this.zkDistributed.realse();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -211,7 +211,6 @@ public class ZkDistributed {
 
 	public String isHaveMaster() throws Exception {
 		byte[] data = this.zkClient.getData().forPath(this.brokersNode);
-		System.out.println(new String(data));
 		if (data == null
 				|| StringUtils.isBlank(objectMapper.readValue(data,
 						BrokersNode.class).getMaster())) {
