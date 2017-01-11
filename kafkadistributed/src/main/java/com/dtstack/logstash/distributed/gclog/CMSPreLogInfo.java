@@ -66,7 +66,7 @@ public class CMSPreLogInfo implements IPreLog {
         if(!logMerge.checkIsFullGC(addLog.getLoginfo())){//非full gc 直接添加到inputlist
             Map<String, Object> eventMap = addLog.getOriginalLog();
             if(logMerge.checkIsYoungGC(addLog.getLoginfo())){//判断是不是younggc
-                eventMap.put("logtype", LogTypeConstant.YOUNG_LOG_TYPE);
+                eventMap.put("gctype", GCTypeConstant.YOUNG_LOG_TYPE);
             }
 
             BaseInput.getInputQueueList().put(eventMap);
@@ -121,7 +121,7 @@ public class CMSPreLogInfo implements IPreLog {
         }
 
         Map<String, Object> extInfo = Maps.newHashMap();
-        extInfo.put("logtype", LogTypeConstant.CMS_LOG_TYPE);
+        extInfo.put("gctype", GCTypeConstant.CMS_LOG_TYPE);
         cmsLog.complete(extInfo);
         if(logList.size() > 0){
             firstEleTime = System.currentTimeMillis();

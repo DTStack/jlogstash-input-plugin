@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 package com.dtstack.logstash.distributed.logmerge;
-
 import com.dtstack.logstash.assembly.qlist.InputQueueList;
 import com.dtstack.logstash.inputs.BaseInput;
 import org.slf4j.Logger;

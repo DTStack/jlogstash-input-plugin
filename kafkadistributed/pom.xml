@@ -86,5 +86,12 @@
 			<version>0.1.4</version>
 		</dependency>
 
+		<dependency>
+			<groupId>dtstack</groupId>
+			<artifactId>jlogstash</artifactId>
+			<version>0.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+
 	</dependencies>
 </project>

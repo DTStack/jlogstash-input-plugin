@@ -94,7 +94,7 @@ public class LogPool {
     }
 
     private IPreLog createPreLogInfoByLogType(ClusterLog clusterLog){
-        if(LogTypeConstant.CMS_LOG_TYPE.equalsIgnoreCase(clusterLog.getLogType())){
+        if(LogTypeConstant.CMS18.equalsIgnoreCase(clusterLog.getLogType())){
             return new CMSPreLogInfo(clusterLog.getLogFlag());
         }else{
             logger.info("not support log type of {}.", clusterLog.getLogType());

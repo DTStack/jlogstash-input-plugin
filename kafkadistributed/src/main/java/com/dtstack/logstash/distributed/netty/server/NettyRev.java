@@ -122,7 +122,7 @@ public class NettyRev {
             Object message = e.getMessage();
             if (message != null && message instanceof ChannelBuffer) {
                 String mes = ((ChannelBuffer) message).toString(Charset.forName(encoding));
-                if(!StringUtils.isNoneBlank(mes)){
+                if(!StringUtils.isNotBlank(mes)){
                     return;
                 }
                 //将数据加入到merge队列里面
