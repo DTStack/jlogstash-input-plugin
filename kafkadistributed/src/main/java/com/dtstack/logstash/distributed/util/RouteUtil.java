@@ -43,7 +43,7 @@ public class RouteUtil {
 	public static String getFormatHashKey(Map<String,Object> event) {
 		String prefix = Formatter.format(event,keyPrefix);
 		int hashcode  = Formatter.format(event,keyHashCode).hashCode();
-		String sign  = String.format("%s_%d", prefix,hashcode);
+		String sign  = String.format("%s-%d", prefix,hashcode);
 		return sign;
 	}
 
