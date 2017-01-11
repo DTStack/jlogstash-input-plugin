@@ -391,7 +391,7 @@ public class ZkDistributed {
 					  nodes.put(child, bb);
 				  }
 			  }
-			  if (brokerNode.getMetas().size() > 0) {
+			  if (brokerNode.getMetas().size() > 0&&nodes.size()>0) {
 				  int total = brokerNode.getMetas().size();
 				  List<Map.Entry<String, BrokerNode>> entries = new LinkedList<Map.Entry<String, BrokerNode>>(
 						  nodes.entrySet());
