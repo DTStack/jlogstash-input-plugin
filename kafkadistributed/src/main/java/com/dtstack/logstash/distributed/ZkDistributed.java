@@ -367,7 +367,9 @@ public class ZkDistributed {
 	}
 
 	public void downTracsitionReblance() throws Exception {
+		logger.warn("downTracsitionReblance start...");
 		if(downReblance()){
+			logger.warn("downReblance start...");
 			updateMemBrokersNodeData();
 			logstashHttpClient.sendImmediatelyLoadNodeData();
 			sendLogPoolData();
@@ -539,6 +541,7 @@ public class ZkDistributed {
 	public void sendLogPoolData() throws Exception {
 		List<Map<String, Object>> events = this.logPool.getNotCompleteLog();
 		route(events);
+		logger.warn("sendLogPoolData:{}",events);
 	}
 
 	public void sendLogPoolData(List<String> nodes) throws Exception {
