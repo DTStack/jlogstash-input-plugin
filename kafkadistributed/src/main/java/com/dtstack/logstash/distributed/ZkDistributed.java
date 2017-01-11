@@ -118,7 +118,7 @@ public class ZkDistributed {
 				"%s/%s", this.distributeRootNode, "updateNodelock"));
 		this.nettyRev = new NettyRev(this.localAddress);
 		this.nettyRev.startup();
-//		this.logPool = LogPool.getInstance();
+		this.logPool = LogPool.getInstance();
 		this.routeSelect = new RouteSelect(this, this.localAddress,this.nodeRouteSelectlock);
 		this.logstashHttpServer = new LogstashHttpServer(this,
 				this.localAddress);
