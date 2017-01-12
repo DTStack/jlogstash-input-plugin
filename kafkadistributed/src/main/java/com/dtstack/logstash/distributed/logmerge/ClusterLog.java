@@ -114,6 +114,7 @@ public class ClusterLog {
         String host = (String)eventMap.get("host");
         String path = (String)eventMap.get("path");
         String logType = (String)eventMap.get("logtype");
+        //offset 必须有 需要根据这个来做排序
         clusterLog.setOffset(Long.valueOf(eventMap.get("offset").toString()));
         clusterLog.setLoginfo(msg);
         clusterLog.host = host;
