@@ -18,6 +18,7 @@
 package com.dtstack.logstash.distributed.logmerge;
 
 import com.dtstack.logstash.distributed.gclog.CMSPreLogInfo;
+import com.dtstack.logstash.exception.ExceptionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -59,23 +60,24 @@ public class LogPool {
         logWatcher.startup();
     }
 
-    public void addLog(String log) throws Exception{
-
-        ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
-        if(log == null){
-            logger.info("analyse msg from log err:{}.", log);
-            return;
+    public void addLog(String log){
+        try{
+            ClusterLog clusterLog = ClusterLog.generateClusterLog(log);
+            if(log == null){
+                logger.info("analyse msg from log err:{}.", log);
+                return;
+            }
+            String flag = clusterLog.getLogFlag();
+            IPreLog preLogInfo = logInfoMap.get(flag);
+            if(preLogInfo == null){
+                preLogInfo = createPreLogInfoByLogType(clusterLog);
+                if (preLogInfo == null) return;
+                logInfoMap.put(flag, preLogInfo);
+            }
+            preLogInfo.addLog(clusterLog);
+        }catch(Exception e){
+            logger.error(ExceptionUtil.getErrorMessage(e));
         }
-
-        String flag = clusterLog.getLogFlag();
-        IPreLog preLogInfo = logInfoMap.get(flag);
-        if(preLogInfo == null){
-            preLogInfo = createPreLogInfoByLogType(clusterLog);
-            if (preLogInfo == null) return;
-            logInfoMap.put(flag, preLogInfo);
-        }
-
-        preLogInfo.addLog(clusterLog);
     }
 
     public CompletedLog mergeLog(String flag){

@@ -18,11 +18,14 @@
 package com.dtstack.logstash.distributed.logmerge;
 
 import com.dtstack.logstash.distributed.util.RouteUtil;
+import com.dtstack.logstash.exception.ExceptionUtil;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -106,22 +109,14 @@ public class ClusterLog {
     }
 
 
-    public static ClusterLog generateClusterLog(String log) throws Exception {
+    public static ClusterLog generateClusterLog(String log) throws IOException {
         Map<String, Object> eventMap  = objectMapper.readValue(log,Map.class);
-        ClusterLog clusterLog = new ClusterLog();
-        long time = getMillTimestamp(eventMap);
+        ClusterLog clusterLog  = new ClusterLog();
         String msg = (String)eventMap.get("message");
         String host = (String)eventMap.get("host");
         String path = (String)eventMap.get("path");
         String logType = (String)eventMap.get("logtype");
-
-        Long offset = 0l;
-        try{
-           offset = Long.valueOf(eventMap.get("offset").toString());
-        }catch (Exception e){
-            logger.error("", e);
-        }
-
+        Long offset = Long.valueOf(eventMap.get("offset").toString());
         clusterLog.setOffset(offset);
         clusterLog.setLoginfo(msg);
         clusterLog.host = host;
@@ -133,8 +128,4 @@ public class ClusterLog {
         return clusterLog;
     }
 
-    private static Long getMillTimestamp(Map<String,Object> event){
-        String timestamp = (String)event.get("@timestamp");
-        return DateTime.parse(timestamp).getMillis();
-    }
 }
