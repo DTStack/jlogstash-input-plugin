@@ -39,7 +39,7 @@ public class ClusterLog {
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
-    private long logTime;
+    private long offset;
 
     private String host;
 
@@ -57,12 +57,12 @@ public class ClusterLog {
        return this.flag;
     }
 
-    public long getLogTime() {
-        return logTime;
+    public long getOffset() {
+        return offset;
     }
 
-    public void setLogTime(long logTime) {
-        this.logTime = logTime;
+    public void setOffset(long offset) {
+        this.offset = offset;
     }
 
     public String getLoginfo() {
@@ -114,7 +114,15 @@ public class ClusterLog {
         String host = (String)eventMap.get("host");
         String path = (String)eventMap.get("path");
         String logType = (String)eventMap.get("logtype");
-        clusterLog.setLogTime(time);
+
+        Long offset = 0l;
+        try{
+           offset = Long.valueOf(eventMap.get("offset").toString());
+        }catch (Exception e){
+            logger.error("", e);
+        }
+
+        clusterLog.setOffset(offset);
         clusterLog.setLoginfo(msg);
         clusterLog.host = host;
         clusterLog.path = path;

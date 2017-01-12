@@ -138,64 +138,77 @@ public class CMSLogPattern {
 
         String initMarkLog = logPool.get(0).getLoginfo();
         if(!checkInitialMark(initMarkLog)){
-           return false;
+            logger.debug("----not match init mark-----,msg:{}", initMarkLog);
+            return false;
         }
 
         String conMarkStartLog = logPool.get(1).getLoginfo();
         if(!checkConMarkStart(conMarkStartLog)){
+            logger.debug("----not match conMarkStartLog-----,msg:{}", conMarkStartLog);
             return false;
         }
 
         String conMarkPhaseLog = logPool.get(2).getLoginfo();
         if(!checkConMarkPhase(conMarkPhaseLog)){
+            logger.debug("----not match conMarkPhaseLog-----,msg:{}", conMarkPhaseLog);
             return false;
         }
 
         String conPreCleanStartLog = logPool.get(3).getLoginfo();
         if(!checkConPrecleanStart(conPreCleanStartLog)){
+            logger.debug("----not match conPreCleanStartLog-----,msg:{}", conPreCleanStartLog);
             return false;
         }
 
         String conPreCleanPhaseLog = logPool.get(4).getLoginfo();
         if(!checkConPrecleanPhase(conPreCleanPhaseLog)){
+            logger.debug("----not match conPreCleanPhaseLog-----,msg:{}", conPreCleanPhaseLog);
             return false;
         }
 
         String abortablePrecleanStartLog = logPool.get(5).getLoginfo();
         if(!checkAbortablePrecleanStart(abortablePrecleanStartLog)){
+            logger.debug("----not match abortablePrecleanStartLog-----,msg:{}", abortablePrecleanStartLog);
             return false;
         }
 
         String abortablePrecleanPhaseLog = logPool.get(6).getLoginfo();
         if(!checkAbortablePrecleanPhase(abortablePrecleanPhaseLog)){
+            logger.debug("----not match abortablePrecleanPhaseLog-----,msg:{}", abortablePrecleanPhaseLog);
             return false;
         }
 
         String finalRemarkLog = logPool.get(7).getLoginfo();
         if(!checkFinalRemark(finalRemarkLog)){
+            logger.debug("----not match finalRemarkLog-----,msg:{}", finalRemarkLog);
             return false;
         }
 
         String conSweepStartLog = logPool.get(8).getLoginfo();
         if(!checkConSweepStart(conSweepStartLog)){
+            logger.debug("----not match conSweepStartLog-----,msg:{}", conSweepStartLog);
             return false;
         }
 
         String conSweepPhaseLog = logPool.get(9).getLoginfo();
         if(!checkConSweepPhase(conSweepPhaseLog)){
-            return  false;
+            logger.debug("----not match conSweepPhaseLog-----,msg:{}", conSweepPhaseLog);
+            return false;
         }
 
         String conResetStartLog = logPool.get(10).getLoginfo();
         if(!checkConResetStart(conResetStartLog)){
+            logger.debug("----not match conResetStartLog-----,msg:{}", conResetStartLog);
             return false;
         }
 
         String conResetPhaseLog = logPool.get(11).getLoginfo();
         if(!checkConResetPhase(conResetPhaseLog)){
+            logger.debug("----not match conResetPhaseLog-----,msg:{}", conResetPhaseLog);
             return false;
         }
 
+        logger.debug("--success of cms msg----");
         return true;
     }
 

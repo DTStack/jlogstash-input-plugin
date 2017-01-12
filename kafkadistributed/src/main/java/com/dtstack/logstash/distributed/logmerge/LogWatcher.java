@@ -18,6 +18,7 @@
 package com.dtstack.logstash.distributed.logmerge;
 import com.dtstack.logstash.assembly.qlist.InputQueueList;
 import com.dtstack.logstash.inputs.BaseInput;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,8 @@ public class LogWatcher implements Callable {
 
     private LogPool logPool;
 
+    private static Gson gson = new Gson();
+
     private static InputQueueList inputQueueList = BaseInput.getInputQueueList();
 
     public  LogWatcher(LogPool logPool){
@@ -75,6 +78,11 @@ public class LogWatcher implements Callable {
             }
 
             CompletedLog completeLog = logPool.mergeLog(flag);
+            if(completeLog == null){
+                continue;
+            }
+
+            logger.debug("add cms to inputqueulist:{}", gson.toJson(completeLog));
             inputQueueList.put(completeLog.getEventMap());
             dealTimeout();
         }

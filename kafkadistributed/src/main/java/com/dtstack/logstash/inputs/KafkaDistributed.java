@@ -282,15 +282,15 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 		consumerConnMap.remove(topicName);
 		
 		//停止topic 对应的stream消耗线程
-	ExecutorService es = executorMap.get(topicName);
-	es.shutdownNow();
-	executorMap.remove(topicName);
+		ExecutorService es = executorMap.get(topicName);
+		es.shutdownNow();
+		executorMap.remove(topicName);
 
-	Properties prop = geneConsumerProp();
-	ConsumerConnector newConsumerConn = kafka.consumer.Consumer
-			.createJavaConsumerConnector(new ConsumerConfig(prop));
-	consumerConnMap.put(topicName, newConsumerConn);
+		Properties prop = geneConsumerProp();
+		ConsumerConnector newConsumerConn = kafka.consumer.Consumer
+				.createJavaConsumerConnector(new ConsumerConfig(prop));
+		consumerConnMap.put(topicName, newConsumerConn);
 
-	addNewConsumer(topicName, topic.get(topicName));
+		addNewConsumer(topicName, topic.get(topicName));
 }
 }

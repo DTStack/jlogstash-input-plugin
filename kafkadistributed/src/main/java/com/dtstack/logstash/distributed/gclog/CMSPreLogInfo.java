@@ -52,6 +52,8 @@ public class CMSPreLogInfo implements IPreLog {
 
     private String flag;
 
+    private static final Gson gson = new Gson();
+
     public CMSPreLogInfo(String flag){
         this.flag  = flag;
         logList = new CopyOnWriteArrayList<ClusterLog>();
@@ -74,10 +76,11 @@ public class CMSPreLogInfo implements IPreLog {
             return true;
         }
 
+        logger.debug("offset:{},---cmslog:{}.", addLog.getOffset(), addLog.getLoginfo());
         int addPos = logList.size();
         for(int i=0; i<logList.size(); i++){
             ClusterLog compLog = logList.get(i);
-            if(addLog.getLogTime() < compLog.getLogTime()){
+            if(addLog.getOffset() < compLog.getOffset()){
                 addPos = i;
                 break;
             }
@@ -89,6 +92,7 @@ public class CMSPreLogInfo implements IPreLog {
         }
 
         if (logList.size() >= CMSLogPattern.MERGE_NUM){
+            logger.debug("fullgc:{}.", gson.toJson(logList));
             LogPool.getInstance().addMergeSignal(flag);
         }
         return true;
