@@ -53,8 +53,8 @@ public class DownReblance implements Runnable{
 		// TODO Auto-generated method stub
 		int index=0;
 		try{
-			++index;
 			while(true){
+				++index;
 				Thread.sleep(INTERVAL);
 				if(this.masterCheck.isMaster()){
 					this.zkDistributed.downTracsitionReblance();
