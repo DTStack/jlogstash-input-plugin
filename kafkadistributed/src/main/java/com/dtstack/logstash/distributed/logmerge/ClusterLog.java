@@ -116,8 +116,7 @@ public class ClusterLog {
         String host = (String)eventMap.get("host");
         String path = (String)eventMap.get("path");
         String logType = (String)eventMap.get("logtype");
-        Long offset = Long.valueOf(eventMap.get("offset").toString());
-        clusterLog.setOffset(offset);
+        clusterLog.setOffset(Long.valueOf(eventMap.get("offset").toString()));
         clusterLog.setLoginfo(msg);
         clusterLog.host = host;
         clusterLog.path = path;
