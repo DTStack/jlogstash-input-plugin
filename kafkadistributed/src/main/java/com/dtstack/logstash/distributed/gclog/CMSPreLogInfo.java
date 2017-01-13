@@ -90,6 +90,17 @@ public class CMSPreLogInfo implements IPreLog {
         }
 
         logList.add(addPos, addLog);
+
+        if(logList.size() >= CMSLogPattern.MERGE_NUM){
+            List<CompletedLog> rstList = mergeGcLog();
+            if(rstList != null){
+                for(CompletedLog log : rstList){
+                    logger.warn("pre insert into inputqueuelist, logInfo:{}.", log.getLogInfo());
+                    BaseInput.getInputQueueList().put(log.getEventMap());
+                    logger.warn("after insert into inputqueuelist");
+                }
+            }
+        }
         return true;
     }
 

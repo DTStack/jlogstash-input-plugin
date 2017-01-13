@@ -43,8 +43,6 @@ public class LogPool {
 
     private Map<String, IPreLog> logInfoMap = Maps.newHashMap();
 
-    private LogMergeWatcher logMergeWatcher;
-
     private LogDeleWatcher logDeleWatcher;
 
     private static LogPool singleton = new LogPool();
@@ -58,9 +56,6 @@ public class LogPool {
     }
 
     public void init(){
-        logMergeWatcher = new LogMergeWatcher(this);
-        logMergeWatcher.startup();
-
         logDeleWatcher = new LogDeleWatcher(this);
         logDeleWatcher.startup();
     }

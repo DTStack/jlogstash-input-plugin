@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 
 public class LogDeleWatcher  implements Callable {
 
-    private static final Logger logger = LoggerFactory.getLogger(LogMergeWatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogDeleWatcher.class);
 
     private boolean isRunning = false;
 
