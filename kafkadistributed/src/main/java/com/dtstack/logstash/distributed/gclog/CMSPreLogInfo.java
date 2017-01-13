@@ -24,9 +24,12 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 接收发送过来的日志容器,日志根据时间排序(升序)
@@ -41,16 +44,16 @@ public class CMSPreLogInfo implements IPreLog {
 
     private static final Logger logger = LoggerFactory.getLogger(CMSPreLogInfo.class);
 
-    /**整合一条cms消息的超时时间*/
-    private static final int TIME_OUT = 60 * 1000;
-
-    private long firstEleTime = 0;
+    /**cms消息的超时时间*/
+    private static final int TIME_OUT = 10 * 60 * 1000;
 
     private CMSLogPattern logMerge = new CMSLogPattern();
 
     private List<ClusterLog> logList;
 
     private String flag;
+
+    private  final ReentrantLock lock = new ReentrantLock(false);
 
     private static final Gson gson = new Gson();
 
@@ -87,52 +90,64 @@ public class CMSPreLogInfo implements IPreLog {
         }
 
         logList.add(addPos, addLog);
-        if(logList.size() == 1){
-            firstEleTime = System.currentTimeMillis();
-        }
-
-        if (logList.size() >= CMSLogPattern.MERGE_NUM){
-            logger.debug("fullgc:{}.", gson.toJson(logList));
-            LogPool.getInstance().addMergeSignal(flag);
-        }
         return true;
     }
 
 
     /**
-     * 合并出完整的一条日志
+     * 合并出完整的日志
      * @return
      */
     @Override
-    public CompletedLog mergeGcLog(){
+    public List<CompletedLog> mergeGcLog(){
 
-        if(!checkIsCompleteLog()){
-            return null;
-        }
+        List<CompletedLog> rstList = Lists.newArrayList();
+        try{
+            lock.lockInterruptibly();
+            int logListSize = logList.size();
+            for(int i=0; i < logListSize; ){
 
-        //从列表中抽取出CMS记录
-        CompletedLog cmsLog = new CompletedLog();
-        for (int i = 0; i< CMSLogPattern.MERGE_NUM; i++){
-            ClusterLog currLog = logList.remove(0);//一直remove第0个
-            if(currLog == null){
-                break;
+                if(i + 1 > logList.size()){
+                    break;
+                }
+
+                ClusterLog currLog = logList.get(i);
+                if(!logMerge.checkInitialMark(currLog.getLoginfo())){
+                    i++;
+                    continue;
+                }
+
+                if(!checkIsCompleteLog(i)){
+                    i++;
+                    continue;
+                }
+
+                CompletedLog cmsLog = new CompletedLog();
+                for (int logIndex = i; logIndex < CMSLogPattern.MERGE_NUM; logIndex++){
+                    ClusterLog targetLog = logList.remove(i);//一直remove第i个
+                    if(targetLog == null){
+                        break;
+                    }
+
+                    if(logIndex == i){
+                        cmsLog.setEventMap(currLog.getBaseInfo());
+                    }
+
+                    cmsLog.addLog(currLog.getLoginfo());
+                }
+
+                Map<String, Object> extInfo = Maps.newHashMap();
+                extInfo.put("gctype", GCTypeConstant.CMS_LOG_TYPE);
+                cmsLog.complete(extInfo);
+                rstList.add(cmsLog);
             }
-
-            if(i == 0){
-                cmsLog.setEventMap(currLog.getBaseInfo());
-            }
-
-            cmsLog.addLog(currLog.getLoginfo());
+        }catch(Exception e){
+            logger.error("", e);
+        }finally {
+            lock.unlock();
         }
 
-        Map<String, Object> extInfo = Maps.newHashMap();
-        extInfo.put("gctype", GCTypeConstant.CMS_LOG_TYPE);
-        cmsLog.complete(extInfo);
-        if(logList.size() > 0){
-            firstEleTime = System.currentTimeMillis();
-        }
-
-        return cmsLog;
+        return rstList;
     }
 
     @Override
@@ -162,8 +177,8 @@ public class CMSPreLogInfo implements IPreLog {
      * 判断是不是一条完整的日志
      * @return
      */
-    public boolean checkIsCompleteLog(){
-        boolean isCompleteLog = logMerge.checkIsCompleteLog(logList.subList(0, 12));
+    public boolean checkIsCompleteLog(int startIndex){
+        boolean isCompleteLog = logMerge.checkIsCompleteLog(logList, startIndex);
         if (isCompleteLog){
             logger.debug("get a full msg..");
         }
@@ -171,33 +186,27 @@ public class CMSPreLogInfo implements IPreLog {
         return isCompleteLog;
     }
 
+
     @Override
-    public void dealTimeout(){
+    public void dealTimeout(){//删除过期数据
 
-        if(logList.size() == 0){
-            return;
-        }
-
-        //在清数据前做一次数据判断
-        if(checkIsCompleteLog()){
-            CompletedLog completedLog = mergeGcLog();
-            BaseInput.getInputQueueList().put(completedLog.getEventMap());
-            if(hasNext()){
-                LogPool.getInstance().addMergeSignal(flag);
+        try{
+            lock.lockInterruptibly();
+            long expriodTime = System.currentTimeMillis() - TIME_OUT;
+            Iterator<ClusterLog> it = logList.iterator();
+            for( ; it.hasNext() ; ){
+                ClusterLog log = it.next();
+                if(log.getGeneTime() < expriodTime){
+                    it.remove();
+                    logger.warn("remove time out log:{}", log.getLoginfo());
+                }
             }
-            return;
+        }catch (Exception e){
+            logger.error("", e);
+        }finally {
+            lock.unlock();
         }
 
-        boolean isTimeout = firstEleTime + TIME_OUT  < System.currentTimeMillis();
-        if(isTimeout){//每次删除第一条记录
-            ClusterLog log = logList.remove(0);
-            firstEleTime = System.currentTimeMillis();
-            //FIXME 暂时修改为warn级别日志
-            logger.warn("time out for cms log, delete log:{}", log.getOriginalLog());
-            if(hasNext()){
-                LogPool.getInstance().addMergeSignal(flag);
-            }
-        }
     }
 
     @Override

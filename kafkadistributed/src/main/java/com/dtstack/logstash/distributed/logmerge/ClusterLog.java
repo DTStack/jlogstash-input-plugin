@@ -54,6 +54,8 @@ public class ClusterLog {
 
     private String flag;
 
+    private Long geneTime;
+
     public String getLogFlag(){
        return this.flag;
     }
@@ -95,6 +97,10 @@ public class ClusterLog {
         this.logType = logType;
     }
 
+    public Long getGeneTime() {
+        return geneTime;
+    }
+
     /**
      * 获取除了message字段以外的信息
      * @return
@@ -118,6 +124,7 @@ public class ClusterLog {
         clusterLog.setOffset(Long.valueOf(eventMap.get("offset").toString()));
         clusterLog.setLoginfo(msg);
         clusterLog.host = host;
+        clusterLog.geneTime = System.currentTimeMillis();
         clusterLog.path = path;
         clusterLog.logType = logType;
         clusterLog.flag = RouteUtil.getFormatHashKey(eventMap);

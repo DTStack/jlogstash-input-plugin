@@ -29,18 +29,17 @@ import java.util.Map;
 public interface IPreLog {
 
     /**
-     * 判断是不是一个完整的日志逻辑
+     * 判断从startIndex开始是否包含一条完整日志
      * @return
      */
-    boolean checkIsCompleteLog();
-
+    boolean checkIsCompleteLog(int startIndex);
 
 
     /**
      * 执行日志合并
      * @return
      */
-    CompletedLog mergeGcLog();
+    List<CompletedLog> mergeGcLog();
 
     /**
      * 添加一条日志源

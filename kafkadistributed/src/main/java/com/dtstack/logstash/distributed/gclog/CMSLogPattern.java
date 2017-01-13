@@ -130,79 +130,79 @@ public class CMSLogPattern {
      * 校验是不是一条完整的cms full gc日志
      * @return
      */
-    public boolean checkIsCompleteLog(List<ClusterLog> logPool){
-        if (logPool.size() < CMSLogPattern.MERGE_NUM){
+    public boolean checkIsCompleteLog(List<ClusterLog> logPool, int startIndex){
+        if (logPool.size() < startIndex + CMSLogPattern.MERGE_NUM){
             logger.info("log size is not match cms step.");
             return false;
         }
 
-        String initMarkLog = logPool.get(0).getLoginfo();
+        String initMarkLog = logPool.get(0 + startIndex).getLoginfo();
         if(!checkInitialMark(initMarkLog)){
             logger.debug("----not match init mark-----,msg:{}", initMarkLog);
             return false;
         }
 
-        String conMarkStartLog = logPool.get(1).getLoginfo();
+        String conMarkStartLog = logPool.get(1 + startIndex).getLoginfo();
         if(!checkConMarkStart(conMarkStartLog)){
             logger.debug("----not match conMarkStartLog-----,msg:{}", conMarkStartLog);
             return false;
         }
 
-        String conMarkPhaseLog = logPool.get(2).getLoginfo();
+        String conMarkPhaseLog = logPool.get(2 + startIndex).getLoginfo();
         if(!checkConMarkPhase(conMarkPhaseLog)){
             logger.debug("----not match conMarkPhaseLog-----,msg:{}", conMarkPhaseLog);
             return false;
         }
 
-        String conPreCleanStartLog = logPool.get(3).getLoginfo();
+        String conPreCleanStartLog = logPool.get(3 + startIndex).getLoginfo();
         if(!checkConPrecleanStart(conPreCleanStartLog)){
             logger.debug("----not match conPreCleanStartLog-----,msg:{}", conPreCleanStartLog);
             return false;
         }
 
-        String conPreCleanPhaseLog = logPool.get(4).getLoginfo();
+        String conPreCleanPhaseLog = logPool.get(4 + startIndex).getLoginfo();
         if(!checkConPrecleanPhase(conPreCleanPhaseLog)){
             logger.debug("----not match conPreCleanPhaseLog-----,msg:{}", conPreCleanPhaseLog);
             return false;
         }
 
-        String abortablePrecleanStartLog = logPool.get(5).getLoginfo();
+        String abortablePrecleanStartLog = logPool.get(5 + startIndex).getLoginfo();
         if(!checkAbortablePrecleanStart(abortablePrecleanStartLog)){
             logger.debug("----not match abortablePrecleanStartLog-----,msg:{}", abortablePrecleanStartLog);
             return false;
         }
 
-        String abortablePrecleanPhaseLog = logPool.get(6).getLoginfo();
+        String abortablePrecleanPhaseLog = logPool.get(6 + startIndex).getLoginfo();
         if(!checkAbortablePrecleanPhase(abortablePrecleanPhaseLog)){
             logger.debug("----not match abortablePrecleanPhaseLog-----,msg:{}", abortablePrecleanPhaseLog);
             return false;
         }
 
-        String finalRemarkLog = logPool.get(7).getLoginfo();
+        String finalRemarkLog = logPool.get(7 + startIndex).getLoginfo();
         if(!checkFinalRemark(finalRemarkLog)){
             logger.debug("----not match finalRemarkLog-----,msg:{}", finalRemarkLog);
             return false;
         }
 
-        String conSweepStartLog = logPool.get(8).getLoginfo();
+        String conSweepStartLog = logPool.get(8 + startIndex).getLoginfo();
         if(!checkConSweepStart(conSweepStartLog)){
             logger.debug("----not match conSweepStartLog-----,msg:{}", conSweepStartLog);
             return false;
         }
 
-        String conSweepPhaseLog = logPool.get(9).getLoginfo();
+        String conSweepPhaseLog = logPool.get(9 + startIndex).getLoginfo();
         if(!checkConSweepPhase(conSweepPhaseLog)){
             logger.debug("----not match conSweepPhaseLog-----,msg:{}", conSweepPhaseLog);
             return false;
         }
 
-        String conResetStartLog = logPool.get(10).getLoginfo();
+        String conResetStartLog = logPool.get(10 + startIndex).getLoginfo();
         if(!checkConResetStart(conResetStartLog)){
             logger.debug("----not match conResetStartLog-----,msg:{}", conResetStartLog);
             return false;
         }
 
-        String conResetPhaseLog = logPool.get(11).getLoginfo();
+        String conResetPhaseLog = logPool.get(11 + startIndex).getLoginfo();
         if(!checkConResetPhase(conResetPhaseLog)){
             logger.debug("----not match conResetPhaseLog-----,msg:{}", conResetPhaseLog);
             return false;
@@ -219,7 +219,7 @@ public class CMSLogPattern {
     /**
      * 2016-12-28T10:07:21.971+0800: 1190255.3662016-12-28T10:07:20.994+0800: 1190254.390: [GC (CMS Initial Mark) [1 CMS-initial-mark: 2786997K(3670016K)] 2839212K(4141888K), 0.0059182 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]
      */
-    private boolean checkInitialMark(String log){//stop the world
+    public boolean checkInitialMark(String log){//stop the world
         Matcher matcher = _cms_imark_pattern.matcher(log);
         if(matcher.find()){
             return true;
