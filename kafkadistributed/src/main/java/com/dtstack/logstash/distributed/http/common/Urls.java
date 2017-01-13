@@ -34,4 +34,7 @@ public class Urls {
 	public final static String LOGPOOLDATA = ROOT+"/logPoolData";
 
 	public final static String MANUALLYDATA = ROOT+"/manuallyData";
+
+	public final static String NOCOMPLETEDATA = ROOT+"/logPoolNoCompleteData";
+
 }

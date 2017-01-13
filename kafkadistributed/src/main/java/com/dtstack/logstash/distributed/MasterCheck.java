@@ -56,7 +56,12 @@ public class MasterCheck implements Runnable{
 			while(true){
 				++index;
 				isMaster.getAndSet(zkDistributed.setMaster());
-				if(CountUtil.count(index,10))logger.warn("MasterCheck start again...");
+				if(CountUtil.count(index,10)){
+					logger.warn("MasterCheck start again...");
+					if(isMaster()){
+						logger.warn("i am is master...");
+					}
+				}
 				Thread.sleep(MASTERCHECK);
 			}
 		}catch(Exception e){

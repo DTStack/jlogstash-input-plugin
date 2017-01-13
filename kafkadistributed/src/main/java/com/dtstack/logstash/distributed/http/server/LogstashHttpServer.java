@@ -19,10 +19,8 @@ package com.dtstack.logstash.distributed.http.server;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.logstash.distributed.ZkDistributed;
 import com.dtstack.logstash.distributed.http.common.HttpCommon;
 import com.dtstack.logstash.distributed.http.common.Urls;
@@ -74,6 +72,7 @@ public class LogstashHttpServer {
 		this.server.createContext(Urls.LOADNODEDATA,new ImmediatelyLoadNodeDataHandler(this.zkDistributed));
 		this.server.createContext(Urls.LOGPOOLDATA,new ImmediatelyLogPoolDataHandler(this.zkDistributed));
 		this.server.createContext(Urls.MANUALLYDATA,new ManuallyLogPoolDataHandler(this.zkDistributed));
+		this.server.createContext(Urls.NOCOMPLETEDATA,new GetLogPoolNoCompleteData(this.zkDistributed));
 	}
 
 }
