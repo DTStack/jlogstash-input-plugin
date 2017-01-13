@@ -85,6 +85,15 @@ public class LogPool {
         return preLogInfo.mergeGcLog();
     }
 
+    public boolean hasNext(String flag){
+        IPreLog preLogInfo = logInfoMap.get(flag);
+        if(preLogInfo == null){
+            return false;
+        }
+
+        return preLogInfo.hasNext();
+    }
+
     public void dealTimeout(){
         for(IPreLog preLog : logInfoMap.values()){
             preLog.dealTimeout();

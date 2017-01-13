@@ -185,8 +185,25 @@ public class CMSPreLogInfo implements IPreLog {
         if(isTimeout){//每次删除第一条记录
             ClusterLog log = logList.remove(0);
             firstEleTime = System.currentTimeMillis();
-            logger.info("time out for cms log, delete log:{}", log.getOriginalLog());
+            //FIXME 暂时修改为warn级别日志
+            logger.warn("time out for cms log, delete log:{}", log.getOriginalLog());
+            if(hasNext()){
+                LogPool.getInstance().addMergeSignal(flag);
+            }
         }
+    }
+
+    @Override
+    public int getPoolSize() {
+        return logList.size();
+    }
+
+    public boolean hasNext(){
+        if(logList.size() >= CMSLogPattern.MERGE_NUM){
+            return true;
+        }
+
+        return false;
     }
 
 

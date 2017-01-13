@@ -60,4 +60,8 @@ public interface IPreLog {
      */
     void dealTimeout();
 
+    int getPoolSize();
+
+    boolean hasNext();
+
 }

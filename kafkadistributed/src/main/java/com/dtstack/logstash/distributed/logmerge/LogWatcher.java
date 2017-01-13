@@ -37,9 +37,9 @@ public class LogWatcher implements Callable {
     private static final Logger logger = LoggerFactory.getLogger(LogWatcher.class);
 
     /**最大空闲等待2min*/
-    private static int MAX_WAIT_PERIOD =  2 * 60;
+    private static int MAX_WAIT_PERIOD =  1 * 60;
 
-    private static int DEAL_TIME_OUT_PERIOD = 2 * 60 * 1000;
+    private static int DEAL_TIME_OUT_PERIOD = 1 * 60 * 1000;
 
     private long lastDealTimeout = System.currentTimeMillis();
 
@@ -79,7 +79,12 @@ public class LogWatcher implements Callable {
 
             CompletedLog completeLog = logPool.mergeLog(flag);
             if(completeLog == null){
+                dealTimeout();
                 continue;
+            }
+
+            if(logPool.hasNext(flag)){
+                wakeup(flag);
             }
 
             logger.debug("add cms to inputqueulist:{}", gson.toJson(completeLog));
