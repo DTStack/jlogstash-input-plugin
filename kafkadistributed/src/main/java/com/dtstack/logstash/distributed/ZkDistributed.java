@@ -386,7 +386,7 @@ public class ZkDistributed {
 				  if (!bb.isAlive() && bb.getMetas().size() > 0) {
 					  brokerNode.getMetas().addAll(bb.getMetas());
 					  failNodes.add(child);
-				  } else {
+				  } else if(bb.isAlive()) {
 					  nodes.put(child, bb);
 				  }
 			  }
@@ -530,13 +530,11 @@ public class ZkDistributed {
 	public void sendLogPoolData() throws Exception {
 		List<Map<String, Object>> events = this.logPool.getNotCompleteLog();
 		route(events);
-		logger.warn("all sendLogPoolData:{}",events);
 	}
 
 	public void sendLogPoolData(List<String> nodes) throws Exception {
 		List<Map<String, Object>> events = this.logPool.getNotCompleteLog(nodes);
 		route(events);
-		logger.warn("{}:sendLogPoolData:{}",nodes,events);
 	}
 
 	public void migration(String target,String source,List<String> datas) throws Exception {
