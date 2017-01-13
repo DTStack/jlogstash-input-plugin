@@ -99,6 +99,8 @@ public class LogWatcher implements Callable {
         if(lastDealTimeout + DEAL_TIME_OUT_PERIOD < System.currentTimeMillis()){
             logPool.dealTimeout();
         }
+
+        lastDealTimeout = System.currentTimeMillis();
     }
 
 
