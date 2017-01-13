@@ -5,7 +5,6 @@ import com.dtstack.logstash.distributed.http.server.callback.ApiCallback;
 import com.dtstack.logstash.distributed.http.server.callback.ApiCallbackMethod;
 import com.dtstack.logstash.distributed.http.server.callback.ApiResult;
 import com.dtstack.logstash.distributed.logmerge.LogPool;
-import com.sun.javafx.tools.packager.Log;
 import com.sun.net.httpserver.HttpExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
