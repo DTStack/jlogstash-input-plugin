@@ -18,10 +18,12 @@
 package com.dtstack.logstash.distributed.logmerge;
 import com.dtstack.logstash.assembly.qlist.InputQueueList;
 import com.dtstack.logstash.inputs.BaseInput;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
 /**
@@ -36,7 +38,7 @@ public class LogWatcher implements Callable {
 
     private static final Logger logger = LoggerFactory.getLogger(LogWatcher.class);
 
-    /**最大空闲等待2min*/
+    /**最大空闲等待1min*/
     private static int MAX_WAIT_PERIOD =  1 * 60;
 
     private static int DEAL_TIME_OUT_PERIOD = 1 * 60 * 1000;
@@ -98,9 +100,8 @@ public class LogWatcher implements Callable {
     private void dealTimeout(){
         if(lastDealTimeout + DEAL_TIME_OUT_PERIOD < System.currentTimeMillis()){
             logPool.dealTimeout();
+            lastDealTimeout = System.currentTimeMillis();
         }
-
-        lastDealTimeout = System.currentTimeMillis();
     }
 
 

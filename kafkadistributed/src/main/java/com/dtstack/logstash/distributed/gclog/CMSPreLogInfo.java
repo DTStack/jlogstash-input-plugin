@@ -173,11 +173,18 @@ public class CMSPreLogInfo implements IPreLog {
 
     @Override
     public void dealTimeout(){
-        if(firstEleTime == 0){
+
+        if(logList.size() == 0){
             return;
         }
 
-        if(logList.size() == 0){
+        //在清数据前做一次数据判断
+        if(checkIsCompleteLog()){
+            CompletedLog completedLog = mergeGcLog();
+            BaseInput.getInputQueueList().put(completedLog.getEventMap());
+            if(hasNext()){
+                LogPool.getInstance().addMergeSignal(flag);
+            }
             return;
         }
 
