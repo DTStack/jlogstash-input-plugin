@@ -149,6 +149,8 @@ public class LogPool {
 
     public static void main(String[] args) {
         LogPool pool = LogPool.getInstance();
+        pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"0\", \"message\":\"2016-12-28T10:07:21.971+0800: 1190255.366: [CMS-concurrent-mark: 0.970/0.970 secs] [Times: user=1.29 sys=0.09, real=0.97 secs]\"}");
+
         pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"1\", \"message\":\"2016-12-28T10:07:21.971+0800: 1190255.3662016-12-28T10:07:20.994+0800: 1190254.390: [GC (CMS Initial Mark) [1 CMS-initial-mark: 2786997K(3670016K)] 2839212K(4141888K), 0.0059182 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]\"}");
         pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"2\", \"message\":\"2016-12-28T10:07:21.000+0800: 1190254.396: [CMS-concurrent-mark-start]\"}");
         pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"3\", \"message\":\"2016-12-28T10:07:21.971+0800: 1190255.366: [CMS-concurrent-mark: 0.970/0.970 secs] [Times: user=1.29 sys=0.09, real=0.97 secs]\"}");
@@ -160,7 +162,7 @@ public class LogPool {
         pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"9\", \"message\":\"2016-12-28T10:07:27.161+0800: 1190260.557: [CMS-concurrent-sweep-start]\"}");
         pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"10\", \"message\":\"2016-12-28T10:07:27.899+0800: 1190261.294: [CMS-concurrent-sweep: 0.738/0.738 secs] [Times: user=1.57 sys=0.00, real=0.74 secs]\"}");
         pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"11\", \"message\":\"2016-12-28T10:07:27.899+0800: 1190261.294: [CMS-concurrent-reset-start]\"}");
-        //pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"12\", \"message\":\"2016-12-28T10:07:27.908+0800: 1190261.303: [CMS-concurrent-reset: 0.009/0.009 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]\"}");
+        pool.addLog("{\"host\":\"123\", \"path\":\"123\", \"logtype\":\"cms18_gclog\", \"offset\":\"12\", \"message\":\"2016-12-28T10:07:27.908+0800: 1190261.303: [CMS-concurrent-reset: 0.009/0.009 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]\"}");
         System.out.println("add over");
     }
 }

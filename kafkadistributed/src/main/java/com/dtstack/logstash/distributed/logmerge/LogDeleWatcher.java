@@ -38,8 +38,8 @@ public class LogDeleWatcher  implements Callable {
     @Override
     public Object call() throws Exception {
         while (isRunning){
-            logPool.deleteLog();
             Thread.sleep(SLEEP_TIME);
+            logPool.deleteLog();
         }
         return null;
     }

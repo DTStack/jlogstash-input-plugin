@@ -89,10 +89,13 @@ public class CMSPreLogInfo implements IPreLog {
             }
         }
 
+        logger.warn("add log:{}.", addLog.getLoginfo());
         logList.add(addPos, addLog);
 
         if(logList.size() >= CMSLogPattern.MERGE_NUM){
+            logger.warn("pre merge log, logList size:{}.", logList.size());
             List<CompletedLog> rstList = mergeGcLog();
+            logger.warn("after merge log, logList size:{}, rstList size:{}.", logList.size(), rstList.size());
             if(rstList != null){
                 for(CompletedLog log : rstList){
                     logger.warn("pre insert into inputqueuelist, logInfo:{}.", log.getLogInfo());
@@ -134,17 +137,18 @@ public class CMSPreLogInfo implements IPreLog {
                 }
 
                 CompletedLog cmsLog = new CompletedLog();
-                for (int logIndex = i; logIndex < CMSLogPattern.MERGE_NUM; logIndex++){
+                int end = CMSLogPattern.MERGE_NUM + i;
+                for (int logIndex = i; logIndex < end; logIndex++){
                     ClusterLog targetLog = logList.remove(i);//一直remove第i个
                     if(targetLog == null){
                         break;
                     }
 
                     if(logIndex == i){
-                        cmsLog.setEventMap(currLog.getBaseInfo());
+                        cmsLog.setEventMap(targetLog.getBaseInfo());
                     }
 
-                    cmsLog.addLog(currLog.getLoginfo());
+                    cmsLog.addLog(targetLog.getLoginfo());
                 }
 
                 Map<String, Object> extInfo = Maps.newHashMap();
