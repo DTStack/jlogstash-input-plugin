@@ -208,11 +208,9 @@ public class CMSPreLogInfo implements IPreLog {
         try{
             lock.lockInterruptibly();
             long expriodTime = System.currentTimeMillis() - TIME_OUT;
-            Iterator<ClusterLog> it = logList.iterator();
-            for( ; it.hasNext() ; ){
-                ClusterLog log = it.next();
+            for(ClusterLog log : logList){
                 if(log.getGeneTime() < expriodTime){
-                    it.remove();
+                    logList.remove(log);
                     logger.warn("remove time out log:{}", log.getLoginfo());
                 }
             }

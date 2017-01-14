@@ -25,7 +25,7 @@ public class LogDeleWatcher  implements Callable {
     private LogPool logPool;
 
     /**删除数据检查间隔时间*/
-    private static int SLEEP_TIME = 10 * 60 * 1000;
+    private static int SLEEP_TIME = 1 * 60 * 1000;
 
     public LogDeleWatcher(LogPool logPool){
         this.logPool = logPool;
@@ -35,6 +35,7 @@ public class LogDeleWatcher  implements Callable {
     public Object call() throws Exception {
         while (isRunning){
             Thread.sleep(SLEEP_TIME);
+            logger.warn("begin to watch time out log...");
             logPool.deleteLog();
         }
         return null;
