@@ -17,6 +17,19 @@
    consumerSettings:必填 consumer 连接kafka的属性配置，map结构 {group.id: jlogstashvvvvv,zookeeper.connect: 127.0.0.1:2181,auto.commit.interval.ms:"1000",auto.offset.reset: smallest}
 
    addFields: 需要添加的属性，map 结构
+   
+#KafkaDistribute:
+   encoding:编码 默认 utf8
+
+   codec:默认plain
+ 
+   topic:必填，map结构，需要说明分区数（{dt_all_test_log: 6}）
+
+   consumerSettings:必填 consumer 连接kafka的属性配置，map结构 {group.id: jlogstashvvvvv,zookeeper.connect: 127.0.0.1:2181,auto.commit.interval.ms:"1000",auto.offset.reset: smallest}
+   
+   distributed: map结构，属性值不为空 说明要开启分布式（主要的应用场景是单个文件日志无序，有单行，有多行，需要后台做聚合和解析，需要把同一个日志发送到同一台服务器）example {"zkAddress":"127.0.0.1:2181/distributed","localAddress":"127.0.0.1:8555","hashKey":"%{tenant_id}:%{hostname}_%{appname}_%{path}"}
+   
+   addFields: 需要添加的属性，map 结构   
 
 
 #Netty:
