@@ -29,7 +29,8 @@
    
    addFields: 需要添加的属性，map 结构 
    
-  distributed: map结构，属性值不为空 说明要开启分布式（主要的应用场景是单个文件日志无序，有单行，有多行，需要后台做聚合和解析，需要把同一个日志发送到同一台服务器）样本: {"zkAddress":"127.0.0.1:2181/distributed","localAddress":"127.0.0.1:8555","hashKey":"%{tenant_id}:%{hostname}_%{appname}_%{path}"}
+  distributed: map结构，属性值不为空 说明要开启分布式（主要的应用场景是单个文件日志无序，有单行，有多行，需要后台做聚合和解析，需要把同一个日志发送     到同一台服务器）每种日志需要定制化开发聚合规则，现在的版本里有cms1.8 gc log 的日志聚合规则
+    样本: {"zkAddress":"127.0.0.1:2181/distributed","localAddress":"127.0.0.1:8555","hashKey":"%{tenant_id}:%                {hostname}_%{appname}_%{path}"}
    
      
 
