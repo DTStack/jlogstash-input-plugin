@@ -508,6 +508,7 @@ public class File extends BaseInput{
 							
 							if (event != null && event.size() > 0){
 								event.put("path", readFileName);
+								event.put("offset", reader.getCurrBufPos());
 								process(event);
 							}
 						}
