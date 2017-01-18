@@ -18,7 +18,6 @@
 package com.dtstack.logstash.distributed.gclog;
 
 import com.dtstack.logstash.distributed.logmerge.ClusterLog;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,8 +102,19 @@ public class CMSLogPattern {
 
     private static Pattern young_gc_pattern = Pattern.compile(young_gc_re);
 
+    private static Pattern gc_begin_pattern = Pattern.compile("CommandLine\\s*flags");
+
     public boolean checkIsYoungGC(String log){
         Matcher matcher = young_gc_pattern.matcher(log);
+        if(matcher.find()){
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean checkIsGCBegin(String log){
+        Matcher matcher = gc_begin_pattern.matcher(log);
         if(matcher.find()){
             return true;
         }

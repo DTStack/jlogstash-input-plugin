@@ -72,6 +72,8 @@ public class CMSPreLogInfo implements IPreLog {
             Map<String, Object> eventMap = addLog.getOriginalLog();
             if(logMerge.checkIsYoungGC(addLog.getLoginfo())){//判断是不是younggc
                 eventMap.put("gctype", GCTypeConstant.YOUNG_LOG_TYPE);
+            }else if(logMerge.checkIsGCBegin(addLog.getLoginfo())){//判断是不是gc开始标识
+                eventMap.put("gctype", GCTypeConstant.GC_BEGIN);
             }
 
             BaseInput.getInputQueueList().put(eventMap);
