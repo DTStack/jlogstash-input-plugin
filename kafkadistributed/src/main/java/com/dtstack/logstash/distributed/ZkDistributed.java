@@ -352,7 +352,7 @@ public class ZkDistributed {
 	public void route(List<Map<String, Object>> events) throws Exception {
 		if (events != null) {
 			for (Map<String, Object> event : events) {
-				this.routeSelect.route(event);
+				route(event);
 			}
 		}
 	}

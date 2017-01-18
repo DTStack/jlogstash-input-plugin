@@ -65,30 +65,46 @@ public class RouteSelect {
 		if(broker!=null){ 
 			nettySend = getNettySend(broker);
 		}else{
+			nettySend = getSyncNettySend(sign);
+		}
+		boolean result = nettySend.emit(event);
+		int index = 0;
+		while(!result){
+			nettySends.remove(broker);
+			nettySend = getSyncNettySend(sign);
+			result = nettySend.emit(event);
+			index = index +1;
+			if(index>3)break;
+		}
+	}
+
+	private NettySend getSyncNettySend(String sign){
+		NettySend nettySend = null;
+		try{
+			this.nodeRouteSelectlock.acquire(30, TimeUnit.SECONDS);
+			zkDistributed.updateMemBrokersNodeData();
+			String broker = getBroker(sign);
+			if(broker!=null){
+				nettySend = getNettySend(broker);
+			}else{
+				broker = selectRoute();
+				List<String> datas = Lists.newArrayList(sign);
+				zkDistributed.updateBrokerNodeMeta(broker,datas,true);
+				nettySend = getNettySend(broker);
+			}
+		}catch(Exception e){
+			logger.error(ExceptionUtil.getErrorMessage(e));
+		}finally{
 			try{
-				this.nodeRouteSelectlock.acquire(30, TimeUnit.SECONDS);
-				zkDistributed.updateMemBrokersNodeData();
-				broker = getBroker(sign);
-				if(broker!=null){
-					nettySend = getNettySend(broker);
-				}else{
-					broker = selectRoute();
-					List<String> datas = Lists.newArrayList(sign);
-					zkDistributed.updateBrokerNodeMeta(broker,datas,true);
-					nettySend = getNettySend(broker);
-				}
+				if(this.nodeRouteSelectlock.isAcquiredInThisProcess())this.nodeRouteSelectlock.release();
 			}catch(Exception e){
 				logger.error(ExceptionUtil.getErrorMessage(e));
-			}finally{
-				try{
-					if(this.nodeRouteSelectlock.isAcquiredInThisProcess())this.nodeRouteSelectlock.release();
-				}catch(Exception e){
-					logger.error(ExceptionUtil.getErrorMessage(e));
-				}
 			}
 		}
-		nettySend.emit(event);
+		return nettySend;
 	}
+
+
 	
 	public String selectRoute(){
 		 Set<Entry<String, BrokerNode>> nodeDatas  = zkDistributed.getNodeDatas().entrySet();

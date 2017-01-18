@@ -73,13 +73,15 @@ public class NettySend{
 		client.connect();
 	}
 
-	public void emit(Map event) {
+	public boolean emit(Map event) {
 		try{
 			String msg = objectMapper.writeValueAsString(event);
-			client.write(msg);
+			return client.write(msg);
 		}catch(Exception e){
 			logger.error(ExceptionUtil.getErrorMessage(e));
 		}
+		logger.error("{}:netty client emit error",this.host);
+		return false;
 	}
 
 
@@ -113,7 +115,7 @@ class NettyClientHandler extends SimpleChannelHandler {
 			throws Exception {
 		logger.warn("channel closed.do connect after:{} seconds.", CONN_DELAY);
 		//重连
-		timer.newTimeout(new TimerTask() {
+		timer.newTimeout(	new TimerTask() {
 			
 			@Override
 			public void run(Timeout timeout) throws Exception {
@@ -192,6 +194,7 @@ class NettyClient{
 	
 	public boolean write(String msg){
 		boolean canWrite = channel.isConnected() && channel.isWritable();
+		int index = 0;
 		while(!canWrite){
 			try {
 				Thread.sleep(500);
@@ -199,6 +202,10 @@ class NettyClient{
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}
 			canWrite = channel.isConnected() && channel.isWritable();
+			index = index + 1;
+			if(index > 3){
+               return false;
+			}
 		}
 		channel.write(msg.replaceAll(delimiter, multilineDelimiter)+delimiter);
 		return true;
