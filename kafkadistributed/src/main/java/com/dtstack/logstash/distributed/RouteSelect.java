@@ -73,8 +73,7 @@ public class RouteSelect {
 			nettySends.remove(broker);
 			nettySend = getSyncNettySend(sign);
 			result = nettySend.emit(event);
-			index = index +1;
-			if(index>3)break;
+			if(++index>3)break;
 		}
 	}
 

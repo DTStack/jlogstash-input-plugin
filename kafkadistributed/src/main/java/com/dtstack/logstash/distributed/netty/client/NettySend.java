@@ -202,10 +202,7 @@ class NettyClient{
 				logger.error(ExceptionUtil.getErrorMessage(e));
 			}
 			canWrite = channel.isConnected() && channel.isWritable();
-			index = index + 1;
-			if(index > 3){
-               return false;
-			}
+			if(++index > 3)return false;
 		}
 		channel.write(msg.replaceAll(delimiter, multilineDelimiter)+delimiter);
 		return true;
