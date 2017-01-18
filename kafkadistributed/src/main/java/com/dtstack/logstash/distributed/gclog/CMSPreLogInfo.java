@@ -25,7 +25,6 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -49,7 +48,7 @@ public class CMSPreLogInfo implements IPreLog {
 
     private CMSLogPattern logMerge = new CMSLogPattern();
 
-    private List<ClusterLog> logList;
+    private List<ClusterLog> logList; //FIXME CopyOnWriteArrayList 不适合该场景,考虑用其他的队列替换
 
     private String flag;
 
@@ -80,17 +79,24 @@ public class CMSPreLogInfo implements IPreLog {
         }
 
         logger.debug("offset:{},---cmslog:{}.", addLog.getOffset(), addLog.getLoginfo());
-        int addPos = logList.size();
-        for(int i=0; i<logList.size(); i++){
-            ClusterLog compLog = logList.get(i);
-            if(addLog.getOffset() < compLog.getOffset()){
-                addPos = i;
-                break;
+        try{
+            lock.lockInterruptibly();
+            int addPos = logList.size();
+            for(int i=0; i<logList.size(); i++){
+                ClusterLog compLog = logList.get(i);
+                if(addLog.getOffset() < compLog.getOffset()){
+                    addPos = i;
+                    break;
+                }
             }
+            logger.warn("add log:{}.", addLog.getLoginfo());
+            logList.add(addPos, addLog);
+        }catch (Exception e){
+            logger.error("", e);
+        }finally {
+            lock.unlock();
         }
 
-        logger.warn("add log:{}.", addLog.getLoginfo());
-        logList.add(addPos, addLog);
 
         if(logList.size() >= CMSLogPattern.MERGE_NUM){
             logger.warn("pre merge log, logList size:{}.", logList.size());
