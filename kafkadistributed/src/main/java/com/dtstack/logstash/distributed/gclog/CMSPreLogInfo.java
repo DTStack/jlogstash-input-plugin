@@ -52,7 +52,7 @@ public class CMSPreLogInfo implements IPreLog {
 
     private String flag;
 
-    private  final ReentrantLock lock = new ReentrantLock(false);
+    private final ReentrantLock lock = new ReentrantLock(false);
 
     private static final Gson gson = new Gson();
 

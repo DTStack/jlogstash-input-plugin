@@ -220,7 +220,16 @@ public class BeatsParser extends ByteToMessageDecoder {
                 logger.debug("Running: READ_JSON");
 
                 ByteBuf buffer = in.readBytes((int) this.requiredBytes);
-                Message message = new Message(sequence, (Map) JsonUtils.mapper.readValue(buffer.array(), Object.class));
+                byte[] arr;
+                if(!buffer.hasArray()){//FIXME
+                    int len =  buffer.readableBytes();
+                    arr = new byte[len];
+                    buffer.getBytes(0, arr);
+                }else{
+                    arr = buffer.array();
+                }
+
+                Message message = new Message(sequence, (Map) JsonUtils.mapper.readValue(arr, Object.class));
 
                 this.batch.addMessage(message);
 

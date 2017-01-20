@@ -114,6 +114,7 @@ public class ClusterLog {
 
 
     public static ClusterLog generateClusterLog(String log) throws IOException {
+
         Map<String, Object> eventMap  = objectMapper.readValue(log,Map.class);
         ClusterLog clusterLog  = new ClusterLog();
         String msg = (String)eventMap.get("message");
