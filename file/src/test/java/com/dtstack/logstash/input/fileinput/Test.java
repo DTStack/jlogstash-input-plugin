@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.dtstack.logstash.inputs.File;
-import com.dtstack.logstash.inputs.ReadLineUtil;
+
+import com.dtstack.jlogstash.inputs.File;
+import com.dtstack.jlogstash.inputs.ReadLineUtil;
 
 public class Test {
 	
