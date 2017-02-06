@@ -77,7 +77,7 @@ public class CMSPreLogInfo implements IPreLog {
                 eventMap.put("gctype", GCTypeConstant.GC_BEGIN);
             }
 
-            BaseInput.getInputToFilterOrOutputDisruptor().put(eventMap);
+            BaseInput.getInputQueueList().put(eventMap);
             return true;
         }
 
@@ -108,7 +108,7 @@ public class CMSPreLogInfo implements IPreLog {
             if(rstList != null){
                 for(CompletedLog log : rstList){
                     logger.warn("pre insert into inputqueuelist, logInfo:{}.", log.getLogInfo());
-                    BaseInput.getInputToFilterOrOutputDisruptor().put(log.getEventMap());
+                    BaseInput.getInputQueueList().put(log.getEventMap());
                     logger.warn("after insert into inputqueuelist");
                 }
             }
