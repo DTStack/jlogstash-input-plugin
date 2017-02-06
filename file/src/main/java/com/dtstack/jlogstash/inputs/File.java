@@ -34,10 +34,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+
+import com.dtstack.jlogstash.annotation.Required;
 import com.dtstack.jlogstash.decoder.IDecode;
 import com.dtstack.jlogstash.decoder.JsonDecoder;
 import com.dtstack.jlogstash.decoder.MultilineDecoder;
@@ -63,13 +66,14 @@ public class File extends BaseInput{
 	
 	private Map<String, IDecode> codecMap = new ConcurrentHashMap<String, IDecode>();
 	
-	private static List<String> path = null;
+	@Required(required=true)
+	private  static  List<String> path;
 	
-	private static List<String> exclude = null;
+	private  static List<String> exclude;
 	
-	private static int maxOpenFiles = 0;//0表示没有上限
+	private  static int maxOpenFiles = 0;//0表示没有上限
 		
-	private static String startPosition = "end";//one of ["beginning", "end"]
+	private  static String startPosition = "end";//one of ["beginning", "end"]
 	
 	/**key:文件夹路径, 匹配信息列表,  10s检测一次*/
 	private Map<String, List<String>> moniDic = new ConcurrentHashMap<String,  List<String>>();
@@ -346,7 +350,7 @@ public class File extends BaseInput{
 	 */
 	private void filterFinishFile(){
 		for(Entry<String, Long> entry : fileCurrPos.entrySet()){
-			if(entry.getValue() == -1l){//表示该文件已经读取完成
+			if(entry.getValue().longValue() == -1l){//表示该文件已经读取完成
 				realPaths.remove(entry.getKey());
 			}
 		}
@@ -610,7 +614,7 @@ public class File extends BaseInput{
 							continue;
 						}
 						
-						if(fileCurrPos.get(tmpFile.getPath()) != null && fileCurrPos.get(tmpFile.getPath()) == -1){
+						if(fileCurrPos.get(tmpFile.getPath()) != null && fileCurrPos.get(tmpFile.getPath()).longValue() == -1l){
 							continue;//已经完结的数据
 						}
 						

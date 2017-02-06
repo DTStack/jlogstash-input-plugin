@@ -54,24 +54,24 @@ import kafka.javaapi.consumer.ConsumerConnector;
 @SuppressWarnings("serial")
 public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	
-	private static final Logger logger = LoggerFactory.getLogger(KafkaDistributed.class);
+	private final static  Logger logger = LoggerFactory.getLogger(KafkaDistributed.class);
 
 	private Map<String, ConsumerConnector> consumerConnMap = new HashMap<>();
 	
 	private Map<String, ExecutorService> executorMap = new HashMap<>();
 	
-	private  String encoding="UTF8";
+	private  static String encoding="UTF8";
 	
 	@Required(required=true)
-	public  Map<String, Integer> topic;
+	public  static Map<String, Integer> topic;
 	
 	@Required(required=true)
-	public  Map<String, String> consumerSettings;
+	public  static Map<String, String> consumerSettings;
 	
 	private ScheduledExecutorService scheduleExecutor;
 	
 	//是否开启partitions监控
-	private  boolean openBalance = false;
+	private  static boolean openBalance = false;
 	
 	/**
 	 *  是否开启分布式 null不开启，不为null开启
@@ -81,13 +81,13 @@ public class KafkaDistributed extends BaseInput implements IKafkaChg{
 	 *   "hashKey":"%{tenant_id}:%{hostname}_%{appname}_%{path}"
 	 *  }
 	 */
-	public Map<String,Object> distributed;
+	public static Map<String,Object> distributed;
 	
 	private ZkDistributed zkDistributed;
 	
-	private  int consumerMoniPeriod =  3600 * 1000;
+	private  static int consumerMoniPeriod =  3600 * 1000;
 	
-	private  int partitionsMoniPeriod = 10 * 1000;
+	private  static int partitionsMoniPeriod = 10 * 1000;
 	
 	private ReentrantLock lock = new ReentrantLock();
 
