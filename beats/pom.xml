@@ -2,17 +2,46 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.dtstack.logstash.input</groupId>
-	<artifactId>beats</artifactId>
+	<groupId>com.dtstack.logstash</groupId>
+	<artifactId>input.beats</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
-
 	<name>beats</name>
-	<url>http://maven.apache.org</url>
+	<description>input plugin beats</description>
+	<url>https://github.com/DTStack/jlogstash-input-plugin/tree/master/beats</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/DTStack/jlogstash-input-plugin</url>
+		<connection>git@github.com:DTStack/jlogstash-input-plugin.git</connection>
+		<developerConnection>scm:git:https://github.com/DTStack/jlogstash-input-plugin.git</developerConnection>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>whiletrue</id>
+			<name>杨思枢</name>
+			<email>sishu.yss@dtstack.com</email>
+			<organization>dtstack</organization>
+			<organizationUrl>http://www.dtstack.com</organizationUrl>
+			<roles>
+				<role>Project-Administrator</role>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
 
 
 	<build>
@@ -52,8 +81,57 @@
 					<compilerVersion>1.7</compilerVersion>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>oss</id>
+			<name>Proficio Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+	</distributionManagement>
 
 
 	<dependencies>
@@ -76,7 +154,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.dtstack</groupId>
+			<groupId>com.dtstack.jlogstash</groupId>
 			<artifactId>jlogstash</artifactId>
 			<version>1.0.0</version>
 			<scope>provided</scope>
