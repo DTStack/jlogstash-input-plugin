@@ -1,19 +1,48 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.dtstack.jlogstash.input</groupId>
-  <artifactId>tcp</artifactId>
-  <version>1.0.0</version>
-  <packaging>jar</packaging>
+	<groupId>com.dtstack.jlogstash</groupId>
+	<artifactId>input.tcp</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+	<name>tcp</name>
+	<description>input plugin tcp</description>
+	<url>https://github.com/DTStack/jlogstash-input-plugin/tree/master/tcp</url>
 
-  <name>tcp</name>
-  <url>http://maven.apache.org</url>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-   	<build>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/DTStack/jlogstash-input-plugin</url>
+		<connection>git@github.com:DTStack/jlogstash-input-plugin.git</connection>
+		<developerConnection>scm:git:https://github.com/DTStack/jlogstash-input-plugin.git</developerConnection>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>whiletrue</id>
+			<name>杨思枢</name>
+			<email>sishu.yss@dtstack.com</email>
+			<organization>dtstack</organization>
+			<organizationUrl>http://www.dtstack.com</organizationUrl>
+			<roles>
+				<role>Project-Administrator</role>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+	<build>
 		<resources>
 			<resource>
 				<directory>src/main/java/</directory>
@@ -50,11 +79,57 @@
 					<compilerVersion>1.7</compilerVersion>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
-  
+	<distributionManagement>
+		<repository>
+			<id>oss</id>
+			<name>Proficio Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+	</distributionManagement>
 
-  <dependencies>
+	<dependencies>
 		<dependency>
 			<groupId>org.apache.mina</groupId>
 			<artifactId>mina-core</artifactId>
@@ -66,12 +141,12 @@
 			<artifactId>mina-filter-ssl</artifactId>
 			<version>1.1.7</version>
 		</dependency>
-		
+
 		<dependency>
-			<groupId>com.dtstack</groupId>
+			<groupId>com.dtstack.jlogstash</groupId>
 			<artifactId>jlogstash</artifactId>
 			<version>1.0.0</version>
 			<scope>provided</scope>
 		</dependency>
-  </dependencies>
+	</dependencies>
 </project>
