@@ -63,7 +63,8 @@ public class File extends BaseInput{
 	private static String encoding = "UTF-8";
 	
 	private static Map<String, Object> pathcodecMap = null;
-	
+
+	/**指定文件的行的聚合规则key:文件名称, val:eg:multiline,json,plain*/
 	private Map<String, IDecode> codecMap = new ConcurrentHashMap<String, IDecode>();
 	
 	@Required(required=true)
@@ -325,12 +326,18 @@ public class File extends BaseInput{
 		InputStream io = null;
 		try {
 			io = new FileInputStream(sinceFile);
-			Map<String, Long> fileMap = (Map) yaml.load(io);
+			Map<String, Object> fileMap = yaml.loadAs(io, Map.class);
 			if(fileMap == null){
 				return;
 			}
-			
-			fileCurrPos.putAll(fileMap);
+
+			for(Entry<String, Object> tmp : fileMap.entrySet()){
+				if(tmp.getValue() == null){
+					continue;
+				}
+
+				fileCurrPos.put(tmp.getKey(), Long.valueOf(tmp.getValue() + ""));
+			}
 		} catch (FileNotFoundException e) {
 			logger.error("open file:{} err:{}!", sinceDbPath, e.getCause());
 			System.exit(1);
