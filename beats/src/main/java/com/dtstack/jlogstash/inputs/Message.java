@@ -3,6 +3,10 @@ package com.dtstack.jlogstash.inputs;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class Message implements Comparable<Message> {
     private int sequence;
     private String identityStream;

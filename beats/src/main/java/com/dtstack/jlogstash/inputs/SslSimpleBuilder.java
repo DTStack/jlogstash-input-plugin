@@ -17,7 +17,10 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-
+/**
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class SslSimpleBuilder {
     public static Logger logger = LoggerFactory.getLogger(SslSimpleBuilder.class.getName());
     private InputStream sslKeyFile;

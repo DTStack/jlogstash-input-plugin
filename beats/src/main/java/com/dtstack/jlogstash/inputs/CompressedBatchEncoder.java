@@ -13,6 +13,10 @@ import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
+/**
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class CompressedBatchEncoder extends BatchEncoder {
     private final static Logger logger = LoggerFactory.getLogger(BatchEncoder.class.getName());
 

@@ -3,6 +3,11 @@ package com.dtstack.jlogstash.inputs;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class Batch {
     private byte protocol = Protocol.VERSION_2;
     private int windowSize;

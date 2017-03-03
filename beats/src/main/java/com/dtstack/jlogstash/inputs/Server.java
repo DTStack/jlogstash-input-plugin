@@ -30,7 +30,10 @@ import javax.net.ssl.SSLException;
 
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class Server {
     static final Logger logger = LoggerFactory.getLogger(Server.class.getName());
     static final long SHUTDOWN_TIMEOUT_SECONDS = 10;

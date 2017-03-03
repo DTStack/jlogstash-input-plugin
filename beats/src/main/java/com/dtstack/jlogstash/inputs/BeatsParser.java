@@ -20,7 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.InflaterInputStream;
 
-
+/**
+ * 
+ * copy from https://github.com/elastic/java-lumber
+ * modify @xuchao
+ */
 public class BeatsParser extends ByteToMessageDecoder {
     private static final int CHUNK_SIZE = 1024;
     private final static Logger logger = LoggerFactory.getLogger(BeatsParser.class);

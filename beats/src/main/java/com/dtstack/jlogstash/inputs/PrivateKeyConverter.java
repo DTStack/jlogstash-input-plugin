@@ -17,6 +17,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 /*
+ * copy from https://github.com/elastic/java-lumber
  * Take an Pem RSA Private key and convert it to a Pkcs8 private key that netty
  * can understand.
  *

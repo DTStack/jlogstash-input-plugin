@@ -14,7 +14,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
-
+/**
+ * 
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class BatchEncoder extends MessageToByteEncoder<Batch> {
     private final static Logger logger = LoggerFactory.getLogger(BatchEncoder.class);
 

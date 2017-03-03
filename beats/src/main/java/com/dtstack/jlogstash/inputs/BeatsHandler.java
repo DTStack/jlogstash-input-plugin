@@ -13,6 +13,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 @ChannelHandler.Sharable
 public class BeatsHandler extends ChannelInboundHandlerAdapter {
     private static Logger logger = LoggerFactory.getLogger(BeatsHandler.class.getName());

@@ -1,6 +1,10 @@
 package com.dtstack.jlogstash.inputs;
 
 
+/**
+ * copy from https://github.com/elastic/java-lumber
+ *
+ */
 public class Protocol {
     public static final byte VERSION_1 = '1';
     public static final byte VERSION_2 = '2';
