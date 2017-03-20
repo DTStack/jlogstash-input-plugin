@@ -25,11 +25,11 @@ public interface IKafkaChg {
 	 * @param consumers
 	 * @param partitions
 	 */
-	public void onInfoChgTrigger(String topicName, int consumers, int partitions);
+	void onInfoChgTrigger(String topicName, int consumers, int partitions);
 	
 	/**
 	 * kafka集群挂掉
 	 */
-	public void onClusterShutDown();
+	void onClusterShutDown();
 
 }

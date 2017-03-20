@@ -63,9 +63,12 @@ public class MonitorCluster implements Runnable{
 	private Map<String, Integer> currTopicPartitions = Maps.newHashMap();
 	
 	private Map<String, Boolean> infoChg = Maps.newHashMap();
+
+	/**是否开启在consumer,partition出现变化的时候做动态平衡*/
+	private boolean openBalance = false;
 	
 	public MonitorCluster(String zkAddress, Set<String> topicNameSet, String consumerGroup, IKafkaChg kafkaChg,
-			int consumerMoniPeriod, int partitionsMoniPeriod){
+			int consumerMoniPeriod, int partitionsMoniPeriod, boolean openBalance){
 		this.zkAddress = zkAddress;
 		this.topicNameSet = topicNameSet;
 		this.consumerGroup = consumerGroup;
@@ -73,7 +76,8 @@ public class MonitorCluster implements Runnable{
 		this.zkClient = new ZkClient(this.zkAddress);
 		this.consumer_moni_period = consumerMoniPeriod;
 		this.partitions_moni_period = partitionsMoniPeriod;
-		
+		this.openBalance = openBalance;
+
 		init();
 	}
 	
@@ -105,8 +109,10 @@ public class MonitorCluster implements Runnable{
 						logger.info("monitor get consumers num:0,it may be not correct.");
 						continue;
 					}
-					
-					kafkaChg.onInfoChgTrigger(tmp.getKey(), currConsumers, topicPartitions);
+
+					if(openBalance){
+						kafkaChg.onInfoChgTrigger(tmp.getKey(), currConsumers, topicPartitions);
+					}
 				}
 			}
 			
