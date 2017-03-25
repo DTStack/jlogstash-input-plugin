@@ -10,6 +10,7 @@ import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -77,6 +79,11 @@ public class MongoDB extends BaseInput {
 
     private Integer interval;
 
+    // 需要转换为byte[]的Binary对象
+    private List<String> binary_fields;
+
+    private boolean needConvertBin;
+
     /**
      * 是否调度
      */
@@ -106,6 +113,11 @@ public class MongoDB extends BaseInput {
 
         // 获取用户自定义的筛选条件
         queryDocument = parseQueryDocument(query);
+
+        // 获取是否需要转换Binary对象为byte[]
+        if (binary_fields != null && binary_fields.size() > 0) {
+            needConvertBin = true;
+        }
 
         // 连接client
         mongoClient = new MongoClient(new MongoClientURI(uri));
@@ -232,6 +244,7 @@ public class MongoDB extends BaseInput {
                 cursor = coll.find(filterDoc).iterator();
                 while (cursor.hasNext()) {
                     document = cursor.next();
+                    handleBinary(document);
                     process(document);
                 }
 
@@ -249,5 +262,17 @@ public class MongoDB extends BaseInput {
             }
         }
 
+    }
+
+    private void handleBinary(Document document) {
+        if (needConvertBin) {
+            for (String binaryField : binary_fields) {
+                Object object = document.get(binaryField);
+                if (object != null && object instanceof Binary) {
+                    Binary binary = (Binary) object;
+                    document.put(binaryField, binary.getData());
+                }
+            }
+        }
     }
 }
