@@ -19,6 +19,7 @@ package com.dtstack.jlogstash.inputs;
 
 import com.dtstack.jlogstash.annotation.Required;
 import com.dtstack.jlogstash.exception.InitializeException;
+import com.dtstack.jlogstash.util.BlobClobUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,14 @@ public class Jdbc extends BaseInput {
 
     private volatile boolean stop;
 
+    private List<String> blob_fields;
+
+    private List<String> clob_fields;
+
+    private boolean needConvertBlob;
+
+    private boolean needConvertClob;
+
     private Connection connection;
 
     @SuppressWarnings("rawtypes")
@@ -66,12 +75,18 @@ public class Jdbc extends BaseInput {
 
     @Override
     public void prepare() {
+        if (blob_fields != null && blob_fields.size() > 0) {
+            needConvertBlob = true;
+        }
+        if (clob_fields != null && clob_fields.size() > 0) {
+            needConvertClob = true;
+        }
+
         connection = initConn(); // 创建连接
     }
 
     @Override
     public void emit() {
-
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
@@ -97,12 +112,41 @@ public class Jdbc extends BaseInput {
                     rowMap.put(columnName, resultSet.getObject(columnName));
                 }
 
+                handleBlob(rowMap);
+                handleClob(rowMap);
+
                 process(rowMap);
             }
         } catch (SQLException e) {
             logger.error("read failed", e);
         } finally {
             JdbcClientHelper.releaseConnection(connection, preparedStatement, resultSet);
+        }
+    }
+
+    private void handleClob(Map<String, Object> rowMap) {
+        if (needConvertClob) {
+            for (String clobField : clob_fields) {
+                Object obj = rowMap.get(clobField);
+                if (obj != null && obj instanceof Clob) {
+                    Clob clob = (Clob) obj;
+                    String content = BlobClobUtil.convertClob2String(clob);
+                    rowMap.put(clobField, content);
+                }
+            }
+        }
+    }
+
+    private void handleBlob(Map<String, Object> rowMap) {
+        if (needConvertBlob) {
+            for (String blobField : blob_fields) {
+                Object obj = rowMap.get(blobField);
+                if (obj != null && obj instanceof Blob) {
+                    Blob blob = (Blob) obj;
+                    byte[] bytes = BlobClobUtil.convertBlob2Bytes(blob);
+                    rowMap.put(blobField, bytes);
+                }
+            }
         }
     }
 
@@ -116,7 +160,7 @@ public class Jdbc extends BaseInput {
         stop = true;
     }
 
-    private Connection initConn()  {
+    private Connection initConn() {
         ConnectionConfig connectionConfig = new ConnectionConfig();
         connectionConfig.setJdbc_connection_string(jdbc_connection_string);
         connectionConfig.setJdbc_driver_class(jdbc_driver_class);
