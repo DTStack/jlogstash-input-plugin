@@ -2,8 +2,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.dtstack.jlogstash.outputs</groupId>
-  <artifactId>jdbc</artifactId>
+  <groupId>com.dtstack.jlogstash.input</groupId>
+  <artifactId>input.jdbc</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
 
@@ -16,7 +16,7 @@
 
   <dependencies>
       <dependency>
-			<groupId>com.dtstack</groupId>
+			<groupId>com.dtstack.jlogstash</groupId>
 			<artifactId>jlogstash</artifactId>
 			<version>1.0.0</version>
 			<scope>provided</scope>
