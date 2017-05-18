@@ -152,9 +152,7 @@ public class Kafka extends BaseInput implements IKafkaChg{
 		}
 		
 		//-----监控-----
-		if(openBalance){
-			startMonitor();
-		}
+		startMonitor();
 	}
 	
 	public void addNewConsumer(String topic, Integer threads){
@@ -197,7 +195,8 @@ public class Kafka extends BaseInput implements IKafkaChg{
 		String groupId = consumerSettings.get("group.id");
 		scheduleExecutor = Executors.newScheduledThreadPool(1);
 		
-		MonitorCluster monitor = new MonitorCluster(zookeeperConn, topic.keySet(), groupId, this, consumerMoniPeriod, partitionsMoniPeriod);
+		MonitorCluster monitor = new MonitorCluster(zookeeperConn, topic.keySet(), groupId,
+				this, consumerMoniPeriod, partitionsMoniPeriod, openBalance);
 		scheduleExecutor.scheduleAtFixedRate(monitor, 10, 10, TimeUnit.SECONDS);
 	}
 
@@ -205,6 +204,8 @@ public class Kafka extends BaseInput implements IKafkaChg{
 	public void onInfoChgTrigger(String topicName, int consumers, int partitions) {
 		
 		lock.lock();
+		logger.info("topic:{} consumer or partitions change, curr consumer num:{} partitions num:{}",
+				new String[]{topicName, consumers+"", partitions+""});
 		
 		try{
 			int expectNum = partitions/consumers;

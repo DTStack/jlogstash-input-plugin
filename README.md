@@ -1,4 +1,4 @@
-#Beats:
+# Beats:
    codec:默认plain
 
    prot: 端口必填没有默认值
@@ -7,7 +7,7 @@
    
    addFields: 需要添加的属性，map 结构
 
-#Kafka:
+# Kafka:
    encoding:编码 默认 utf8
 
    codec:默认plain
@@ -18,7 +18,7 @@
 
    addFields: 需要添加的属性，map 结构
    
-#KafkaDistribute:
+# KafkaDistribute:
    encoding:编码 默认 utf8
 
    codec:默认plain
@@ -35,7 +35,7 @@
      
 
 
-#Netty:
+# Netty:
   codec:默认plain
 
   prot: 端口必填没有默认值
@@ -52,7 +52,7 @@
 
   addFields: 需要添加的属性，map 结构
 
-#Tcp:
+# Tcp:
   
   codec:默认plain
 
@@ -68,12 +68,12 @@
 
   addFields: 需要添加的属性，map 结构
 
-#Stdin:
+# Stdin:
   标准输入
   addFields: 需要添加的属性，map 结构
 
 
-#File:
+# File:
  addFields: 需要添加的属性，map 结构
 
  path:文件输入路径(可以是文件,文件夹),参数类型为列表
