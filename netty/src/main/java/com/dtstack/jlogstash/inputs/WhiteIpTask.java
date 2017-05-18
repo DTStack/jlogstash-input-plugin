@@ -5,15 +5,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.code.regexp.Pattern;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -109,6 +106,10 @@ public class WhiteIpTask implements Runnable{
         return sb.toString();
     }
     
+    public boolean isWhiteIp(String ip){
+    	return isWhiteIp(Lists.newArrayList(ip));
+    } 
+    
     public  boolean isWhiteIp(Map<String,Object> data){
     	Object sourceIp = data.get("local_ip");
     	List<String> ips = Lists.newArrayList();
@@ -117,6 +118,10 @@ public class WhiteIpTask implements Runnable{
     	}else if(sourceIp instanceof List){
     		ips.addAll((List<String>)sourceIp);
     	}
+    	return isWhiteIp(ips);
+    }
+    
+    public boolean isWhiteIp(List<String> ips){
 	    for(String ip:ips){
 	    	Set<Map.Entry<String, Pattern>> patterns =whiteListPatterns.entrySet();
 	    	for(Map.Entry<String, Pattern> pattern:patterns){
@@ -125,7 +130,7 @@ public class WhiteIpTask implements Runnable{
 	    		}
 	    	}
 	    }
-    	return false;
+	    return false;
     }
     
     public static void main(String[] args){

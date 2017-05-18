@@ -169,16 +169,19 @@ public class Netty extends BaseInput {
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
-			Object message = e.getMessage();
-			if (message != null) {
-				if (message instanceof ChannelBuffer) {
-					String mes = ((ChannelBuffer) message).toString(Charset
-							.forName(encoding));
-					if (StringUtils.isNotBlank(mes)) {
-						mes = multilineDecoder(mes);
-						Map<String,Object> data = this.netty.getDecoder().decode(mes);
-						if(whiteIpTask.isWhiteIp(data)){
-							this.netty.process(data);
+			String address = ((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress();
+			if(whiteIpTask.isWhiteIp(address)){
+				Object message = e.getMessage();
+				if (message != null) {
+					if (message instanceof ChannelBuffer) {
+						String mes = ((ChannelBuffer) message).toString(Charset
+								.forName(encoding));
+						if (StringUtils.isNotBlank(mes)) {
+							mes = multilineDecoder(mes);
+							Map<String,Object> data = this.netty.getDecoder().decode(mes);
+							if(whiteIpTask.isWhiteIp(data)){
+								this.netty.process(data);
+							}
 						}
 					}
 				}
@@ -196,4 +199,16 @@ public class Netty extends BaseInput {
 			return msg.replace(multilineDelimiter, delimiter);
 		}
 	}
+
+//	public static void main(String[] args){
+//		Netty.port = 8989;
+//		Netty.whiteListPath = "/Users/sishuyss/ysq/opensource/ip.txt";
+//		Netty.isExtract = true;
+//		Map<String,Object> config =new HashMap<String,Object>();
+//		config.put("codec","json");
+//		Netty netty = new Netty(config);
+//		netty.prepare();
+//		netty.emit();
+//	}
+	
 }
