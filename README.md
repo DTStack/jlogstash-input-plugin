@@ -51,6 +51,10 @@
   delimiter:数据的分隔符 默认是根据系统的换行分隔符
 
   addFields: 需要添加的属性，map 结构
+  
+  whiteListPath: ip白名单（需要数据加入local_ip属性）
+  
+  isExtract: 是否开启解压功能（gzip）
 
 # Tcp:
   
