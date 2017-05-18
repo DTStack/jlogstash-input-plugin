@@ -20,9 +20,13 @@ package com.dtstack.jlogstash.inputs;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -35,10 +39,14 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.handler.codec.compression.ZlibDecoder;
+import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.dtstack.jlogstash.annotation.Required;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -67,12 +75,23 @@ public class Netty extends BaseInput {
 	
 	private static String multilineDelimiter = (char)29 +"";
 	
+	private static String whiteListPath;//url 地址或本地文件
+	
+	private static volatile Set<String> whiteList = Sets.newConcurrentHashSet();
+	
+	private static boolean isExtract = false;
+	
 	private ServerBootstrap bootstrap;
 	
 	private Executor bossExecutor;
 	
 	private Executor workerExecutor;
-
+	
+	private static ExecutorService executors;
+	
+	private static WhiteIpTask whiteIpTask;
+	
+	
 	public Netty(Map config) {
 		super(config);
 		// TODO Auto-generated constructor stub
@@ -81,6 +100,15 @@ public class Netty extends BaseInput {
 	@Override
 	public void prepare() {
 		// TODO Auto-generated method stub
+		if(executors == null){
+			synchronized(Netty.class){
+				if(executors == null){
+					whiteIpTask = new WhiteIpTask(whiteListPath,whiteList);
+					executors = Executors.newFixedThreadPool(1);
+					executors.execute(whiteIpTask);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -106,6 +134,9 @@ public class Netty extends BaseInput {
 				@Override
 				public ChannelPipeline getPipeline() throws Exception {
 					ChannelPipeline pipeline = Channels.pipeline();
+					if(isExtract){
+						pipeline.addLast("zlibDecoder", new ZlibDecoder(ZlibWrapper.GZIP));
+					}
 					pipeline.addLast(
 							"decoder",
 							new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,
@@ -145,7 +176,10 @@ public class Netty extends BaseInput {
 							.forName(encoding));
 					if (StringUtils.isNotBlank(mes)) {
 						mes = multilineDecoder(mes);
-						this.netty.process(this.netty.getDecoder().decode(mes));
+						Map<String,Object> data = this.netty.getDecoder().decode(mes);
+						if(whiteIpTask.isWhiteIp(data)){
+							this.netty.process(data);
+						}
 					}
 				}
 			}
@@ -161,5 +195,5 @@ public class Netty extends BaseInput {
 		public String multilineDecoder(String msg){
 			return msg.replace(multilineDelimiter, delimiter);
 		}
-	}	
+	}
 }
