@@ -33,8 +33,6 @@
     样本: {"zkAddress":"127.0.0.1:2181/distributed","localAddress":"127.0.0.1:8555","hashKey":"%{tenant_id}:%                {hostname}_%{appname}_%{path}"}
    
      
-
-
 # Netty:
   codec:默认plain
 
@@ -52,9 +50,9 @@
 
   addFields: 需要添加的属性，map 结构
   
-  whiteListPath: ip白名单（需要数据加入local_ip属性）
+  whiteListPath: ip白名单路径（多个用逗号隔开）
   
-  isExtract: 是否开启解压功能（gzip）
+  isExtract: true|false是否开启解压功能（gzip）
 
 # Tcp:
   
