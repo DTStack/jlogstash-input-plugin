@@ -20,13 +20,11 @@ package com.dtstack.jlogstash.inputs;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -44,7 +42,6 @@ import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.dtstack.jlogstash.annotation.Required;
 import com.google.common.collect.Sets;
 
@@ -100,12 +97,14 @@ public class Netty extends BaseInput {
 	@Override
 	public void prepare() {
 		// TODO Auto-generated method stub
-		if(executors == null){
-			synchronized(Netty.class){
-				if(executors == null){
-					whiteIpTask = new WhiteIpTask(whiteListPath,whiteList);
-					executors = Executors.newFixedThreadPool(1);
-					executors.execute(whiteIpTask);
+		if(StringUtils.isNotBlank(whiteListPath)){
+			if(executors == null){
+				synchronized(Netty.class){
+					if(executors == null){
+						whiteIpTask = new WhiteIpTask(whiteListPath,whiteList);
+						executors = Executors.newFixedThreadPool(1);
+						executors.execute(whiteIpTask);
+					}
 				}
 			}
 		}
@@ -170,18 +169,32 @@ public class Netty extends BaseInput {
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
 			String address = ((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress();
-			if(whiteIpTask.isWhiteIp(address)){
+			if(StringUtils.isNotBlank(whiteListPath)){
+				if(whiteIpTask.isWhiteIp(address)){
+					Object message = e.getMessage();
+					if (message != null) {
+						if (message instanceof ChannelBuffer) {
+							String mes = ((ChannelBuffer) message).toString(Charset
+									.forName(encoding));
+							if (StringUtils.isNotBlank(mes)){
+								mes = multilineDecoder(mes);
+								Map<String,Object> data = this.netty.getDecoder().decode(mes);
+								if(whiteIpTask.isWhiteIp(data)){
+									this.netty.process(data);
+								}
+							}
+						}
+					}
+				}
+			}else{
 				Object message = e.getMessage();
 				if (message != null) {
 					if (message instanceof ChannelBuffer) {
 						String mes = ((ChannelBuffer) message).toString(Charset
 								.forName(encoding));
-						if (StringUtils.isNotBlank(mes)) {
+						if (StringUtils.isNotBlank(mes)){
 							mes = multilineDecoder(mes);
-							Map<String,Object> data = this.netty.getDecoder().decode(mes);
-							if(whiteIpTask.isWhiteIp(data)){
-								this.netty.process(data);
-							}
+							this.netty.process(this.netty.getDecoder().decode(mes));
 						}
 					}
 				}
