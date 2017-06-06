@@ -55,10 +55,11 @@ public class BeatsParser extends ByteToMessageDecoder {
         if(!hasEnoughBytes(in)) {
             return;
         }
-        
+
+        /**
         if(in.readableBytes() > LIMIT_PACKAGE_SIZE){
-    		logger.warn("rev a msg which legnth:{} may be too long.", in.readableBytes());
-    	}
+    		logger.warn("rev a msg which length:{} may be too long.", in.readableBytes());
+    	}*/
 
         switch (currentState) {
             case READ_HEADER: {
