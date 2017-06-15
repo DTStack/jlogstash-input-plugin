@@ -100,4 +100,22 @@
 
  readFileThreadNum:文件读取的线程数,默认是:cpu处理器数+1
  
+ # Redis:
+ host:IP地址，默认“127.0.0.1”
+ 
+ port:redis服务端口，默认6379
+ 
+ password:密码
+ 
+ key:
+ 
+ data_type:
+ 
+ db:
+ 
+ thread:
+ 
+ 
+ 
+ 
  
