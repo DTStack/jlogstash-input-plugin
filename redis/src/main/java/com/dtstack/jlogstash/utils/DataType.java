@@ -1,7 +1,7 @@
 package com.dtstack.jlogstash.utils;
 
 public enum DataType {
-    LIST("list"),CHANNEL("channel"),PATTERN_CHANNEL("pattern_channel");
+    LIST("list"),STRING("string"),SET("set"),HASH("hash");
 
     private String dataType;
 
