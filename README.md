@@ -101,21 +101,10 @@
  readFileThreadNum:文件读取的线程数,默认是:cpu处理器数+1
  
  # Redis:
- host:IP地址，默认“127.0.0.1”
+ host:redis服务主机地址
  
- port:redis服务端口，默认6379
+ key:键值，当data_type为channel或者channel_pattern时表示订阅的频道
  
- password:密码
+ data_size:数据数量，只有当data_type为list和sorted_set时有效
  
- key:
- 
- data_type:
- 
- db:
- 
- thread:
- 
- 
- 
- 
- 
+ data_type:数据格式，取值范围为：string,list,set,sorted_set,hash,channel,channel_pattern,其中channel和channel_pattern表示订阅模式下所监听的频道

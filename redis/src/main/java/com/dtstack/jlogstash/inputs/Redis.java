@@ -61,9 +61,9 @@ public class Redis extends BaseInput {
             hashRunner();
         } else if (data_type.equals(DataType.SORTEDSET.getDataType())) {
             sortedSetRunner();
-        } else if(data_type.equals(DataType.CHANNEL.getDataType())){
+        } else if (data_type.equals(DataType.CHANNEL.getDataType())) {
             channelRunner();
-        } else if(data_type.equals(DataType.CHANNEL_PATTERN.getDataType())){
+        } else if (data_type.equals(DataType.CHANNEL_PATTERN.getDataType())) {
             channelPatternRunner();
         } else {
             setRunner();
@@ -82,7 +82,7 @@ public class Redis extends BaseInput {
      */
     private void hashRunner() {
         while (!isStop) {
-            Map<String,String> data = jedis.hgetAll(key);
+            Map<String, String> data = jedis.hgetAll(key);
             Map<String, Object> map = new HashMap<String, Object>();
             map.put(key, data);
             process(map);
@@ -98,6 +98,9 @@ public class Redis extends BaseInput {
      *
      */
     private void sortedSetRunner() {
+        if (data_size < 0) {
+            data_size = 0;
+        }
         while (!isStop) {
             Set<String> data = jedis.zrange(key, 0, data_size - 1);
             Map<String, Object> map = new HashMap<String, Object>();
@@ -149,6 +152,9 @@ public class Redis extends BaseInput {
      *
      */
     private void listRunner() {
+        if (data_size < 0) {
+            data_size = 0;
+        }
         while (!isStop) {
             List<String> data = jedis.lrange(key, 0, data_size - 1);
             jedis.ltrim(key, data_size + 1, -1);
@@ -166,17 +172,16 @@ public class Redis extends BaseInput {
     /**
      *
      */
-    private void channelRunner(){
+    private void channelRunner() {
         ChannelListener channelListener = new ChannelListener(this);
-        jedis.subscribe(channelListener,key);
+        jedis.subscribe(channelListener, key);
     }
 
     /**
      *
      */
-    private void channelPatternRunner(){
+    private void channelPatternRunner() {
         ChannelListener channelListener = new ChannelListener(this);
-        jedis.psubscribe(channelListener,key);
-        System.out.println(key);
+        jedis.psubscribe(channelListener, key);
     }
 }
