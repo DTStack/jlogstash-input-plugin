@@ -1,5 +1,7 @@
 package com.dtstack.jlogstash;
 
+import com.dtstack.jlogstash.inputs.ChannelListener;
+import com.dtstack.jlogstash.utils.JedisPoolUtils;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -12,67 +14,114 @@ import java.util.*;
 /**
  * Unit test for simple App.
  */
-public class AppTest extends TestCase {
+public class AppTest {
 
-    public AppTest(String testName) {
-        super(testName);
+    private Jedis jedis;
+    private String host = "localhost";
+    private int port = 6379;
+    private int db = 1;
+    private boolean isStop = false;
+    private static String script_sha;
+
+    private void initData() {
+        jedis.lpush("list1", "one", "two", "three", "four");
     }
 
-    public static Test suite() {
-        return new TestSuite(AppTest.class);
+    public static void main(String args[]) {
+        AppTest appTest = new AppTest();
+        appTest.testApp();
     }
 
 
     public void testApp() {
-        //pubsub();
-        listBatch();
-        //listSingleListener("key3");
+        initJedis();
+        testConnection();
+        //stringRunner("str1");
+        //setRunner("set1");
+        //initData();
+        //setRunner("set1");
+        //sortedSetRunner("set2",0);
+        //hashRunner("h1");
+        //channel("channel1");
+        channelPatternRunner("ch");
     }
 
-    public void pubsub() {
-        Jedis jedis = new Jedis("localhost", 6379, 100000);
-        TestPubSub testPubSub = new TestPubSub();
-        testPubSub.proceed(jedis.getClient(), "redisChat");
+    private void channelPatternRunner(String channel){
+        TestPubSub listener = new TestPubSub();
+        jedis.psubscribe(listener,channel);
     }
 
-    private void listSingleListener(String key) {
-        Jedis jedis = getJedis();
-        String redisScript = "return redis.call('lrange', KEYS[1],0,0)";
-
-        List<String> keys = new ArrayList<String>();
-        keys.add(key);
-
-        List<String> args = new ArrayList<String>();
-        args.add("0");
-
-        List<String> response = (List<String>) jedis.eval(redisScript,keys,null);
-        System.out.println(response.toString());
+    private void channel(String channel) {
+        TestPubSub listener = new TestPubSub();
+        jedis.subscribe(listener, channel);
+        /*while(true){
+            jedis.publish("channel1","haha");
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }*/
     }
 
-    public void listBatch() {
-        Jedis jedis = getJedis();
-
-        String redisScript = "local result = redis.call('lrange', KEYS[1], 0, " + 2 + ");\n"
-                + "redis.call('ltrim', KEYS[1], " + 2 + " + 1, -1);\n"
-                + "return result;\n";
-
-        List<String> keys = new ArrayList<String>();
-        keys.add("key1");
-
-        List<String> args = new ArrayList<String>();
-        args.add("1");
-
-        List<String> response = (List<String>) jedis.eval(redisScript, keys, args);
-
-        System.out.print(response.toString());
+    private void hashRunner(String key) {
+        //while (!isStop) {
+        Map<String, String> data = jedis.hgetAll(key);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(key, data);
+        System.out.println(map.toString());
+        //}
     }
 
+    private void sortedSetRunner(String key, int data_size) {
+        //while (!isStop) {
+        Set<String> data = jedis.zrange(key, 0, data_size - 1);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(key, data);
+        System.out.println(map.toString());
+        //}
+    }
 
-    public Jedis getJedis() {
-        JedisPoolConfig config = new JedisPoolConfig();
-        config.setTestOnBorrow(true);
-        JedisPool jedisPool = new JedisPool("localhost");
-        Jedis jedis = jedisPool.getResource();
-        return jedis;
+    /**
+     *
+     */
+    private void getList(String key, int data_size) {
+        List<String> data = jedis.lrange(key, 0, data_size - 1);
+        jedis.ltrim(key, data_size + 1, -1);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(key, data);
+        System.out.println(map.toString());
+    }
+
+    private void stringRunner(String key) {
+        while (!isStop) {
+            String data = jedis.get(key);
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.put(key, data);
+            System.out.println(map.toString());
+        }
+    }
+
+    private void setRunner(String key) {
+        //while (!isStop) {
+        Set<String> data = jedis.smembers(key);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(key, data);
+        System.out.println(map.toString());
+        //}
+    }
+
+    public void initJedis() {
+        JedisPoolUtils.init(host, port, 0);
+        jedis = JedisPoolUtils.getJedis();
+    }
+
+    public void testConnection() {
+        if (jedis.ping().equals("PONG")) {
+            System.out.println("---------链接成功---------");
+        } else {
+            System.out.println("---------链接失败---------");
+            System.exit(-1);
+        }
     }
 }
