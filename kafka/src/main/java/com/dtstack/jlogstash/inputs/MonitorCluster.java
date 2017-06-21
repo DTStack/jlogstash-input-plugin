@@ -179,6 +179,9 @@ public class MonitorCluster implements Runnable{
 		return true;
 	}
 	
+	/**
+	 * 重置配置，默认都为false。
+	 */
 	private void resetChgInfo(){
 		for(Entry<String, Boolean> tmp : infoChg.entrySet()){
 			tmp.setValue(false);

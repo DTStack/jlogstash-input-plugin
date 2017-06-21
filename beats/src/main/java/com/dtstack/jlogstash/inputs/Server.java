@@ -57,6 +57,11 @@ public class Server {
         sslBuilder = builder;
     }
 
+    /**
+     * 开启netty server。
+     * @return
+     * @throws InterruptedException
+     */
     public Server listen() throws InterruptedException {
         try {
             logger.info("Starting server listing port: " + this.port);
@@ -117,6 +122,9 @@ public class Server {
             beatsHandler = new BeatsHandler(server.messageListener);
         }
 
+        /**
+         * 加入打日志、ssl、idleState、BeatsHandler和BeatsParser这几个handler。
+         */
         public void initChannel(SocketChannel socket) throws SSLException {
             ChannelPipeline pipeline = socket.pipeline();
 

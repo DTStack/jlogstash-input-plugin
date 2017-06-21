@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 包含data及其sequence和identityStream。还有batch。
  * copy from https://github.com/elastic/java-lumber
  *
  */

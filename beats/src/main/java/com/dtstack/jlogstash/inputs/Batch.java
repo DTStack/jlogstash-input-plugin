@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 
+ * 打包协议版本、窗口、消息集。
  * copy from https://github.com/elastic/java-lumber
  *
  */

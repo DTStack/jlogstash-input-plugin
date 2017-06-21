@@ -46,8 +46,6 @@ public class Beats extends BaseInput {
 
 	private static String sslCertificate;
 
-	private static String sslKey;
-
 	private static String noPkcs7SslKey;
 
 	private static boolean sslEnable = false;
@@ -59,18 +57,16 @@ public class Beats extends BaseInput {
 	@SuppressWarnings("rawtypes")
 	public Beats(Map config) {
 		super(config);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public void prepare() {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
 	public void emit() {
-		// TODO Auto-generated method stub
+		
 		try {
 			messageListener = new MessageListener(this);
 			server = new Server(host, port, messageListener);
@@ -78,9 +74,6 @@ public class Beats extends BaseInput {
 				PrivateKeyConverter converter = new PrivateKeyConverter(
 						noPkcs7SslKey, null);
 				logger.debug("SSLCertificate: {}", sslCertificate);
-				logger.debug("SSLKey: {}", sslKey);
-				// SslSimpleBuilder sslBuilder = new
-				// SslSimpleBuilder(sslCertificate, sslKey, null)
 				SslSimpleBuilder sslBuilder = new SslSimpleBuilder(
 						new FileInputStream(sslCertificate),
 						converter.convert(), null).setProtocols(
@@ -97,15 +90,19 @@ public class Beats extends BaseInput {
 
 	@Override
 	public void release() {
-		// TODO Auto-generated method stub
+
 		try {
 			if(server!=null)server.stop();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			logger.error("beat server stop error: {}",e.getCause());
 		}
 	}
 
+	/**
+	 * 消息的监听器。
+	 * @author daguan
+	 *
+	 */
 	public class MessageListener implements IMessageListener {
 
         private Beats beats;
@@ -116,9 +113,12 @@ public class Beats extends BaseInput {
 
 		@SuppressWarnings({ "unchecked"})
 		@Override
+		/**
+		 * 消息进来就交由beats处理。
+		 */
 		public void onNewMessage(ChannelHandlerContext ctx, Message message) {
 			Map<String,Object> map =message.getData();
-			System.out.println(map);
+			logger.debug("message data,map={}",map);
 			if (map!=null){
 				this.beats.process(map);
 			}

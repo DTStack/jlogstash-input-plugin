@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 
+ * 给消息加字段。
  * copy from https://github.com/elastic/java-lumber
  *
  */
@@ -31,12 +31,18 @@ public class BeatsHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    /**
+     * 啥都没干。
+     */
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.ctx = ctx;
         this.messageListener.onNewConnection(ctx);
     }
 
     @Override
+    /**
+     * 啥都没干。
+     */
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         this.messageListener.onConnectionClose(ctx);
     }
@@ -79,6 +85,11 @@ public class BeatsHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+    /**
+     * 当消息的序列等于消息的窗口大小，就可以ack了。
+     * @param message
+     * @return
+     */
     private boolean needAck(Message message) {
         if (message.getSequence() == message.getBatch().getWindowSize()) {
             return true;

@@ -122,6 +122,7 @@ public class File extends BaseInput{
 			path = Lists.newArrayList();
 		}
 		
+		//设置codec
 		for(Entry<String, Object> entry : pathcodecMap.entrySet()){
 			String filePatternName = entry.getKey();
 			Object codecInfo = entry.getValue();
@@ -150,6 +151,7 @@ public class File extends BaseInput{
 	public void prepare() {
 		
 		init();
+		
 		if(path == null || path.size() == 0){
 			logger.error("don't set any input file. [path, pathcodecMap] must not be empty at the same time.");
 			System.exit(-1);
@@ -180,6 +182,10 @@ public class File extends BaseInput{
 		runFlag = true;
 	}
 	
+	/**
+	 * 获取文件路径。支持精准路径、目录或者模糊匹配的文件。会过滤排除的文件。
+	 * @return
+	 */
 	private List<String> generateRealPath(){
 		
 		List<String> ps = Lists.newArrayList();
@@ -218,6 +224,11 @@ public class File extends BaseInput{
 		return ps;
 	}
 	
+	/**
+	 * 返回匹配正则的file列表。
+	 * @param patternName
+	 * @return
+	 */
 	private List<String> getPatternFile(String patternName){
 		
 		List<String> fileList = Lists.newArrayList(); 
@@ -246,6 +257,11 @@ public class File extends BaseInput{
 		return fileList;
 	}
 	
+	/**
+	 * 把patternName的list存入moniDic，其key为dir。
+	 * @param dir
+	 * @param patternName
+	 */
 	public void addMonitorDic(String dir, String patternName){
 		List<String> patternList = moniDic.get(dir);
 		if(patternList == null){
@@ -259,6 +275,12 @@ public class File extends BaseInput{
 		
 	}
 	
+	/**
+	 * 文件名正则匹配。
+	 * @param pattern
+	 * @param str
+	 * @return
+	 */
 	private boolean filePatternMatcher(String pattern, String str) {
 		
 		pattern = pattern.replace("\\", "").replace("/", "");
@@ -316,6 +338,9 @@ public class File extends BaseInput{
 		return false;
 	}
 	
+	/**
+	 * 把sincedb.yaml的内容存入fileCurrPos。
+	 */
 	private void checkoutSinceDb(){
 		Yaml yaml = new Yaml();
 		java.io.File sinceFile = new java.io.File(sinceDbPath);

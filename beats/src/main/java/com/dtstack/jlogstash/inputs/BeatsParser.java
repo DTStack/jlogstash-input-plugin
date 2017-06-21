@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.zip.InflaterInputStream;
 
 /**
- * 
  * copy from https://github.com/elastic/java-lumber
  * modify @xuchao
  */
@@ -55,13 +54,9 @@ public class BeatsParser extends ByteToMessageDecoder {
         if(!hasEnoughBytes(in)) {
             return;
         }
-
-        /**
-        if(in.readableBytes() > LIMIT_PACKAGE_SIZE){
-    		logger.warn("rev a msg which length:{} may be too long.", in.readableBytes());
-    	}*/
-
+        
         switch (currentState) {
+        	//判断版本，并转由READ_FRAME_TYPE处理。
             case READ_HEADER: {
                 logger.debug("Running: READ_HEADER");
                 
@@ -78,6 +73,7 @@ public class BeatsParser extends ByteToMessageDecoder {
                 transition(States.READ_FRAME_TYPE, 1);
                 break;
             }
+            //判断框架类型，并交由对应框架类型处理。
             case READ_FRAME_TYPE: {
                 logger.debug("Running: READ_FRAME_TYPE");
                 
@@ -104,6 +100,7 @@ public class BeatsParser extends ByteToMessageDecoder {
                 }
                 break;
             }
+            //给batch设置windowSize。
             case READ_WINDOW_SIZE: {
                 logger.debug("Running: READ_WINDOW_SIZE");
                 this.batch.setWindowSize((int) in.readUnsignedInt());
@@ -121,6 +118,7 @@ public class BeatsParser extends ByteToMessageDecoder {
                 transitionToReadHeader();
                 break;
             }
+            //版本1中数据按照字段划分。
             case READ_DATA_FIELDS: {
                 // Lumberjack version 1 protocol, which use the Key:Value format.
                 logger.debug("Running: READ_DATA_FIELDS");
@@ -177,6 +175,7 @@ public class BeatsParser extends ByteToMessageDecoder {
 
                 break;
             }
+            //读出json的sequence和size，并跳转READ_JSON处理。
             case READ_JSON_HEADER: {
                 logger.debug("Running: READ_JSON_HEADER");
 
@@ -192,7 +191,8 @@ public class BeatsParser extends ByteToMessageDecoder {
                 transition(States.READ_COMPRESSED_FRAME, in.readUnsignedInt());
                 break;
             }
-
+            
+            //解压。
             case READ_COMPRESSED_FRAME: {
                 logger.debug("Running: READ_COMPRESSED_FRAME");
 
@@ -221,11 +221,13 @@ public class BeatsParser extends ByteToMessageDecoder {
 
                 break;
             }
+            //json反序列化，存入batch，如果batch大小等于windowSize则输出。
             case READ_JSON: {
                 logger.debug("Running: READ_JSON");
 
                 ByteBuf buffer = in.readBytes((int) this.requiredBytes);
                 byte[] arr;
+                //这个hasArray不太懂
                 if(!buffer.hasArray()){//FIXME
                     int len =  buffer.readableBytes();
                     arr = new byte[len];
@@ -233,8 +235,10 @@ public class BeatsParser extends ByteToMessageDecoder {
                 }else{
                     arr = buffer.array();
                 }
-
+                
+                logger.debug("before json parsed, message={}",new String(arr,"utf-8"));
                 Message message = new Message(sequence, (Map) JsonUtils.mapper.readValue(arr, Object.class));
+                logger.debug("after json parsed, message={}",(Map) JsonUtils.mapper.readValue(arr, Object.class));
 
                 this.batch.addMessage(message);
 
