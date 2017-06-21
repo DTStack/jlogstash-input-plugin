@@ -33,8 +33,6 @@
     样本: {"zkAddress":"127.0.0.1:2181/distributed","localAddress":"127.0.0.1:8555","hashKey":"%{tenant_id}:%                {hostname}_%{appname}_%{path}"}
    
      
-
-
 # Netty:
   codec:默认plain
 
@@ -51,6 +49,10 @@
   delimiter:数据的分隔符 默认是根据系统的换行分隔符
 
   addFields: 需要添加的属性，map 结构
+  
+  whiteListPath: ip白名单路径（多个用逗号隔开）
+  
+  isExtract: true|false是否开启解压功能（gzip）
 
 # Tcp:
   
@@ -98,4 +100,11 @@
 
  readFileThreadNum:文件读取的线程数,默认是:cpu处理器数+1
  
+ # Redis:
+ host:redis服务主机地址
  
+ key:键值，当data_type为channel或者channel_pattern时表示订阅的频道
+ 
+ data_size:数据数量，只有当data_type为list和sorted_set时有效
+ 
+ data_type:数据格式，取值范围为：string,list,set,sorted_set,hash,channel,channel_pattern,其中channel和channel_pattern表示订阅模式下所监听的频道
