@@ -24,6 +24,9 @@ public class BatchEncoder extends MessageToByteEncoder<Batch> {
 
 
     @Override
+    /**
+     * 把协议、消息集大小、消息集信息存入buffer。
+     */
     protected void encode(ChannelHandlerContext ctx, Batch batch, ByteBuf out) throws Exception {
         out.writeByte(batch.getProtocol());
         out.writeByte('W');
@@ -31,6 +34,13 @@ public class BatchEncoder extends MessageToByteEncoder<Batch> {
         out.writeBytes(getPayload(ctx, batch));
     }
 
+    /**
+     * 把batch中的message存入ctx的buffer里面。有2中version，version2是以json存储message，否则version1，按照field存储。
+     * @param ctx
+     * @param batch
+     * @return
+     * @throws IOException
+     */
     protected ByteBuf getPayload(ChannelHandlerContext ctx, Batch batch) throws IOException {
         ByteBuf payload = ctx.alloc().buffer();
 
