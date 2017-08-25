@@ -78,13 +78,13 @@
 # File:
  addFields: 需要添加的属性，map 结构
 
- path:文件输入路径(可以是文件,文件夹),参数类型为list
+ path:文件输入路径(可以是文件,文件夹),参数类型为list["home/admin/ysq.log"]
 
  pathcodecMap: 文件路径,参数是Map类型(key:文件路径,value:该文件类型对应的codec)
 
  --注意path参数和pathcodecMap参数不能同时为空
 
- exclude:排除文件路径(可以是文件,文件夹),参数类型为列表
+ exclude:排除文件路径(可以是文件,文件夹),参数类型为list
 
  encoding:读取文件的编码格式,默认是UTF-8
 
