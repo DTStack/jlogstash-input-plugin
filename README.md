@@ -78,7 +78,7 @@
 # File:
  addFields: 需要添加的属性，map 结构
 
- path:文件输入路径(可以是文件,文件夹),参数类型为列表
+ path:文件输入路径(可以是文件,文件夹),参数类型为list
 
  pathcodecMap: 文件路径,参数是Map类型(key:文件路径,value:该文件类型对应的codec)
 
