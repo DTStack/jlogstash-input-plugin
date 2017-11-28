@@ -130,7 +130,7 @@
   
   password: 密码
   
-# Jdbc
+# Jdbc:
   jdbc_connection_string: jdbc url地址 必填项
   
   jdbc_driver_class: 驱动类 必填项
