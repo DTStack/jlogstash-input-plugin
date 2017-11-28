@@ -130,4 +130,20 @@
   
   password: 密码
   
+# Jdbc
+  jdbc_connection_string: jdbc url地址 必填项
+  
+  jdbc_driver_class: 驱动类 必填项
+  
+  jdbc_driver_library: 驱动包的路径 必填项
+  
+  jdbc_fetch_size: 一次获取的数据 必填项
+  
+  jdbc_user: 用户名 必填项
+  
+  jdbc_password: 密码 必填项
+  
+  statement: 查询语句 必填项
+  
+  parameters: 参数
 
