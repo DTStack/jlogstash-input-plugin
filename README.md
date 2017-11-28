@@ -120,7 +120,7 @@
   
   type: 索引类型
   
-  query: dsl 查新语法（默认 {\"query\": {\"match_all\":{}},\"sort\" : [\"_doc\"]}）
+  query: dsl 查询语法（默认 {\"query\": {\"match_all\":{}},\"sort\" : [\"_doc\"]}）
   
   scroll: 翻页（默认 5）
   
