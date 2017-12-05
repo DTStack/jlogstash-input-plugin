@@ -16,7 +16,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +46,7 @@ public class MongoDB extends BaseInput {
      * database名称
      */
     @Required(required = true)
-    private String db_name;
+    private String dbName;
 
     /**
      * collection名称
@@ -63,7 +62,7 @@ public class MongoDB extends BaseInput {
     /**
      * 增量抽取的起始时间
      */
-    private volatile String since_time;
+    private volatile String sinceTime;
 
     /**
      * 可选值：_id，time。是基于_id还是基于时间戳字段
@@ -75,12 +74,12 @@ public class MongoDB extends BaseInput {
      */
     private String since_column = "_id";
 
-    private String last_run_metadata_path;
+    private String lastRunMetadataPath;
 
     private Integer interval;
 
     // 需要转换为byte[]的Binary对象
-    private List<String> binary_fields;
+    private List<String> binaryFields;
 
     private boolean needConvertBin;
 
@@ -109,19 +108,19 @@ public class MongoDB extends BaseInput {
     @Override
     public void prepare() {
         // 初始化增量的开始时间
-        startTime = new StartTime(since_time, last_run_metadata_path);
+        startTime = new StartTime(sinceTime, lastRunMetadataPath);
 
         // 获取用户自定义的筛选条件
         queryDocument = parseQueryDocument(query);
 
         // 获取是否需要转换Binary对象为byte[]
-        if (binary_fields != null && binary_fields.size() > 0) {
+        if (binaryFields != null && binaryFields.size() > 0) {
             needConvertBin = true;
         }
 
         // 连接client
         mongoClient = new MongoClient(new MongoClientURI(uri));
-        database = mongoClient.getDatabase(db_name);
+        database = mongoClient.getDatabase(dbName);
         coll = database.getCollection(collection);
     }
 
@@ -266,7 +265,7 @@ public class MongoDB extends BaseInput {
 
     private void handleBinary(Document document) {
         if (needConvertBin) {
-            for (String binaryField : binary_fields) {
+            for (String binaryField : binaryFields) {
                 Object object = document.get(binaryField);
                 if (object != null && object instanceof Binary) {
                     Binary binary = (Binary) object;
