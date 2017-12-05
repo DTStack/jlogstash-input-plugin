@@ -22,8 +22,13 @@ import com.dtstack.jlogstash.exception.InitializeException;
 import com.dtstack.jlogstash.util.BlobClobUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.*;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,21 +40,21 @@ public class Jdbc extends BaseInput {
     private static final Logger logger = LoggerFactory.getLogger(JdbcClientHelper.class);
 
     @Required(required = true)
-    private String jdbc_connection_string;
+    private String jdbcConnectionString;
 
     @Required(required = true)
-    private String jdbc_driver_class;
+    private String jdbcDriverClass;
 
     @Required(required = true)
-    private String jdbc_driver_library;
+    private String jdbcDriverLibrary;
 
-    private Integer jdbc_fetch_size;
-
-    @Required(required = true)
-    private String jdbc_user;
+    private Integer jdbcFetchSize;
 
     @Required(required = true)
-    private String jdbc_password;
+    private String jdbcUser;
+
+    @Required(required = true)
+    private String jdbcPassword;
 
     @Required(required = true)
     private String statement;
@@ -58,9 +63,9 @@ public class Jdbc extends BaseInput {
 
     private volatile boolean stop;
 
-    private List<String> blob_fields;
+    private List<String> blobFields;
 
-    private List<String> clob_fields;
+    private List<String> clobFields;
 
     private boolean needConvertBlob;
 
@@ -75,13 +80,12 @@ public class Jdbc extends BaseInput {
 
     @Override
     public void prepare() {
-        if (blob_fields != null && blob_fields.size() > 0) {
+        if (blobFields != null && blobFields.size() > 0) {
             needConvertBlob = true;
         }
-        if (clob_fields != null && clob_fields.size() > 0) {
+        if (clobFields != null && clobFields.size() > 0) {
             needConvertClob = true;
         }
-
         connection = initConn(); // 创建连接
     }
 
@@ -91,8 +95,8 @@ public class Jdbc extends BaseInput {
         ResultSet resultSet = null;
         try {
             preparedStatement = connection.prepareStatement(statement, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-            if (jdbc_fetch_size != null) {
-                preparedStatement.setFetchSize(jdbc_fetch_size);
+            if (jdbcFetchSize != null) {
+                preparedStatement.setFetchSize(jdbcFetchSize);
             }
 
             resultSet = preparedStatement.executeQuery();
@@ -126,7 +130,7 @@ public class Jdbc extends BaseInput {
 
     private void handleClob(Map<String, Object> rowMap) {
         if (needConvertClob) {
-            for (String clobField : clob_fields) {
+            for (String clobField : clobFields) {
                 Object obj = rowMap.get(clobField);
                 if (obj != null && obj instanceof Clob) {
                     Clob clob = (Clob) obj;
@@ -139,7 +143,7 @@ public class Jdbc extends BaseInput {
 
     private void handleBlob(Map<String, Object> rowMap) {
         if (needConvertBlob) {
-            for (String blobField : blob_fields) {
+            for (String blobField : blobFields) {
                 Object obj = rowMap.get(blobField);
                 if (obj != null && obj instanceof Blob) {
                     Blob blob = (Blob) obj;
@@ -162,11 +166,11 @@ public class Jdbc extends BaseInput {
 
     private Connection initConn() {
         ConnectionConfig connectionConfig = new ConnectionConfig();
-        connectionConfig.setJdbc_connection_string(jdbc_connection_string);
-        connectionConfig.setJdbc_driver_class(jdbc_driver_class);
-        connectionConfig.setJdbc_driver_library(jdbc_driver_library);
-        connectionConfig.setJdbc_user(jdbc_user);
-        connectionConfig.setJdbc_password(jdbc_password);
+        connectionConfig.setJdbc_connection_string(jdbcConnectionString);
+        connectionConfig.setJdbc_driver_class(jdbcDriverClass);
+        connectionConfig.setJdbc_driver_library(jdbcDriverLibrary);
+        connectionConfig.setJdbc_user(jdbcUser);
+        connectionConfig.setJdbc_password(jdbcPassword);
 
         try {
             return JdbcClientHelper.getConnection(connectionConfig);
