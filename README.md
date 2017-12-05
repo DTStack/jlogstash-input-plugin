@@ -108,3 +108,42 @@
  data_size:数据数量，只有当data_type为list和sorted_set时有效
  
  data_type:数据格式，取值范围为：string,list,set,sorted_set,hash,channel,channel_pattern,其中channel和channel_pattern表示订阅模式下所监听的频道
+ 
+# Elasticsearch:
+  hosts: elasticsearch 集群地址，也可以slb地址 类型是数组（["node01","node02"]）必填
+  
+  cluster: elasticsearch 集群名称(默认值 elasticsearch)
+  
+  sniff:是否自动发现（默认值 true）
+  
+  index: 索引（默认值 logstash-*）
+  
+  type: 索引类型
+  
+  query: dsl 查询语法（默认 {\"query\": {\"match_all\":{}},\"sort\" : [\"_doc\"]}）
+  
+  scroll: 翻页（默认 5）
+  
+  size: 一次获取的数据 （默认 1000）
+  
+  user: 用户名
+  
+  password: 密码
+  
+# Jdbc:
+  jdbc_connection_string: jdbc url地址 必填项
+  
+  jdbc_driver_class: 驱动类 必填项
+  
+  jdbc_driver_library: 驱动包的路径 必填项
+  
+  jdbc_fetch_size: 一次获取的数据 必填项
+  
+  jdbc_user: 用户名 必填项
+  
+  jdbc_password: 密码 必填项
+  
+  statement: 查询语句 必填项
+  
+  parameters: 参数
+
