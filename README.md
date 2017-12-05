@@ -148,11 +148,11 @@
   parameters: 参数
 
 # MongoDB:
-  uri: MongoDB连接URI 必填项目
+  uri: MongoDB连接URI 必填项
   
-  dbName: database名称 必填项目
+  dbName: database名称 必填项
   
-  collection: collection名称 必填项目
+  collection: collection名称 必填项
   
   query: Filter语句 
   
