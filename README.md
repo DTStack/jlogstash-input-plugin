@@ -131,19 +131,29 @@
   password: 密码
   
 # Jdbc:
-  jdbc_connection_string: jdbc url地址 必填项
+  jdbcConnectionString: jdbc url地址 必填项
   
-  jdbc_driver_class: 驱动类 必填项
+  jdbcDriverClass: 驱动类 必填项
   
-  jdbc_driver_library: 驱动包的路径 必填项
+  jdbcDriverLibrary: 驱动包的路径 必填项
   
-  jdbc_fetch_size: 一次获取的数据 必填项
+  jdbcFetchSize: 一次获取的数据 必填项
   
-  jdbc_user: 用户名 必填项
+  jdbcUser: 用户名 必填项
   
-  jdbc_password: 密码 必填项
+  jdbcPassword: 密码 必填项
   
   statement: 查询语句 必填项
   
   parameters: 参数
 
+# MongoDB:
+  uri: MongoDB连接URI 必填项目
+  
+  dbName: database名称 必填项目
+  
+  collection: collection名称 必填项目
+  
+  query: Filter语句 
+  
+  sinceTime: 增量抽取的起始时间
