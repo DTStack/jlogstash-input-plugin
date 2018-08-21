@@ -142,7 +142,7 @@ public class BeatsParser extends ByteToMessageDecoder {
                     	return;
                     }
                     
-                    String field = in.readBytes(fieldLength).toString(Charset.forName("UTF8"));
+                    String field = in.readSlice(fieldLength).toString(Charset.forName("UTF8"));
 
                     int dataLength = (int) in.readUnsignedInt();
                     
@@ -155,8 +155,12 @@ public class BeatsParser extends ByteToMessageDecoder {
                     if(!checkEnoughBytes(in, dataLength, true)){
                     	return;
                     }
-                    
-                    String data = in.readBytes(dataLength).toString(Charset.forName("UTF8"));
+
+                    ByteBuf buf = in.readBytes(dataLength);
+                    String data = buf.toString(Charset.forName("UTF8"));
+
+                    //避免内存泄漏：http://netty.io/wiki/reference-counted-objects.html
+                    buf.release();
 
                     dataMap.put(field, data);
 
@@ -227,7 +231,6 @@ public class BeatsParser extends ByteToMessageDecoder {
 
                 ByteBuf buffer = in.readBytes((int) this.requiredBytes);
                 byte[] arr;
-                //这个hasArray不太懂
                 if(!buffer.hasArray()){//FIXME
                     int len =  buffer.readableBytes();
                     arr = new byte[len];
@@ -235,6 +238,9 @@ public class BeatsParser extends ByteToMessageDecoder {
                 }else{
                     arr = buffer.array();
                 }
+
+                //避免内存泄漏：http://netty.io/wiki/reference-counted-objects.html
+                buffer.release();
                 
                 logger.debug("before json parsed, message={}",new String(arr,"utf-8"));
                 Message message = new Message(sequence, (Map) JsonUtils.mapper.readValue(arr, Object.class));

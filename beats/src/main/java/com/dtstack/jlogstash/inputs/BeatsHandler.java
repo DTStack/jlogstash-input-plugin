@@ -45,6 +45,7 @@ public class BeatsHandler extends ChannelInboundHandlerAdapter {
      */
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         this.messageListener.onConnectionClose(ctx);
+        ctx.close();
     }
 
     @Override
