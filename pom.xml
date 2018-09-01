@@ -20,6 +20,7 @@
         <module>redis</module>
         <module>stdin</module>
         <module>tcp</module>
+        <module>binlog</module>
     </modules>
 
     <properties>
