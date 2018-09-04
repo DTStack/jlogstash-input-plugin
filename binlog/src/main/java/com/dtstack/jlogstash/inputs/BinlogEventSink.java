@@ -35,7 +35,12 @@ public class BinlogEventSink extends AbstractCanalLifeCycle implements com.aliba
                 return false;
             }
 
-            processRowChange(rowChange);
+            CanalEntry.Header header = entry.getHeader();
+            long ts = header.getExecuteTime();
+            String schema = header.getSchemaName();
+            String table = header.getTableName();
+
+            processRowChange(rowChange, schema, table, ts);
         }
         return true;
     }
@@ -50,12 +55,15 @@ public class BinlogEventSink extends AbstractCanalLifeCycle implements com.aliba
         return rowChange;
     }
 
-    private void processRowChange(CanalEntry.RowChange rowChange) {
+    private void processRowChange(CanalEntry.RowChange rowChange, String schema, String table, long ts) {
         CanalEntry.EventType eventType = rowChange.getEventType();
         for(CanalEntry.RowData rowData : rowChange.getRowDatasList()) {
             Map<String,Object> event = new HashMap<>();
             Map<String,Object> message = new HashMap<>();
             message.put("type", eventType.toString());
+            message.put("schema", schema);
+            message.put("table", table);
+            message.put("ts", ts);
             message.put("before", processColumnList(rowData.getBeforeColumnsList()));
             message.put("after", processColumnList(rowData.getAfterColumnsList()));
             event.put("message", message);

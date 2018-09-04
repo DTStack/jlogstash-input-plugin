@@ -1,19 +1,18 @@
 package com.dtstack.jlogstash.inputs;
 
+import com.alibaba.otter.canal.filter.aviater.AviaterRegexFilter;
+import com.alibaba.otter.canal.filter.aviater.AviaterSimpleFilter;
 import com.alibaba.otter.canal.parse.exception.CanalParseException;
 import com.alibaba.otter.canal.parse.inbound.mysql.MysqlEventParser;
 import com.alibaba.otter.canal.parse.index.AbstractLogPositionManager;
 import com.alibaba.otter.canal.parse.support.AuthenticationInfo;
-import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.alibaba.otter.canal.protocol.position.LogPosition;
-import com.alibaba.otter.canal.sink.CanalEventSink;
-import com.alibaba.otter.canal.sink.exception.CanalSinkException;
 import com.dtstack.jlogstash.annotation.Required;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -42,6 +41,8 @@ public class Binlog extends BaseInput {
     @Required(required = true)
     private String password;
 
+    private String filter;
+
     private MysqlEventParser controller;
 
     public Binlog(Map config) {
@@ -62,7 +63,6 @@ public class Binlog extends BaseInput {
         controller.setParallelBufferSize(256);
         controller.setParallelThreadSize(2);
         controller.setIsGTIDMode(false);
-
         controller.setEventSink(new BinlogEventSink(this));
 
         controller.setLogPositionManager(new AbstractLogPositionManager() {
@@ -74,9 +74,15 @@ public class Binlog extends BaseInput {
 
             @Override
             public void persistLogPosition(String destination, LogPosition logPosition) throws CanalParseException {
-                System.out.println(logPosition);
+                logger.info("logPosition: " + logPosition.toString());
             }
         });
+
+        //filter = "hyf\\..*";
+        System.out.println("filter: " + filter);
+        if (filter != null) {
+            controller.setEventFilter(new AviaterRegexFilter(filter));
+        }
 
         logger.info("binlog prepare ended..");
     }
@@ -93,6 +99,17 @@ public class Binlog extends BaseInput {
         if(controller != null) {
             controller.stop();
         }
+    }
+
+    public static void main(String[] args) {
+        Map<String,Object> config = new HashMap<>();
+        Binlog binlog = new Binlog(config);
+        binlog.host = "rdos1";
+        binlog.username = "canal";
+        binlog.password = "canal";
+
+        binlog.prepare();
+        binlog.emit();
     }
 
 }
