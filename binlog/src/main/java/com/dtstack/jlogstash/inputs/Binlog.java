@@ -6,14 +6,29 @@ import com.alibaba.otter.canal.parse.exception.CanalParseException;
 import com.alibaba.otter.canal.parse.inbound.mysql.MysqlEventParser;
 import com.alibaba.otter.canal.parse.index.AbstractLogPositionManager;
 import com.alibaba.otter.canal.parse.support.AuthenticationInfo;
+import com.alibaba.otter.canal.protocol.CanalEntry;
+import com.alibaba.otter.canal.protocol.position.EntryPosition;
 import com.alibaba.otter.canal.protocol.position.LogPosition;
 import com.dtstack.jlogstash.annotation.Required;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Time;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -28,6 +43,8 @@ public class Binlog extends BaseInput {
 
     private static final Logger logger = LoggerFactory.getLogger(Binlog.class);
 
+    private String taskId = "defaultTaskId";
+
     @Required(required = true)
     private String host;
 
@@ -41,12 +58,42 @@ public class Binlog extends BaseInput {
     @Required(required = true)
     private String password;
 
+    private Map<String,Object> start;
+
     private String filter;
 
     private MysqlEventParser controller;
 
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private EntryPosition entryPosition = new EntryPosition();
+
+
     public Binlog(Map config) {
         super(config);
+    }
+
+    public void updateLastPos(EntryPosition entryPosition) {
+        this.entryPosition = entryPosition;
+    }
+
+    private EntryPosition findStartPosition() {
+        if(start != null) {
+            EntryPosition startPosition = new EntryPosition();
+            startPosition.setJournalName((String) start.get("journalName"));
+            startPosition.setTimestamp((Long) start.get("timestamp"));
+            startPosition.setPosition((Long) start.get("position"));
+            return startPosition;
+        }
+
+        EntryPosition startPosition = null;
+        try {
+            startPosition = BinlogPosUtil.readPos(taskId);
+        } catch(IOException e) {
+            logger.error("Failed to read pos file: " + e.getMessage());
+        }
+
+        return startPosition;
     }
 
     @Override
@@ -65,21 +112,14 @@ public class Binlog extends BaseInput {
         controller.setIsGTIDMode(false);
         controller.setEventSink(new BinlogEventSink(this));
 
-        controller.setLogPositionManager(new AbstractLogPositionManager() {
+        controller.setLogPositionManager(new BinlogPositionManager(this));
 
-            @Override
-            public LogPosition getLatestIndexBy(String destination) {
-                return null;
-            }
+        EntryPosition startPosition = findStartPosition();
+        if (startPosition != null) {
+           controller.setMasterPosition(startPosition);
+        }
 
-            @Override
-            public void persistLogPosition(String destination, LogPosition logPosition) throws CanalParseException {
-                logger.info("logPosition: " + logPosition.toString());
-            }
-        });
 
-        //filter = "hyf\\..*";
-        System.out.println("filter: " + filter);
         if (filter != null) {
             controller.setEventFilter(new AviaterRegexFilter(filter));
         }
@@ -90,7 +130,20 @@ public class Binlog extends BaseInput {
     @Override
     public void emit() {
         logger.info("binlog emit started...");
+
         controller.start();
+
+        scheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BinlogPosUtil.savePos(taskId, entryPosition);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, 500, 1000, TimeUnit.MILLISECONDS);
+
         logger.info("binlog emit ended...");
     }
 
@@ -98,6 +151,16 @@ public class Binlog extends BaseInput {
     public void release() {
         if(controller != null) {
             controller.stop();
+        }
+
+        if(scheduler != null) {
+            scheduler.shutdown();
+        }
+
+        try {
+            BinlogPosUtil.savePos(taskId, entryPosition);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

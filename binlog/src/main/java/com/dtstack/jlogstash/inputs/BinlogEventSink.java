@@ -39,9 +39,9 @@ public class BinlogEventSink extends AbstractCanalLifeCycle implements com.aliba
             long ts = header.getExecuteTime();
             String schema = header.getSchemaName();
             String table = header.getTableName();
-
             processRowChange(rowChange, schema, table, ts);
         }
+
         return true;
     }
 
