@@ -57,6 +57,11 @@ public class BinlogEventSink extends AbstractCanalLifeCycle implements com.aliba
 
     private void processRowChange(CanalEntry.RowChange rowChange, String schema, String table, long ts) {
         CanalEntry.EventType eventType = rowChange.getEventType();
+
+        if(!binlog.accept(eventType.toString())) {
+            return;
+        }
+
         for(CanalEntry.RowData rowData : rowChange.getRowDatasList()) {
             Map<String,Object> event = new HashMap<>();
             Map<String,Object> message = new HashMap<>();

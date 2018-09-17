@@ -10,6 +10,7 @@ import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.alibaba.otter.canal.protocol.position.EntryPosition;
 import com.alibaba.otter.canal.protocol.position.LogPosition;
 import com.dtstack.jlogstash.annotation.Required;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Time;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,6 +46,8 @@ import java.util.concurrent.TimeUnit;
 public class Binlog extends BaseInput {
 
     private static final Logger logger = LoggerFactory.getLogger(Binlog.class);
+
+    /** plugin properties */
 
     private String taskId = "defaultTaskId";
 
@@ -62,12 +68,17 @@ public class Binlog extends BaseInput {
 
     private String filter;
 
+    private String cat;
+
+    /** internal fields */
+
     private MysqlEventParser controller;
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private EntryPosition entryPosition = new EntryPosition();
 
+    private List<String> categories = new ArrayList<>();
 
     public Binlog(Map config) {
         super(config);
@@ -75,6 +86,17 @@ public class Binlog extends BaseInput {
 
     public void updateLastPos(EntryPosition entryPosition) {
         this.entryPosition = entryPosition;
+    }
+
+    public boolean accept(String type) {
+        return categories.isEmpty() || categories.contains(type);
+    }
+
+    private void parseCategories() {
+        if(!StringUtils.isBlank(cat)) {
+            System.out.println(categories);
+            categories = Arrays.asList(cat.toUpperCase().split(","));
+        }
     }
 
     private EntryPosition findStartPosition() {
@@ -99,6 +121,9 @@ public class Binlog extends BaseInput {
     @Override
     public void prepare() {
         logger.info("binlog prepare started..");
+
+        parseCategories();
+
         controller = new MysqlEventParser();
         controller.setConnectionCharset(Charset.forName("UTF-8"));
         controller.setSlaveId(slaveId);
