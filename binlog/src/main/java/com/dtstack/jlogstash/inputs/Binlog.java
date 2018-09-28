@@ -76,7 +76,7 @@ public class Binlog extends BaseInput {
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private EntryPosition entryPosition = new EntryPosition();
+    private volatile EntryPosition entryPosition = new EntryPosition();
 
     private List<String> categories = new ArrayList<>();
 
@@ -100,7 +100,7 @@ public class Binlog extends BaseInput {
     }
 
     private EntryPosition findStartPosition() {
-        if(start != null) {
+        if(start != null && start.size() != 0) {
             EntryPosition startPosition = new EntryPosition();
             startPosition.setJournalName((String) start.get("journalName"));
             startPosition.setTimestamp((Long) start.get("timestamp"));
@@ -162,7 +162,7 @@ public class Binlog extends BaseInput {
             @Override
             public void run() {
                 try {
-                    BinlogPosUtil.savePos(taskId, entryPosition);
+                    BinlogPosUtil.savePos(taskId + "_output", entryPosition);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -183,7 +183,7 @@ public class Binlog extends BaseInput {
         }
 
         try {
-            BinlogPosUtil.savePos(taskId, entryPosition);
+            BinlogPosUtil.savePos(taskId + "_output", entryPosition);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

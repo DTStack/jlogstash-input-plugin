@@ -24,7 +24,7 @@ public class BinlogPositionManager extends AbstractLogPositionManager {
 
     @Override
     public void persistLogPosition(String destination, LogPosition logPosition) throws CanalParseException {
-        logger.info("logPosition: " + logPosition.toString());
+        logger.info("persistLogPosition: " + logPosition.toString());
         binlog.updateLastPos(logPosition.getPostion());
     }
 
