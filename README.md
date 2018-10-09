@@ -157,3 +157,20 @@
   query: Filter语句 
   
   sinceTime: 增量抽取的起始时间
+
+# Binlog
+  host: MySQL主机名 必填项
+
+  port: MySQL端口号 默认3306
+
+  username: MySQL用户名 必填项
+
+  password: MySQL密码 必填项
+
+  start: 日志起始位置， 格式为 {"journalName":"mysql-bin.000002","position":39493,timestamp":1537948008000}，其中journalName为binlog日志文件名，position为日志偏移量，timestamp为日志时间戳
+
+  filter: 过滤器列表，由若干个过滤器组成， 格式为 {schema1\.table1,schema2\.table2}，多个过滤器之间用逗号分隔；
+  默认为空，表示不过滤schema和table。
+
+  cat: 数据操作类别列表，由若干个数据操作类别组成，格式为 {insert,update,select,delete}，多个数据操作类别用逗号分隔；
+  默认为空，表示处理binlog所有操作类别的日志。
