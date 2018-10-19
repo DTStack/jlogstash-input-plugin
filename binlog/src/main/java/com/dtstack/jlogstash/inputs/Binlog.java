@@ -1,30 +1,16 @@
 package com.dtstack.jlogstash.inputs;
 
 import com.alibaba.otter.canal.filter.aviater.AviaterRegexFilter;
-import com.alibaba.otter.canal.filter.aviater.AviaterSimpleFilter;
-import com.alibaba.otter.canal.parse.exception.CanalParseException;
 import com.alibaba.otter.canal.parse.inbound.mysql.MysqlEventParser;
-import com.alibaba.otter.canal.parse.index.AbstractLogPositionManager;
 import com.alibaba.otter.canal.parse.support.AuthenticationInfo;
-import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.alibaba.otter.canal.protocol.position.EntryPosition;
-import com.alibaba.otter.canal.protocol.position.LogPosition;
 import com.dtstack.jlogstash.annotation.Required;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -102,7 +88,14 @@ public class Binlog extends BaseInput {
     private EntryPosition findStartPosition() {
         if(start != null && start.size() != 0) {
             EntryPosition startPosition = new EntryPosition();
-            startPosition.setJournalName((String) start.get("journalName"));
+            String journalName = (String) start.get("journalName");
+            if(StringUtils.isNotEmpty(journalName)) {
+                if(new BinlogJournalValidator(host, port, username, password).check(journalName)) {
+                    startPosition.setJournalName(journalName);
+                } else {
+                    throw new IllegalArgumentException("Can't find journalName: " + journalName);
+                }
+            }
             startPosition.setTimestamp((Long) start.get("timestamp"));
             startPosition.setPosition((Long) start.get("position"));
             return startPosition;
